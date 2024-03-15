@@ -8,7 +8,7 @@ export function importCSV(file: File, tableName: string) {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
-            chunkSize: 1000,
+            chunkSize: 500,
             chunk: async (results: ParseResult<any>)=> {
                 try {
                     const table = db.table(tableName);
