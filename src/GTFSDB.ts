@@ -186,7 +186,7 @@ class GTFSDB extends Dexie {
 
     public constructor() {
         super('GTFSDB');
-        this.version(2).stores({
+        this.version(3).stores({
             agencies: 'agency_id',
             stops: 'stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station',
             routes: 'route_id,agency_id,route_short_name,route_long_name,route_type',
