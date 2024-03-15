@@ -18,7 +18,7 @@ function App() {
     });
 
     const handleRefresh = () => {
-        updateServiceWorker(true);
+        void updateServiceWorker(true);
     };
 
 

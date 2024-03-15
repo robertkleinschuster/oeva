@@ -1,15 +1,15 @@
 import {useState, useEffect} from 'react';
-import {db, Routes, Stops, StopTimes, Trips} from './GTFSDB'; // Adjust the import path to your GTFSDB instance
+import {db, Route, Stop, StopTime, Trip} from './GTFSDB'; // Adjust the import path to your GTFSDB instance
 
-interface Departure extends StopTimes {
-    trip?: Trips,
-    route?: Routes,
+interface Departure extends StopTime {
+    trip?: Trip,
+    route?: Route,
 }
 
 const StationSearch = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [stations, setStations] = useState<Stops[]>([]);
-    const [selectedStation, setSelectedStation] = useState<Stops | null>(null);
+    const [stations, setStations] = useState<Stop[]>([]);
+    const [selectedStation, setSelectedStation] = useState<Stop | null>(null);
     const [departures, setDepartures] = useState<Departure[]>([]);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const StationSearch = () => {
         }
     }, [searchTerm]);
 
-    const handleSelectStation = async (station: Stops) => {
+    const handleSelectStation = async (station: Stop) => {
         setSelectedStation(station);
         const stationDepartures = await db.stopTimes
             .where('stop_id')

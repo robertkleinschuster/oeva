@@ -76,6 +76,15 @@ export async function importFeedInfo(file: File) {
     await importCSV(file, 'feedInfo');
 }
 
+export async function importLevels(file: File) {
+    await importCSV(file, 'levels');
+}
+
+export async function importPathways(file: File) {
+    await importCSV(file, 'pathways');
+}
+
+
 const requiredGTFSFiles = [
     'agency.txt',
     'stops.txt',
@@ -140,9 +149,9 @@ export async function importGTFSZip(file: File, progress?: (progress: number, fi
                 case 'fare_rules.txt':
                     await importFareRules(newFile);
                     break;
-                case 'shapes.txt':
-                    await importShapes(newFile);
-                    break;
+//                case 'shapes.txt':
+//                    await importShapes(newFile);
+//                    break;
                 case 'frequencies.txt':
                     await importFrequencies(newFile);
                     break;
@@ -151,6 +160,12 @@ export async function importGTFSZip(file: File, progress?: (progress: number, fi
                     break;
                 case 'feed_info.txt':
                     await importFeedInfo(newFile);
+                    break;
+                case 'levels.txt':
+                    await importLevels(newFile);
+                    break;
+                case 'pathways.txt':
+                    await importPathways(newFile);
                     break;
                 default:
                     importedFiles.pop()

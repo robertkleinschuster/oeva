@@ -11,7 +11,7 @@ interface Agency {
     agency_email?: string;
 }
 
-export interface Stops {
+export interface Stop {
     stop_id: string;
     stop_code?: string;
     stop_name: string;
@@ -28,7 +28,7 @@ export interface Stops {
     platform_code?: string;
 }
 
-export interface Routes {
+export interface Route {
     route_id: string;
     agency_id?: string;
     route_short_name: string;
@@ -43,7 +43,7 @@ export interface Routes {
     continuous_drop_off?: number;
 }
 
-export interface Trips {
+export interface Trip {
     route_id: string;
     service_id: string;
     trip_id: string;
@@ -56,7 +56,7 @@ export interface Trips {
     bikes_allowed?: number;
 }
 
-export interface StopTimes {
+export interface StopTime {
     trip_id: string;
     arrival_time?: string;
     departure_time?: string;
@@ -84,13 +84,13 @@ interface Calendar {
     end_date: string;
 }
 
-interface CalendarDates {
+interface CalendarDate {
     service_id: string;
     date: string;
     exception_type: number;
 }
 
-interface FareAttributes {
+interface FareAttribute {
     fare_id: string;
     price: string;
     currency_type: string;
@@ -100,7 +100,7 @@ interface FareAttributes {
     transfer_duration?: number;
 }
 
-interface FareRules {
+interface FareRule {
     fare_id: string;
     route_id?: string;
     origin_id?: string;
@@ -108,7 +108,7 @@ interface FareRules {
     contains_id?: string;
 }
 
-interface Shapes {
+interface Shape {
     shape_id: string;
     shape_pt_lat: number;
     shape_pt_lon: number;
@@ -116,7 +116,7 @@ interface Shapes {
     shape_dist_traveled?: number;
 }
 
-interface Frequencies {
+interface Frequency {
     trip_id: string;
     start_time: string;
     end_time: string;
@@ -124,7 +124,7 @@ interface Frequencies {
     exact_times?: number;
 }
 
-interface Transfers {
+interface Transfer {
     from_stop_id: string;
     to_stop_id: string;
     transfer_type: number;
@@ -142,20 +142,37 @@ interface FeedInfo {
     feed_contact_url?: string;
 }
 
+interface Level {
+    level_id: string;
+    level_index: string;
+    level_name: string;
+}
+
+interface Pathway {
+    pathway_id: string;
+    from_stop_id: string;
+    to_stop_id: string;
+    pathway_mode: number;
+    is_bidirectional: boolean;
+    traversal_time: number;
+}
+
 class GTFSDB extends Dexie {
     public agencies: Dexie.Table<Agency, string>;
-    public stops: Dexie.Table<Stops, string>;
-    public routes: Dexie.Table<Routes, string>;
-    public trips: Dexie.Table<Trips, string>;
-    public stopTimes: Dexie.Table<StopTimes, number>;
+    public stops: Dexie.Table<Stop, string>;
+    public routes: Dexie.Table<Route, string>;
+    public trips: Dexie.Table<Trip, string>;
+    public stopTimes: Dexie.Table<StopTime, number>;
     public calendar: Dexie.Table<Calendar, string>;
-    public calendarDates: Dexie.Table<CalendarDates, number>;
-    public fareAttributes: Dexie.Table<FareAttributes, string>;
-    public fareRules: Dexie.Table<FareRules, number>;
-    public shapes: Dexie.Table<Shapes, number>;
-    public frequencies: Dexie.Table<Frequencies, number>;
-    public transfers: Dexie.Table<Transfers, number>;
+    public calendarDates: Dexie.Table<CalendarDate, number>;
+    public fareAttributes: Dexie.Table<FareAttribute, string>;
+    public fareRules: Dexie.Table<FareRule, number>;
+    public shapes: Dexie.Table<Shape, number>;
+    public frequencies: Dexie.Table<Frequency, number>;
+    public transfers: Dexie.Table<Transfer, number>;
     public feedInfo: Dexie.Table<FeedInfo, number>;
+    public levels: Dexie.Table<Level, number>;
+    public pathways: Dexie.Table<Pathway, number>;
 
     public constructor() {
         super('GTFSDB');
@@ -173,6 +190,8 @@ class GTFSDB extends Dexie {
             frequencies: '++id, trip_id, start_time, end_time',
             transfers: '++id, from_stop_id, to_stop_id',
             feedInfo: '++id',
+            levels: 'level_id,level_index,level_name',
+            pathways: 'pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,traversal_time',
         });
 
         this.agencies = this.table('agencies');
@@ -188,6 +207,8 @@ class GTFSDB extends Dexie {
         this.frequencies = this.table('frequencies');
         this.transfers = this.table('transfers');
         this.feedInfo = this.table('feedInfo');
+        this.levels = this.table('levels');
+        this.pathways = this.table('pathways');
     }
 }
 
