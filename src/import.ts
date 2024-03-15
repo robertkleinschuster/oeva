@@ -15,7 +15,7 @@ export function importCSV(file: File, tableName: string) {
                     parser.pause()
                     const table = db.table(tableName);
                     await table.bulkPut(results.data);
-                    await new Promise(resolve => setTimeout(resolve, 500))
+                    await new Promise(resolve => setTimeout(resolve, 50))
                     parser.resume()
                 } catch (error) {
                     reject(error);
