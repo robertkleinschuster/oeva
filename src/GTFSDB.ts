@@ -188,10 +188,10 @@ class GTFSDB extends Dexie {
         super('GTFSDB');
         this.version(2).stores({
             agencies: 'agency_id',
-            stops: 'stop_id,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,level_id,platform_code',
+            stops: 'stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station',
             routes: 'route_id,agency_id,route_short_name,route_long_name,route_type',
-            trips: 'trip_id,route_id,service_id,shape_id,trip_headsign,trip_short_name,direction_id,block_id',
-            stopTimes: '++id, trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled',
+            trips: 'trip_id,route_id,service_id,shape_id,direction_id',
+            stopTimes: '[trip_id+stop_id], trip_id, stop_id',
             calendar: 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date',
             calendarDates: '++id, service_id,date,exception_type',
             fareAttributes: 'fare_id',
@@ -201,7 +201,7 @@ class GTFSDB extends Dexie {
             transfers: '++id, from_stop_id, to_stop_id',
             feedInfo: '++id',
             levels: 'level_id,level_index,level_name',
-            pathways: 'pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,traversal_time',
+            pathways: 'pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional',
             import: '++id, [name+done]'
         });
 
