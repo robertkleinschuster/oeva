@@ -42,18 +42,13 @@ function App() {
     }
 
     const importData = async (importId: number, data: Blob) => {
-        await importGTFSZip(data, (progress, filename) => {
+        await importGTFSZip(data, (progress) => {
             setUpdateProgress(progress);
-            db.import.update(importId, {
-                done: 0,
-                current_file: filename
-            })
         })
-        setUpdateProgress(0)
         setUpdatingData(false)
         db.import.update(importId, {
             done: 1,
-            current_file: null
+            data: null
         })
     }
 
