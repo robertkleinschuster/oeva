@@ -8,13 +8,14 @@ export function importCSV(file: File, tableName: string) {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
-            chunkSize: 100,
+            chunkSize: 1000,
             worker: false,
             chunk: async (results: ParseResult<any>, parser) => {
                 try {
                     parser.pause()
                     const table = db.table(tableName);
                     await table.bulkPut(results.data);
+                    await new Promise(resolve => setTimeout(resolve, 500))
                     parser.resume()
                 } catch (error) {
                     reject(error);
