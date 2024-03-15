@@ -1,4 +1,4 @@
-import Papa from 'papaparse';
+import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {db} from './GTFSDB.ts'; // Adjust the import path according to your project structure
 
@@ -8,14 +8,17 @@ export function importCSV(file: File, tableName: string) {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
-            complete: async (results) => {
+            chunkSize: 1000,
+            chunk: async (results: ParseResult<any>)=> {
                 try {
                     const table = db.table(tableName);
                     await table.bulkPut(results.data);
-                    resolve();
                 } catch (error) {
                     reject(error);
                 }
+            },
+            complete: () => {
+                resolve();
             },
             error: (error) => {
                 reject(error);
@@ -101,7 +104,7 @@ const requiredGTFSFiles = [
     'feed_info.txt',
 ];
 
-export async function importGTFSZip(file: File, progress?: (progress: number, filename: string) => void) {
+export async function importGTFSZip(file: File|Blob, progress?: (progress: number, filename: string) => void) {
     const zip = new JSZip();
     const content = await zip.loadAsync(file);
 

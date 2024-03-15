@@ -157,6 +157,15 @@ interface Pathway {
     traversal_time: number;
 }
 
+export interface Import {
+    id?: number;
+    timestamp: number;
+    name: string;
+    done: number;
+    current_file: string|null;
+    data: Blob|null;
+}
+
 class GTFSDB extends Dexie {
     public agencies: Dexie.Table<Agency, string>;
     public stops: Dexie.Table<Stop, string>;
@@ -173,14 +182,15 @@ class GTFSDB extends Dexie {
     public feedInfo: Dexie.Table<FeedInfo, number>;
     public levels: Dexie.Table<Level, number>;
     public pathways: Dexie.Table<Pathway, number>;
+    public import: Dexie.Table<Import, number>
 
     public constructor() {
         super('GTFSDB');
-        this.version(1).stores({
+        this.version(2).stores({
             agencies: 'agency_id',
             stops: 'stop_id,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,level_id,platform_code',
             routes: 'route_id,agency_id,route_short_name,route_long_name,route_type',
-            trips: 'route_id,service_id,trip_id,shape_id,trip_headsign,trip_short_name,direction_id,block_id',
+            trips: 'trip_id,route_id,service_id,shape_id,trip_headsign,trip_short_name,direction_id,block_id',
             stopTimes: '++id, trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled',
             calendar: 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date',
             calendarDates: '++id, service_id,date,exception_type',
@@ -192,6 +202,7 @@ class GTFSDB extends Dexie {
             feedInfo: '++id',
             levels: 'level_id,level_index,level_name',
             pathways: 'pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,traversal_time',
+            import: '++id, [name+done]'
         });
 
         this.agencies = this.table('agencies');
@@ -209,6 +220,7 @@ class GTFSDB extends Dexie {
         this.feedInfo = this.table('feedInfo');
         this.levels = this.table('levels');
         this.pathways = this.table('pathways');
+        this.import = this.table('import')
     }
 }
 

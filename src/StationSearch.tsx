@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {db, Route, Stop, StopTime, Trip} from './GTFSDB'; // Adjust the import path to your GTFSDB instance
+import {db, Route, Stop, StopTime, Trip} from './GTFSDB';
 
 interface Departure extends StopTime {
     trip?: Trip,
@@ -20,6 +20,7 @@ const StationSearch = () => {
                     .startsWithIgnoreCase(searchTerm)
                     .toArray();
                 setStations(foundStations);
+                setSelectedStation(null)
             };
 
             search();
@@ -42,7 +43,7 @@ const StationSearch = () => {
             const route = trip ? await db.routes.get(trip.route_id) : undefined;
             return {...departure, trip, route};
         }));
-
+        console.log(departuresWithDetails)
         setDepartures(departuresWithDetails);
     };
 
@@ -54,23 +55,22 @@ const StationSearch = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            {stations.map(station => (
-                <div key={station.stop_id} onClick={() => handleSelectStation(station)}>
-                    {station.stop_name}
-                </div>
-            ))}
-            {selectedStation && (
+            {selectedStation ? (
                 <div>
                     <h2>Departures for {selectedStation.stop_name}</h2>
                     <ul>
                         {departures.map((departure, index) => (
                             <li key={index}>
-                                {departure.departure_time} - {departure.route?.route_long_name}
+                                {departure.departure_time}:{departure.trip?.trip_headsign}
                             </li>
                         ))}
                     </ul>
                 </div>
-            )}
+            ) : stations.map(station => (
+                <div key={station.stop_id} onClick={() => handleSelectStation(station)}>
+                    {station.stop_name}
+                </div>
+            ))}
         </div>
     );
 };

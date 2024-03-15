@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@types/papaparse": "^5.3.14",
+    "axios": "^1.6.7",
     "dexie": "^3.2.6",
     "jest-environment-jsdom": "^29.7.0",
     "jszip": "^3.10.1",
