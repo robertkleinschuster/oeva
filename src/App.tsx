@@ -4,6 +4,7 @@ import StationSearch from "./StationSearch.tsx";
 import {useState} from "react";
 import {db} from './GTFSDB';
 import axios, {AxiosProgressEvent} from "axios";
+import {importGTFSZip} from "./import.ts";
 
 function App() {
     const [updatingData, setUpdatingData] = useState<boolean>(false)
@@ -13,39 +14,11 @@ function App() {
 
     const updateData = (importId: number) => {
         setUpdatingData(true)
-        const worker = new Worker(new URL('./importWorker.ts', import.meta.url), {type: 'module'});
-        worker.onmessage = async (e) => {
-            const {type, progress, currentFile, importedFiles} = e.data;
-            switch (type) {
-                case 'PROGRESS':
-                    setUpdateProgress(progress);
-                    db.import.update(importId, {
-                        done: 0,
-                        current_file: currentFile
-                    })
-                    break;
-                case 'DONE':
-                    setUpdateProgress(0)
-                    setUpdatingData(false)
-                    db.import.update(importId, {
-                        done: 1,
-                        current_file: null
-                    })
-                    console.log('Imported files:', importedFiles);
-                    break;
-            }
-
-        };
-
-        worker.onerror = (error) => {
-            console.error('Worker error:', error);
-            setUpdatingData(false);
-        };
 
         db.import.get(importId).then(currentImport => {
             if (currentImport) {
                 if (currentImport.data) {
-                    worker.postMessage({file: currentImport.data})
+                    importData(importId, currentImport.data)
                 } else {
                     setDownloadingData(true)
                     axios.get("https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
@@ -61,10 +34,26 @@ function App() {
                                 data: response.data
                             })
                             setDownloadingData(false)
-                            worker.postMessage({file: response.data})
+                            importData(importId, response.data)
                         })
                 }
             }
+        })
+    }
+
+    const importData = async (importId: number, data: Blob) => {
+        await importGTFSZip(data, (progress, filename) => {
+            setUpdateProgress(progress);
+            db.import.update(importId, {
+                done: 0,
+                current_file: filename
+            })
+        })
+        setUpdateProgress(0)
+        setUpdatingData(false)
+        db.import.update(importId, {
+            done: 1,
+            current_file: null
         })
     }
 
