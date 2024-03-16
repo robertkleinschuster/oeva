@@ -4,21 +4,26 @@ import StationSearch from "./StationSearch.tsx";
 import {useState} from "react";
 import {db} from './GTFSDB';
 import axios, {AxiosProgressEvent} from "axios";
-import {importGTFSZip} from "./import.ts";
+import {runImport, prepareImport} from "./import.ts";
 
 function App() {
     const [updatingData, setUpdatingData] = useState<boolean>(false)
     const [downloadingData, setDownloadingData] = useState<boolean>(false)
     const [updateProgress, setUpdateProgress] = useState<number>(0)
+    const [currentFilename, setCurrentFilename] = useState<string|null>(null)
     const [downloadStats, setDownloadStats] = useState<AxiosProgressEvent | null>(null)
 
     const updateData = (importId: number) => {
         setUpdatingData(true)
 
-        db.import.get(importId).then(currentImport => {
-            if (currentImport) {
-                if (currentImport.data) {
-                    importData(importId, currentImport.data)
+        db.import.get(importId)
+            .then(async currentImport => {
+                if (currentImport?.files) {
+                    await runImport(importId, (progress, filename) => {
+                        setUpdateProgress(progress);
+                        setCurrentFilename(filename)
+                    })
+                    setUpdatingData(false)
                 } else {
                     setDownloadingData(true)
                     axios.get("https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
@@ -29,27 +34,16 @@ function App() {
                             }
                         })
                         .then(async response => {
-                            await db.import.update(importId, {
-                                done: 0,
-                                data: response.data
-                            })
+                            await prepareImport(importId, response.data)
                             setDownloadingData(false)
-                            importData(importId, response.data)
+                            await runImport(importId, (progress, filename) => {
+                                setUpdateProgress(progress);
+                                setCurrentFilename(filename)
+                            })
+                            setUpdatingData(false)
                         })
                 }
-            }
-        })
-    }
-
-    const importData = async (importId: number, data: Blob) => {
-        await importGTFSZip(data, (progress) => {
-            setUpdateProgress(progress);
-        })
-        setUpdatingData(false)
-        db.import.update(importId, {
-            done: 1,
-            data: null
-        })
+            })
     }
 
     const {
@@ -76,10 +70,10 @@ function App() {
         } else {
             const importId = await db.import.add({
                 name: 'oebb',
-                current_file: null,
+                files: null,
+                imported: null,
                 done: 0,
-                timestamp: (new Date()).getTime(),
-                data: null
+                timestamp: (new Date()).getTime()
             })
             updateData(importId)
         }
@@ -101,7 +95,7 @@ function App() {
             {downloadingData ?
                 <p>Downloading
                     data: {Math.round((downloadStats?.loaded ?? 0) / 1000000)} / {Math.round((downloadStats?.total ?? 0) / 1000000)} MB</p> : null}
-            {updatingData ? <p>Saving data: {updateProgress} %</p> :
+            {updatingData ? <p>Importing data: {updateProgress} % {currentFilename ? <>({currentFilename})</> : null}</p> :
                 <StationSearch/>}
         </>
     )

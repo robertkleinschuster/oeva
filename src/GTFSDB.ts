@@ -130,11 +130,11 @@ interface Pathway {
 
 export interface Import {
     id?: number;
-    timestamp: number;
     name: string;
+    files: Map<string, Blob> | null;
+    imported: string[] | null;
     done: number;
-    current_file: string | null;
-    data: Blob | null;
+    timestamp: number;
 }
 
 class GTFSDB extends Dexie {
