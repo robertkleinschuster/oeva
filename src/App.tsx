@@ -7,14 +7,15 @@ import axios, {AxiosProgressEvent} from "axios";
 import {runImport, prepareImport} from "./import.ts";
 
 function App() {
-    const [updatingData, setUpdatingData] = useState<boolean>(false)
+    const [importingData, setImportingData] = useState<boolean>(false)
     const [downloadingData, setDownloadingData] = useState<boolean>(false)
+    const [importFinished, setImportFinished] = useState<boolean>(false)
     const [updateProgress, setUpdateProgress] = useState<number>(0)
     const [currentFilename, setCurrentFilename] = useState<string|null>(null)
     const [downloadStats, setDownloadStats] = useState<AxiosProgressEvent | null>(null)
 
     const updateData = (importId: number) => {
-        setUpdatingData(true)
+        setImportingData(true)
 
         db.import.get(importId)
             .then(async currentImport => {
@@ -23,7 +24,7 @@ function App() {
                         setUpdateProgress(progress);
                         setCurrentFilename(filename)
                     })
-                    setUpdatingData(false)
+                    setImportFinished(true)
                 } else {
                     setDownloadingData(true)
                     axios.get("https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
@@ -40,7 +41,7 @@ function App() {
                                 setUpdateProgress(progress);
                                 setCurrentFilename(filename)
                             })
-                            setUpdatingData(false)
+                            setImportFinished(true)
                         })
                 }
             })
@@ -87,7 +88,7 @@ function App() {
                     <button onClick={handleRefresh}>Refresh</button>
                 </div>
             )}
-            {!downloadingData && !updatingData ?
+            {!downloadingData && !importingData ?
                 <div>
                     <button onClick={handleUpdate}>Update data</button>
                 </div>
@@ -95,7 +96,7 @@ function App() {
             {downloadingData ?
                 <p>Downloading
                     data: {Math.round((downloadStats?.loaded ?? 0) / 1000000)} / {Math.round((downloadStats?.total ?? 0) / 1000000)} MB</p> : null}
-            {updatingData ? <p>Importing data: {updateProgress} % {currentFilename ? <>({currentFilename})</> : null}</p> :
+            {importingData ? importFinished ? <p>Import abgeschlossen</p> : <p>Importing data: {updateProgress} % {currentFilename ? <>({currentFilename})</> : null}</p> :
                 <StationSearch/>}
         </>
     )
