@@ -42,6 +42,17 @@ function importCSV(file: File, tableName: string) {
 }
 
 
+export async function createImport()
+{
+    return db.import.add({
+        name: 'oebb',
+        files: null,
+        imported: null,
+        done: 0,
+        timestamp: (new Date()).getTime()
+    })
+}
+
 export async function prepareImport(importId: number, file: File | Blob) {
     const zip = new JSZip();
     const content = await zip.loadAsync(file);

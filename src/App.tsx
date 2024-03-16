@@ -4,7 +4,7 @@ import StationSearch from "./StationSearch.tsx";
 import {useState} from "react";
 import {db} from './GTFSDB';
 import axios, {AxiosProgressEvent} from "axios";
-import {runImport, prepareImport} from "./import.ts";
+import {runImport, prepareImport, createImport} from "./import.ts";
 
 function App() {
     const [importingData, setImportingData] = useState<boolean>(false)
@@ -69,14 +69,7 @@ function App() {
         if (unfinishedImportId) {
             updateData(unfinishedImportId)
         } else {
-            const importId = await db.import.add({
-                name: 'oebb',
-                files: null,
-                imported: null,
-                done: 0,
-                timestamp: (new Date()).getTime()
-            })
-            updateData(importId)
+            updateData(await createImport())
         }
     }
 
