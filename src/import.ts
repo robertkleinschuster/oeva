@@ -87,12 +87,12 @@ export async function runImport(importId: number, progress?: (progress: number, 
         throw new Error('No files in import')
     }
 
+    const imported = importData.imported ?? [];
+
     for (let [fileName, fileContent] of importData.files.entries()) {
         if (importData.imported && importData.imported.includes(fileName)) {
             continue;
         }
-
-        const imported = importData.imported ?? [];
 
         if (progress) {
             progress(Math.round((imported.length / importData.files.size) * 100), fileName)
