@@ -21,20 +21,15 @@ function importCSV(file: File, tableName: string) {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
-            chunkSize: 1000,
+            chunkSize: 5000,
             worker: false,
             encoding: "UTF-8",
-            chunk: async (results: ParseResult<any>, parser) => {
-                try {
-                    console.log(results.data.length)
-                    parser.pause()
-                    const table = db.table(tableName);
-                    await table.bulkPut(results.data);
-                    //await new Promise(resolve => setTimeout(resolve, 50))
-                    parser.resume()
-                } catch (error) {
-                    reject(error);
-                }
+            chunk: (results: ParseResult<any>, parser) => {
+                parser.pause()
+                const table = db.table(tableName);
+                table.bulkPut(results.data)
+                    .then(() => parser.resume())
+                    .catch(reject);
             },
             complete: () => {
                 resolve();
