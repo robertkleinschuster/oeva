@@ -90,7 +90,7 @@ export async function runImport(importId: number, progress?: (progress: number, 
     const imported = importData.imported ?? [];
 
     for (let [fileName, fileContent] of importData.files.entries()) {
-        if (importData.imported && importData.imported.includes(fileName)) {
+        if (imported.includes(fileName)) {
             continue;
         }
 
