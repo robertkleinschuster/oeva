@@ -130,6 +130,7 @@ interface Pathway {
 
 export interface Import {
     id?: number;
+    url: string;
     name: string;
     files: Map<string, Blob> | null;
     imported: string[] | null;

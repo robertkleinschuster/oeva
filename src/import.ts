@@ -1,6 +1,7 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {db} from './GTFSDB.ts';
+import axios, {AxiosProgressEvent} from "axios";
 
 const tableMap = new Map<string, string>
 tableMap.set('agency.txt', 'agencies')
@@ -42,15 +43,31 @@ function importCSV(file: File, tableName: string) {
 }
 
 
-export async function createImport()
-{
+export async function createImport(url: string, name: string) {
     return db.import.add({
-        name: 'oebb',
+        name,
+        url,
         files: null,
         imported: null,
         done: 0,
         timestamp: (new Date()).getTime()
     })
+}
+
+export async function downloadData(importId: number, progress: (event: AxiosProgressEvent) => void) {
+    const importData = await db.import.get(importId);
+    if (!importData) {
+        throw new Error('Import not found')
+    }
+
+    const response = await axios.get(
+        importData.url,
+        {
+            responseType: 'blob',
+            onDownloadProgress: progress
+        }
+    );
+    await prepareImport(importId, response.data)
 }
 
 export async function prepareImport(importId: number, file: File | Blob) {

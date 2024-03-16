@@ -3,8 +3,8 @@ import {useRegisterSW} from "virtual:pwa-register/react";
 import StationSearch from "./StationSearch.tsx";
 import {useState} from "react";
 import {db} from './GTFSDB';
-import axios, {AxiosProgressEvent} from "axios";
-import {runImport, prepareImport, createImport} from "./import.ts";
+import {AxiosProgressEvent} from "axios";
+import {runImport, createImport, downloadData} from "./import.ts";
 
 function App() {
     const [importingData, setImportingData] = useState<boolean>(false)
@@ -27,22 +27,13 @@ function App() {
                     setImportFinished(true)
                 } else {
                     setDownloadingData(true)
-                    axios.get("https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
-                        {
-                            responseType: 'blob',
-                            onDownloadProgress: (progressEvent) => {
-                                setDownloadStats(progressEvent)
-                            }
-                        })
-                        .then(async response => {
-                            await prepareImport(importId, response.data)
-                            setDownloadingData(false)
-                            await runImport(importId, (finished, open, filename) => {
-                                setUpdateMessage(`${finished} / ${open}`);
-                                setCurrentFilename(filename)
-                            })
-                            setImportFinished(true)
-                        })
+                    await downloadData(importId, setDownloadStats)
+                    setDownloadingData(false)
+                    await runImport(importId, (finished, open, filename) => {
+                        setUpdateMessage(`${finished} / ${open}`);
+                        setCurrentFilename(filename)
+                    })
+                    setImportFinished(true)
                 }
             })
     }
@@ -69,7 +60,10 @@ function App() {
         if (unfinishedImportId) {
             updateData(unfinishedImportId)
         } else {
-            updateData(await createImport())
+            updateData(await createImport(
+                "https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
+                'oebb'
+            ))
         }
     }
 
