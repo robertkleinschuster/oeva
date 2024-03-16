@@ -10,8 +10,8 @@ function App() {
     const [importingData, setImportingData] = useState<boolean>(false)
     const [downloadingData, setDownloadingData] = useState<boolean>(false)
     const [importFinished, setImportFinished] = useState<boolean>(false)
-    const [updateProgress, setUpdateProgress] = useState<number>(0)
-    const [currentFilename, setCurrentFilename] = useState<string|null>(null)
+    const [updateMessage, setUpdateMessage] = useState<string>('')
+    const [currentFilename, setCurrentFilename] = useState<string | null>(null)
     const [downloadStats, setDownloadStats] = useState<AxiosProgressEvent | null>(null)
 
     const updateData = (importId: number) => {
@@ -20,8 +20,8 @@ function App() {
         db.import.get(importId)
             .then(async currentImport => {
                 if (currentImport?.files) {
-                    await runImport(importId, (progress, filename) => {
-                        setUpdateProgress(progress);
+                    await runImport(importId, (finished, open, filename) => {
+                        setUpdateMessage(`${finished} / ${open}`);
                         setCurrentFilename(filename)
                     })
                     setImportFinished(true)
@@ -37,8 +37,8 @@ function App() {
                         .then(async response => {
                             await prepareImport(importId, response.data)
                             setDownloadingData(false)
-                            await runImport(importId, (progress, filename) => {
-                                setUpdateProgress(progress);
+                            await runImport(importId, (finished, open, filename) => {
+                                setUpdateMessage(`${finished} / ${open}`);
                                 setCurrentFilename(filename)
                             })
                             setImportFinished(true)
@@ -94,10 +94,15 @@ function App() {
                 </div>
                 : null}
             {downloadingData ?
-                <p>Downloading
-                    data: {Math.round((downloadStats?.loaded ?? 0) / 1000000)} / {Math.round((downloadStats?.total ?? 0) / 1000000)} MB</p> : null}
-            {importingData ? importFinished ? <p>Import abgeschlossen</p> : <p>Importing data: {updateProgress} % {currentFilename ? <>({currentFilename})</> : null}</p> :
-                <StationSearch/>}
+                <p>
+                    Downloading
+                    data: {Math.round((downloadStats?.loaded ?? 0) / 1000000)} / {Math.round((downloadStats?.total ?? 0) / 1000000)} MB
+                </p>
+                : null}
+            {importingData ? importFinished ? <p>Import done</p> :
+                <p>Importing data: {currentFilename} ({updateMessage})</p> : null}
+
+            <StationSearch/>
         </>
     )
 }

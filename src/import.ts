@@ -72,7 +72,7 @@ export async function prepareImport(importId: number, file: File | Blob) {
     };
 }
 
-export async function runImport(importId: number, progress?: (progress: number, filename: string) => void) {
+export async function runImport(importId: number, progress?: (finished: number, open: number, filename: string) => void) {
     const importData = await db.import.get(importId)
     if (!importData) {
         throw new Error('Import not found')
@@ -90,7 +90,7 @@ export async function runImport(importId: number, progress?: (progress: number, 
         }
 
         if (progress) {
-            progress(Math.round((imported.length / importData.files.size) * 100), fileName)
+            progress(imported.length, importData.files.size, fileName)
         }
 
         const file = new File([fileContent], fileName, {type: 'text/csv'});
