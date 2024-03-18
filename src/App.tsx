@@ -3,8 +3,8 @@ import {useRegisterSW} from "virtual:pwa-register/react";
 import StationSearch from "./StationSearch.tsx";
 import {useState} from "react";
 import {db} from './GTFSDB';
-import {AxiosProgressEvent} from "axios";
-import {runImport, createImport, downloadData} from "./import.ts";
+import axios, {AxiosProgressEvent} from "axios";
+import {DataImporter} from "./DataImporter";
 
 function App() {
     const [importingData, setImportingData] = useState<boolean>(false)
@@ -13,6 +13,7 @@ function App() {
     const [updateMessage, setUpdateMessage] = useState<string>('')
     const [currentFilename, setCurrentFilename] = useState<string | null>(null)
     const [downloadStats, setDownloadStats] = useState<AxiosProgressEvent | null>(null)
+    const dataImporter = new DataImporter(db, axios);
 
     const updateData = (importId: number) => {
         setImportingData(true)
@@ -20,16 +21,16 @@ function App() {
         db.import.get(importId)
             .then(async currentImport => {
                 if (currentImport?.files) {
-                    await runImport(importId, (finished, open, filename) => {
+                    await dataImporter.runImport(importId, (finished, open, filename) => {
                         setUpdateMessage(`${finished} / ${open}`);
                         setCurrentFilename(filename)
                     })
                     setImportFinished(true)
                 } else {
                     setDownloadingData(true)
-                    await downloadData(importId, setDownloadStats)
+                    await dataImporter.downloadData(importId, setDownloadStats)
                     setDownloadingData(false)
-                    await runImport(importId, (finished, open, filename) => {
+                    await dataImporter.runImport(importId, (finished, open, filename) => {
                         setUpdateMessage(`${finished} / ${open}`);
                         setCurrentFilename(filename)
                     })
@@ -60,7 +61,7 @@ function App() {
         if (unfinishedImportId) {
             updateData(unfinishedImportId)
         } else {
-            updateData(await createImport(
+            updateData(await dataImporter.createImport(
                 "https://static.oebb.at/open-data/soll-fahrplan-gtfs/GTFS_OP_2024_obb.zip",
                 'oebb'
             ))

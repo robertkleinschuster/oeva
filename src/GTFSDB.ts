@@ -138,7 +138,7 @@ export interface Import {
     timestamp: number;
 }
 
-class GTFSDB extends Dexie {
+export class GTFSDB extends Dexie {
     public agencies: Dexie.Table<Agency, string>;
     public stops: Dexie.Table<Stop, string>;
     public routes: Dexie.Table<Route, string>;
