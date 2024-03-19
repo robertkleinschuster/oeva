@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
 import {db, Route, Stop, StopTime, Trip} from './GTFSDB';
+import {Input} from "framework7-react";
 
 interface Departure extends StopTime {
     trip?: Trip,
@@ -49,7 +50,7 @@ const StationSearch = () => {
 
     return (
         <div>
-            <input
+            <Input
                 type="text"
                 placeholder="Search for a station..."
                 value={searchTerm}

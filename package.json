@@ -14,6 +14,8 @@
     "@types/papaparse": "^5.3.14",
     "axios": "^1.6.7",
     "dexie": "^3.2.6",
+    "framework7": "^8.3.2",
+    "framework7-react": "^8.3.2",
     "jest-environment-jsdom": "^29.7.0",
     "jszip": "^3.10.1",
     "papaparse": "^5.4.1",
