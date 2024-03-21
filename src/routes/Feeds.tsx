@@ -1,13 +1,13 @@
 import {Icon, List, ListItem, Navbar, Page, Button} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {transitDB} from "../TransitDB.ts";
+import {transitDB} from "../db/TransitDB.ts";
 import {useEffect, useState} from "react";
 import {FeedSheet} from "../components/FeedSheet.tsx";
-import {FeedImporter} from "../FeedImporter.ts";
+import {FeedImporter} from "../import/FeedImporter.ts";
 import axios from "axios";
 import {FeedStatus} from "../components/FeedStatus.tsx";
 import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
-import {feedDb} from "../FeedDb.ts";
+import {feedDb} from "../db/FeedDb.ts";
 
 export const Feeds = () => {
     const imports = useLiveQuery(() => feedDb.transit.toArray());

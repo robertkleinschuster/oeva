@@ -1,6 +1,6 @@
-import {Transit} from "../FeedDb.ts";
+import {TransitFeed} from "../db/FeedDb.ts";
 
-export const FeedStatus = ({feed}: {feed: Transit}) => {
+export const FeedStatus = ({feed}: {feed: TransitFeed}) => {
     return <>
         {feed.done ? <p>Abgeschlossen</p> : <p>In Bearbeitung</p>}
 

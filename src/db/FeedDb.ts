@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 
-export interface Transit {
+export interface TransitFeed {
     id?: number;
     url: string;
     name: string;
@@ -15,7 +15,7 @@ export interface Transit {
 }
 
 export class FeedDB extends Dexie {
-    public transit: Dexie.Table<Transit, number>
+    public transit: Dexie.Table<TransitFeed, number>
 
     public constructor() {
         super('Feed');

@@ -1,9 +1,9 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {Axios} from "axios";
-import {TransitDB} from './TransitDB.ts';
-import {getFiles, getTableName} from "./TransitMapping.ts";
-import {FeedDB} from "./FeedDb.ts";
+import {TransitDB} from '../db/TransitDB.ts';
+import {getFiles, getTableName} from "../db/TransitMapping.ts";
+import {FeedDB} from "../db/FeedDb.ts";
 
 class FeedImporter {
 

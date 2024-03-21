@@ -1,6 +1,6 @@
 import {useRegisterSW} from "virtual:pwa-register/react";
 import {App, Block, Button, View} from 'framework7-react';
-import routes from "./routes/routes.tsx";
+import routes from "./routes.tsx";
 
 export default () => {
     const {
@@ -24,9 +24,7 @@ export default () => {
             <Block>
                 <p>Es ist eine neue Version von OeVA Beta verfügbar!</p>
                 <Button fill large onClick={handleRefresh}>Jetzt aktualisieren</Button>
-            </Block>
-        : null}
-
+            </Block> : null}
         <View main/>
     </App>
 }

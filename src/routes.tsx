@@ -1,5 +1,5 @@
-import {Home} from "./Home.tsx";
-import {Feeds} from "./Feeds.tsx";
+import {Home} from "./routes/Home.tsx";
+import {Feeds} from "./routes/Feeds.tsx";
 import {Router} from "framework7/types";
 
 export default [

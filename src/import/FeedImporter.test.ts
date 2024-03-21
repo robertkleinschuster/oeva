@@ -1,12 +1,12 @@
 import {FeedImporter} from './FeedImporter.ts';
-import {transitDB} from './TransitDB.ts';
-import {feedDb, Transit} from "./FeedDb.ts";
+import {transitDB} from '../db/TransitDB.ts';
+import {feedDb, TransitFeed} from "../db/FeedDb.ts";
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import axios from "axios";
 import fs from 'fs';
 import path from 'path';
 
-jest.mock('./TransitDB.ts', () => {
+jest.mock('../db/TransitDB.ts', () => {
     const mockTable = () => ({
         add: jest.fn(),
         get: jest.fn(),
@@ -15,7 +15,7 @@ jest.mock('./TransitDB.ts', () => {
     });
 
     return {
-        gtfsDb: {
+        transitDB: {
             agencies: mockTable(),
             stops: mockTable(),
             routes: mockTable(),
@@ -36,9 +36,9 @@ jest.mock('./TransitDB.ts', () => {
 
 const mockedTransitDb = transitDB as jest.Mocked<typeof transitDB>;
 
-jest.mock('./FeedDb.ts', () => {
+jest.mock('../db/FeedDb.ts', () => {
     const mockTable = () => ({
-        add: jest.fn<() => Promise<Transit>>(),
+        add: jest.fn<() => Promise<TransitFeed>>(),
         get: jest.fn(),
         update: jest.fn(),
         bulkPut: jest.fn(),
@@ -88,7 +88,7 @@ describe('FeedImporter', () => {
     test('should download data successfully', async () => {
         // Setup mock import data
         const importId = 1;
-        const mockImportData: Transit = {
+        const mockImportData: TransitFeed = {
             id: importId,
             url: 'http://example.com/data.zip',
             name: 'Test Data',
@@ -120,7 +120,7 @@ describe('FeedImporter', () => {
     });
     test('should import data successfully', async () => {
         const feedId = 1;
-        const mockImportData: Transit = {
+        const mockImportData: TransitFeed = {
             id: feedId,
             url: 'http://example.com/gtfs_example.zip',
             name: 'Test Data',

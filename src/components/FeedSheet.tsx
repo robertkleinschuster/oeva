@@ -1,10 +1,10 @@
 import {Block, BlockTitle, Button, PageContent, Sheet} from "framework7-react";
-import {transitDB} from "../TransitDB.ts";
-import {FeedImporter} from "../FeedImporter.ts";
+import {transitDB} from "../db/TransitDB.ts";
+import {FeedImporter} from "../import/FeedImporter.ts";
 import axios from "axios";
 import {useLiveQuery} from "dexie-react-hooks";
 import {FeedStatus} from "./FeedStatus.tsx";
-import {feedDb} from "../FeedDb.ts";
+import {feedDb} from "../db/FeedDb.ts";
 
 export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSheetClosed: () => void }) => {
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
