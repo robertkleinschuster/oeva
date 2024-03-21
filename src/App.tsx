@@ -1,5 +1,5 @@
 import {useRegisterSW} from "virtual:pwa-register/react";
-import {App, View} from 'framework7-react';
+import {App, Block, Button, View} from 'framework7-react';
 import routes from "./routes/routes.tsx";
 
 export default () => {
@@ -20,12 +20,12 @@ export default () => {
     };
 
     return <App theme="ios" name="OeVA Beta" routes={routes}>
-        {needRefresh && (
-            <div>
-                <p>A new update is available!</p>
-                <button onClick={handleRefresh}>Refresh</button>
-            </div>
-        )}
+        {needRefresh || true ?
+            <Block>
+                <p>Es ist eine neue Version von OeVA Beta verfügbar!</p>
+                <Button fill large onClick={handleRefresh}>Jetzt aktualisieren</Button>
+            </Block>
+        : null}
 
         <View main/>
     </App>
