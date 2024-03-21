@@ -132,8 +132,12 @@ export interface Import {
     id?: number;
     url: string;
     name: string;
+    current_file: string | null;
     files: Map<string, Blob> | null;
     imported: string[] | null;
+    downloading: number;
+    downloaded_bytes: number;
+    download_progress: number;
     done: number;
     timestamp: number;
 }

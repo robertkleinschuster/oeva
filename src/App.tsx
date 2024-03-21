@@ -27,7 +27,7 @@ export default () => {
             </div>
         )}
 
-        <View main url="/"/>
+        <View main/>
     </App>
 }
 

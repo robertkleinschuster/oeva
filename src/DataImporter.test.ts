@@ -71,8 +71,12 @@ describe('DataImporter with mocked GTFSDB', () => {
             name: 'Test Data',
             imported: null,
             files: null,
+            current_file: null,
             done: 0,
-            timestamp: 0
+            timestamp: 0,
+            downloading: 0,
+            downloaded_bytes: 0,
+            download_progress: 0,
         };
 
         // Mock the db.import.get to return the mock import data
@@ -86,8 +90,7 @@ describe('DataImporter with mocked GTFSDB', () => {
         }));
 
         const dataImporter = new DataImporter(mockedDb, mockedAxios);
-        await expect(dataImporter.downloadData(importId, () => {
-        })).resolves.not.toThrow();
+        await expect(dataImporter.downloadData(importId)).resolves.not.toThrow();
 
         // Verify axios was called with the correct URL
         expect(axios.get).toHaveBeenCalledWith(mockImportData.url, expect.anything());
@@ -103,8 +106,12 @@ describe('DataImporter with mocked GTFSDB', () => {
                 ['agency.txt', new Blob(["route_id,agency_id,route_short_name,route_long_name,route_type\n1001,1,10,Example Route,3"], {type: 'text/csv'})],
                 ['stops.txt', new Blob(["stop_id,stop_name,stop_lat,stop_lon\n1,Example Stop,50.0,-50.0"], {type: 'text/csv'})],
             ]),
+            current_file: null,
             done: 0,
-            timestamp: 0
+            timestamp: 0,
+            downloading: 0,
+            downloaded_bytes: 0,
+            download_progress: 0,
         };
 
         mockedDb.import.get.mockResolvedValue(mockImportData);
@@ -138,8 +145,7 @@ describe('DataImporter with mocked GTFSDB', () => {
         mockedDb.import.get.mockResolvedValue(null);
 
         const dataImporter = new DataImporter(mockedDb, mockedAxios);
-        await expect(dataImporter.downloadData(importId, () => {
-        })).rejects.toThrow('Import not found');
+        await expect(dataImporter.downloadData(importId)).rejects.toThrow('Import not found');
     });
 
     test('prepareImport successfully processes a ZIP file', async () => {

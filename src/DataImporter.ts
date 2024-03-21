@@ -1,8 +1,8 @@
-import Papa, { ParseResult } from 'papaparse';
+import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
-import {Axios, AxiosProgressEvent} from "axios";
+import {Axios} from "axios";
 import {GTFSDB} from './GTFSDB.ts';
-import { getFiles, getTableName } from "./GTFSMapping.ts";
+import {getFiles, getTableName} from "./GTFSMapping.ts";
 
 class DataImporter {
 
@@ -15,22 +15,59 @@ class DataImporter {
             url,
             files: null,
             imported: null,
+            current_file: null,
             done: 0,
+            downloading: 0,
+            downloaded_bytes: 0,
+            download_progress: 0,
             timestamp: (new Date()).getTime()
         });
     }
 
-    async downloadData(importId: number, progress: (event: AxiosProgressEvent) => void) {
+    async restartImport(importId: number) {
+        this.db.import.update(importId, {
+            files: null,
+            imported: null,
+            current_file: null,
+            done: 0,
+            downloading: 0,
+            downloaded_bytes: 0,
+            download_progress: 0,
+        });
+    }
+
+    async run(importId: number) {
+        const importData = await this.db.import.get(importId);
+        if (!importData?.files) {
+            await this.downloadData(importId)
+        }
+        await this.runImport(importId)
+    }
+
+    async downloadData(importId: number) {
         const importData = await this.db.import.get(importId);
         if (!importData) {
             throw new Error('Import not found');
         }
 
+        this.db.import.update(importId, {
+            downloading: 1
+        });
+
         const response = await this.axios.get(importData.url, {
             responseType: 'blob',
-            onDownloadProgress: progress
+            onDownloadProgress: (event) => {
+                this.db.import.update(importId, {
+                    downloaded_bytes: event.loaded,
+                    download_progress: event.progress
+                });
+            }
         });
         await this.prepareImport(importId, response.data);
+
+        this.db.import.update(importId, {
+            downloading: 0
+        });
     }
 
     async prepareImport(importId: number, file: File | Blob) {
@@ -61,7 +98,7 @@ class DataImporter {
         };
     }
 
-    async runImport(importId: number, progress?: (finished: number, open: number, filename: string) => void) {
+    async runImport(importId: number) {
         const importData = await this.db.import.get(importId);
         if (!importData) {
             throw new Error('Import not found');
@@ -78,11 +115,11 @@ class DataImporter {
                 continue;
             }
 
-            if (progress) {
-                progress(imported.length, importData.files.size, fileName);
-            }
+            this.db.import.update(importId, {
+                current_file: fileName
+            });
 
-            const file = new File([fileContent], fileName, { type: 'text/csv' });
+            const file = new File([fileContent], fileName, {type: 'text/csv'});
             const tableName = getTableName(file.name);
 
             if (tableName) {
@@ -92,6 +129,7 @@ class DataImporter {
             imported.push(fileName);
             this.db.import.update(importId, {
                 imported,
+                current_file: null,
                 done: imported.length === importData.files.size ? 1 : 0
             });
         }
@@ -125,4 +163,4 @@ class DataImporter {
 }
 
 
-export { DataImporter };
+export {DataImporter};
