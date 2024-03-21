@@ -20,7 +20,7 @@ export default () => {
     };
 
     return <App theme="ios" name="OeVA Beta" routes={routes}>
-        {needRefresh || true ?
+        {needRefresh ?
             <Block>
                 <p>Es ist eine neue Version von OeVA Beta verfügbar!</p>
                 <Button fill large onClick={handleRefresh}>Jetzt aktualisieren</Button>
