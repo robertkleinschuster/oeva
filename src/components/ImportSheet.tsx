@@ -17,8 +17,7 @@ export const ImportSheet = ({importId, onSheetClosed}: { importId: number | null
                     <ImportStatus importData={importData}/>
                     <Button onClick={async () => {
                         await dataImporter.restartImport(importData.id!)
-                        await dataImporter.downloadData(importData.id!)
-                        await dataImporter.runImport(importData.id!)
+                        await dataImporter.run(importData.id!)
                     }}>Neu Importieren</Button>
                     <Button color="red" onClick={async () => {
                        db.import.delete(importData.id!)

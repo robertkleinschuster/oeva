@@ -36,8 +36,7 @@ export const Import = () => {
                     f7.dialog.prompt('Gib die URL zu einem GTFS ZIP-Archiv an.', async (url) => {
                         const dataImporter = new DataImporter(db, axios)
                         const importId = await dataImporter.createImport(url, name)
-                        await dataImporter.downloadData(importId)
-                        await dataImporter.runImport(importId)
+                        await dataImporter.run(importId)
                     })
                 });
             }}>Neu</Button>
