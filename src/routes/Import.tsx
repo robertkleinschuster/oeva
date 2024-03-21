@@ -33,9 +33,11 @@ export const Import = () => {
         <Navbar title="Import" backLink>
             <Button slot="right" onClick={() => {
                 f7.dialog.prompt('Gib einen Namen für diesen Import ein.', (name) => {
-                    f7.dialog.prompt('Gib die URL zu einem GTFS ZIP-Archiv an.', (url) => {
+                    f7.dialog.prompt('Gib die URL zu einem GTFS ZIP-Archiv an.', async (url) => {
                         const dataImporter = new DataImporter(db, axios)
-                        dataImporter.createImport(url, name)
+                        const importId = await dataImporter.createImport(url, name)
+                        await dataImporter.downloadData(importId)
+                        await dataImporter.runImport(importId)
                     })
                 });
             }}>Neu</Button>

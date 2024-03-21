@@ -60,6 +60,10 @@ describe('DataImporter with mocked GTFSDB', () => {
             imported: null,
             done: 0,
             timestamp: expect.any(Number),
+            current_file: null,
+            download_progress: 0,
+            downloaded_bytes: 0,
+            downloading: 0,
         });
     });
     test('should download data successfully', async () => {
@@ -82,7 +86,7 @@ describe('DataImporter with mocked GTFSDB', () => {
         // Mock the db.import.get to return the mock import data
         mockedDb.import.get.mockResolvedValue(mockImportData);
 
-        const zipFilePath = path.resolve(__dirname, 'gtfs_example.zip');
+        const zipFilePath = path.resolve('__mocks__/gtfs_example.zip');
         const zipFileBuffer = fs.readFileSync(zipFilePath);
 
         mockedAxios.get.mockResolvedValue(Promise.resolve({
@@ -127,14 +131,31 @@ describe('DataImporter with mocked GTFSDB', () => {
             1,
             importId,
             {
+                current_file: 'agency.txt',
+            }
+        )
+
+        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+            2,
+            importId,
+            {
+                current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
                 done: 0
             }
         )
         expect(mockedDb.import.update).toHaveBeenNthCalledWith(
-            2,
+            3,
             importId,
             {
+                current_file: 'stops.txt',
+            }
+        )
+        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+            4,
+            importId,
+            {
+                current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
                 done: 1
             }
@@ -151,7 +172,7 @@ describe('DataImporter with mocked GTFSDB', () => {
     test('prepareImport successfully processes a ZIP file', async () => {
         const importId = 1;
 
-        const zipFilePath = path.resolve(__dirname, 'gtfs_example.zip');
+        const zipFilePath = path.resolve('__mocks__/gtfs_example.zip');
         const zipFileBuffer = fs.readFileSync(zipFilePath);
 
         const mockFile = new Blob([zipFileBuffer], {type: 'application/zip'});
