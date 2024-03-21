@@ -9,19 +9,20 @@ export const ImportSheet = ({importId, onSheetClosed}: { importId: number | null
     const dataImporter = new DataImporter(db, axios)
     const importData = useLiveQuery(() => importId ? db.import.get(importId) : undefined, [importId])
 
-    return <Sheet push backdrop closeByBackdropClick opened={Boolean(importData)} onSheetClosed={onSheetClosed}>
-        <div className="swipe-handler"></div>
+    return <Sheet push backdrop closeByBackdropClick opened={Boolean(importData)} onSheetClosed={onSheetClosed} style={{height: "auto"}}>
         {importData ? <PageContent>
                 <BlockTitle large>{importData.name}</BlockTitle>
                 <Block>
                     <ImportStatus importData={importData}/>
-                    <Button onClick={async () => {
-                        await dataImporter.restartImport(importData.id!)
-                        await dataImporter.run(importData.id!)
-                    }}>Neu Importieren</Button>
-                    <Button color="red" onClick={async () => {
-                       db.import.delete(importData.id!)
-                    }}>Löschen</Button>
+                    <p className="grid grid-cols-2 grid-gap">
+                        <Button color="red" onClick={async () => {
+                            db.import.delete(importData.id!)
+                        }}>Löschen</Button>
+                        <Button onClick={async () => {
+                            await dataImporter.restartImport(importData.id!)
+                            await dataImporter.run(importData.id!)
+                        }}>Neu Importieren</Button>
+                    </p>
                 </Block>
             </PageContent> :
             <PageContent>

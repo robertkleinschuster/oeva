@@ -1,4 +1,4 @@
-import {Icon, List, ListItem, Navbar, Page, Button, f7} from "framework7-react";
+import {Icon, List, ListItem, Navbar, Page, Button} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {db} from "../GTFSDB.ts";
 import {useEffect, useState} from "react";
@@ -6,10 +6,12 @@ import {ImportSheet} from "../components/ImportSheet.tsx";
 import {DataImporter} from "../DataImporter.ts";
 import axios from "axios";
 import {ImportStatus} from "../components/ImportStatus.tsx";
+import {CreateImportSheet} from "../components/CreateImportSheet.tsx";
 
 export const Import = () => {
     const imports = useLiveQuery(() => db.import.toArray());
-    const [loaded, setLoaded] = useState<boolean>(false)
+    const [loaded, setLoaded] = useState(false)
+    const [create, setCreate] = useState(false)
 
     useEffect(() => {
         if (imports) {
@@ -32,13 +34,7 @@ export const Import = () => {
     return <Page>
         <Navbar title="Import" backLink>
             <Button slot="right" onClick={() => {
-                f7.dialog.prompt('Gib einen Namen für diesen Import ein.', (name) => {
-                    f7.dialog.prompt('Gib die URL zu einem GTFS ZIP-Archiv an.', async (url) => {
-                        const dataImporter = new DataImporter(db, axios)
-                        const importId = await dataImporter.createImport(url, name)
-                        await dataImporter.run(importId)
-                    })
-                });
+                setCreate(true)
             }}>Neu</Button>
         </Navbar>
         <List strong>
@@ -54,5 +50,13 @@ export const Import = () => {
             </ListItem>)}
         </List>
         <ImportSheet importId={selected} onSheetClosed={() => setSelected(null)}/>
+        <CreateImportSheet open={create} onCreate={async (url, name) => {
+            const dataImporter = new DataImporter(db, axios)
+            const importId = await dataImporter.createImport(url, name)
+            setCreate(false)
+            await dataImporter.run(importId)
+        }} onAbort={() => {
+            setCreate(false)
+        }}/>
     </Page>
 };
