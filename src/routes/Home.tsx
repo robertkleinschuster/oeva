@@ -4,7 +4,7 @@ export const Home = () => (
     <Page name="home">
         <Navbar title="OeVA" large transparent/>
         <List strong>
-            <ListItem link="/import">Import</ListItem>
+            <ListItem link="/feeds">Feeds</ListItem>
         </List>
     </Page>
 )

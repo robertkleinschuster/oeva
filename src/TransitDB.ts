@@ -9,6 +9,7 @@ interface Agency {
     agency_phone?: string;
     agency_fare_url?: string;
     agency_email?: string;
+    feed_id: number;
 }
 
 export interface Stop {
@@ -26,6 +27,7 @@ export interface Stop {
     wheelchair_boarding?: number;
     level_id?: string;
     platform_code?: string;
+    feed_id: number;
 }
 
 export interface Route {
@@ -41,6 +43,7 @@ export interface Route {
     route_sort_order?: number;
     continuous_pickup?: number;
     continuous_drop_off?: number;
+    feed_id: number;
 }
 
 export interface Trip {
@@ -54,6 +57,7 @@ export interface Trip {
     shape_id?: string;
     wheelchair_accessible?: number;
     bikes_allowed?: number;
+    feed_id: number;
 }
 
 export interface StopTime {
@@ -69,6 +73,7 @@ export interface StopTime {
     continuous_drop_off?: number;
     shape_dist_traveled?: number;
     timepoint?: number;
+    feed_id: number;
 }
 
 interface Calendar {
@@ -82,12 +87,14 @@ interface Calendar {
     sunday: number;
     start_date: string;
     end_date: string;
+    feed_id: number;
 }
 
 interface CalendarDate {
     service_id: string;
     date: string;
     exception_type: number;
+    feed_id: number;
 }
 
 interface Shape {
@@ -96,6 +103,7 @@ interface Shape {
     shape_pt_lon: number;
     shape_pt_sequence: number;
     shape_dist_traveled?: number;
+    feed_id: number;
 }
 
 interface Frequency {
@@ -104,6 +112,7 @@ interface Frequency {
     end_time: string;
     headway_secs: number;
     exact_times?: number;
+    feed_id: number;
 }
 
 interface Transfer {
@@ -111,12 +120,14 @@ interface Transfer {
     to_stop_id: string;
     transfer_type: number;
     min_transfer_time?: number;
+    feed_id: number;
 }
 
 interface Level {
     level_id: string;
     level_index: string;
     level_name: string;
+    feed_id: number;
 }
 
 interface Pathway {
@@ -126,23 +137,10 @@ interface Pathway {
     pathway_mode: number;
     is_bidirectional: boolean;
     traversal_time: number;
+    feed_id: number;
 }
 
-export interface Import {
-    id?: number;
-    url: string;
-    name: string;
-    current_file: string | null;
-    files: Map<string, Blob> | null;
-    imported: string[] | null;
-    downloading: number;
-    downloaded_bytes: number;
-    download_progress: number;
-    done: number;
-    timestamp: number;
-}
-
-export class GTFSDB extends Dexie {
+export class TransitDB extends Dexie {
     public agencies: Dexie.Table<Agency, string>;
     public stops: Dexie.Table<Stop, string>;
     public routes: Dexie.Table<Route, string>;
@@ -155,24 +153,22 @@ export class GTFSDB extends Dexie {
     public transfers: Dexie.Table<Transfer, number>;
     public levels: Dexie.Table<Level, number>;
     public pathways: Dexie.Table<Pathway, number>;
-    public import: Dexie.Table<Import, number>
 
     public constructor() {
-        super('GTFSDB');
+        super('Transit');
         this.version(1).stores({
-            agencies: 'agency_id',
-            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon]',
-            routes: 'route_id,route_type',
-            trips: 'trip_id,route_id,shape_id,direction_id',
-            stopTimes: '[trip_id+stop_id],trip_id,stop_id',
-            calendar: 'service_id,[service_id+start_date+end_date]',
-            calendarDates: '[service_id+date],service_id',
-            shapes: 'shape_id',
-            frequencies: '[trip_id+start_time]',
-            transfers: '[from_stop_id+to_stop_id]',
-            levels: 'level_id,level_index,level_name',
-            pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional]',
-            import: '++id,[name+done]'
+            agencies: 'agency_id,feed_id',
+            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],feed_id',
+            routes: 'route_id,route_type,feed_id',
+            trips: 'trip_id,route_id,shape_id,direction_id,feed_id',
+            stopTimes: '[trip_id+stop_id],trip_id,stop_id,feed_id',
+            calendar: 'service_id,[service_id+start_date+end_date],feed_id',
+            calendarDates: '[service_id+date],service_id,feed_id',
+            shapes: 'shape_id,feed_id',
+            frequencies: '[trip_id+start_time],feed_id',
+            transfers: '[from_stop_id+to_stop_id],feed_id',
+            levels: 'level_id,level_index,level_name,feed_id',
+            pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional],feed_id',
         });
 
         this.agencies = this.table('agencies');
@@ -187,8 +183,7 @@ export class GTFSDB extends Dexie {
         this.transfers = this.table('transfers');
         this.levels = this.table('levels');
         this.pathways = this.table('pathways');
-        this.import = this.table('import')
     }
 }
 
-export const db = new GTFSDB();
+export const transitDB = new TransitDB();

@@ -1,5 +1,5 @@
 import {Home} from "./Home.tsx";
-import {Import} from "./Import.tsx";
+import {Feeds} from "./Feeds.tsx";
 import {Router} from "framework7/types";
 
 export default [
@@ -8,7 +8,7 @@ export default [
         component: Home
     },
     {
-        path: "/import",
-        component: Import
+        path: "/feeds",
+        component: Feeds
     }
 ] satisfies Router.RouteParameters[];

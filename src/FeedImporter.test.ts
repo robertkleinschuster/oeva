@@ -1,20 +1,21 @@
-import {DataImporter} from './DataImporter.ts';
-import {db, Import} from './GTFSDB.ts';
+import {FeedImporter} from './FeedImporter.ts';
+import {transitDB} from './TransitDB.ts';
+import {feedDb, Transit} from "./FeedDb.ts";
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import axios from "axios";
 import fs from 'fs';
 import path from 'path';
 
-jest.mock('./GTFSDB.ts', () => {
+jest.mock('./TransitDB.ts', () => {
     const mockTable = () => ({
-        add: jest.fn<() => Promise<Import>>(),
+        add: jest.fn(),
         get: jest.fn(),
         update: jest.fn(),
         bulkPut: jest.fn(),
     });
 
     return {
-        db: {
+        gtfsDb: {
             agencies: mockTable(),
             stops: mockTable(),
             routes: mockTable(),
@@ -33,7 +34,25 @@ jest.mock('./GTFSDB.ts', () => {
     };
 });
 
-const mockedDb = db as jest.Mocked<typeof db>;
+const mockedTransitDb = transitDB as jest.Mocked<typeof transitDB>;
+
+jest.mock('./FeedDb.ts', () => {
+    const mockTable = () => ({
+        add: jest.fn<() => Promise<Transit>>(),
+        get: jest.fn(),
+        update: jest.fn(),
+        bulkPut: jest.fn(),
+    });
+
+    return {
+        feedDb: {
+            transit: mockTable(),
+            table: jest.fn()
+        },
+    };
+});
+
+const mockedFeedDb = feedDb as jest.Mocked<typeof feedDb>;
 
 jest.mock('axios', () => ({
     get: jest.fn<() => Promise<{ data: any }>>(),
@@ -41,19 +60,19 @@ jest.mock('axios', () => ({
 
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
-describe('DataImporter with mocked GTFSDB', () => {
+describe('FeedImporter', () => {
     beforeEach(() => {
         jest.resetAllMocks()
     })
     test('createImport should interact with the database', async () => {
         const url = 'http://example.com/data.zip';
         const name = 'Test Import';
-        const dataImporter = new DataImporter(mockedDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
 
         await dataImporter.createImport(url, name);
 
         // Verify if the add method was called with the correct parameters
-        expect(db.import.add).toHaveBeenCalledWith({
+        expect(feedDb.transit.add).toHaveBeenCalledWith({
             name,
             url,
             files: null,
@@ -69,7 +88,7 @@ describe('DataImporter with mocked GTFSDB', () => {
     test('should download data successfully', async () => {
         // Setup mock import data
         const importId = 1;
-        const mockImportData: Import = {
+        const mockImportData: Transit = {
             id: importId,
             url: 'http://example.com/data.zip',
             name: 'Test Data',
@@ -84,7 +103,7 @@ describe('DataImporter with mocked GTFSDB', () => {
         };
 
         // Mock the db.import.get to return the mock import data
-        mockedDb.import.get.mockResolvedValue(mockImportData);
+        mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
 
         const zipFilePath = path.resolve('__mocks__/gtfs_example.zip');
         const zipFileBuffer = fs.readFileSync(zipFilePath);
@@ -93,16 +112,16 @@ describe('DataImporter with mocked GTFSDB', () => {
             data: zipFileBuffer,
         }));
 
-        const dataImporter = new DataImporter(mockedDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
         await expect(dataImporter.downloadData(importId)).resolves.not.toThrow();
 
         // Verify axios was called with the correct URL
         expect(axios.get).toHaveBeenCalledWith(mockImportData.url, expect.anything());
     });
     test('should import data successfully', async () => {
-        const importId = 1;
-        const mockImportData: Import = {
-            id: importId,
+        const feedId = 1;
+        const mockImportData: Transit = {
+            id: feedId,
             url: 'http://example.com/gtfs_example.zip',
             name: 'Test Data',
             imported: null,
@@ -118,42 +137,42 @@ describe('DataImporter with mocked GTFSDB', () => {
             download_progress: 0,
         };
 
-        mockedDb.import.get.mockResolvedValue(mockImportData);
-        mockedDb.import.bulkPut.mockResolvedValue(importId)
-        mockedDb.import.update.mockResolvedValue(importId)
+        mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
+        mockedTransitDb.stops.bulkPut.mockResolvedValue('')
+        mockedTransitDb.stops.update.mockResolvedValue(0)
 
-        mockedDb.table.mockReturnValue(mockedDb.import)
+        mockedTransitDb.table.mockReturnValue(mockedTransitDb.stops)
 
-        const dataImporter = new DataImporter(mockedDb, mockedAxios);
-        await dataImporter.runImport(importId)
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        await dataImporter.runImport(feedId)
 
-        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+        expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
             1,
-            importId,
+            feedId,
             {
                 current_file: 'agency.txt',
             }
         )
 
-        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+        expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
             2,
-            importId,
+            feedId,
             {
                 current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
                 done: 0
             }
         )
-        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+        expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
             3,
-            importId,
+            feedId,
             {
                 current_file: 'stops.txt',
             }
         )
-        expect(mockedDb.import.update).toHaveBeenNthCalledWith(
+        expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
             4,
-            importId,
+            feedId,
             {
                 current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
@@ -162,11 +181,11 @@ describe('DataImporter with mocked GTFSDB', () => {
         )
     });
     test('should throw an error if import data is not found', async () => {
-        const importId = 2;
-        mockedDb.import.get.mockResolvedValue(null);
+        const feedId = 2;
+        mockedFeedDb.transit.get.mockResolvedValue(null);
 
-        const dataImporter = new DataImporter(mockedDb, mockedAxios);
-        await expect(dataImporter.downloadData(importId)).rejects.toThrow('Import not found');
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        await expect(dataImporter.downloadData(feedId)).rejects.toThrow('Feed not found');
     });
 
     test('prepareImport successfully processes a ZIP file', async () => {
@@ -177,11 +196,11 @@ describe('DataImporter with mocked GTFSDB', () => {
 
         const mockFile = new Blob([zipFileBuffer], {type: 'application/zip'});
 
-        const dataImporter = new DataImporter(mockedDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
 
         await dataImporter.prepareImport(importId, mockFile);
 
-        expect(mockedDb.import.update).toHaveBeenCalledWith(importId, {
+        expect(mockedFeedDb.transit.update).toHaveBeenCalledWith(importId, {
             files: new Map([
                 ['agency.txt', expect.any(Blob)],
                 ['stops.txt', expect.any(Blob)],

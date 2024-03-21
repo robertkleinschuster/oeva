@@ -1,16 +1,17 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {Axios} from "axios";
-import {GTFSDB} from './GTFSDB.ts';
-import {getFiles, getTableName} from "./GTFSMapping.ts";
+import {TransitDB} from './TransitDB.ts';
+import {getFiles, getTableName} from "./TransitMapping.ts";
+import {FeedDB} from "./FeedDb.ts";
 
-class DataImporter {
+class FeedImporter {
 
-    constructor(private db: GTFSDB, private axios: Axios) {
+    constructor(private feedDb: FeedDB, private transitDb: TransitDB, private axios: Axios) {
     }
 
     async createImport(url: string, name: string) {
-        return this.db.import.add({
+        return this.feedDb.transit.add({
             name,
             url,
             files: null,
@@ -24,8 +25,8 @@ class DataImporter {
         });
     }
 
-    async restartImport(importId: number) {
-        this.db.import.update(importId, {
+    async restartImport(feedId: number) {
+        this.feedDb.transit.update(feedId, {
             files: null,
             imported: null,
             current_file: null,
@@ -36,41 +37,41 @@ class DataImporter {
         });
     }
 
-    async run(importId: number) {
-        const importData = await this.db.import.get(importId);
+    async run(feedId: number) {
+        const importData = await this.feedDb.transit.get(feedId);
         if (!importData?.files) {
-            await this.downloadData(importId)
+            await this.downloadData(feedId)
         }
-        await this.runImport(importId)
+        await this.runImport(feedId)
     }
 
-    async downloadData(importId: number) {
-        const importData = await this.db.import.get(importId);
-        if (!importData) {
-            throw new Error('Import not found');
+    async downloadData(feedId: number) {
+        const feed = await this.feedDb.transit.get(feedId);
+        if (!feed) {
+            throw new Error('Feed not found');
         }
 
-        this.db.import.update(importId, {
+        this.feedDb.transit.update(feedId, {
             downloading: 1
         });
 
-        const response = await this.axios.get(importData.url, {
+        const response = await this.axios.get(feed.url, {
             responseType: 'blob',
             onDownloadProgress: (event) => {
-                this.db.import.update(importId, {
+                this.feedDb.transit.update(feedId, {
                     downloaded_bytes: event.loaded,
                     download_progress: event.progress
                 });
             }
         });
-        await this.prepareImport(importId, response.data);
+        await this.prepareImport(feedId, response.data);
 
-        this.db.import.update(importId, {
+        this.feedDb.transit.update(feedId, {
             downloading: 0
         });
     }
 
-    async prepareImport(importId: number, file: File | Blob) {
+    async prepareImport(feedId: number, file: File | Blob) {
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
         const requiredGTFSFiles = getFiles();
@@ -85,7 +86,7 @@ class DataImporter {
             fileMap.set(fileName, fileContent);
         }
 
-        this.db.import.update(importId, {
+        this.feedDb.transit.update(feedId, {
             files: fileMap
         });
 
@@ -98,24 +99,24 @@ class DataImporter {
         };
     }
 
-    async runImport(importId: number) {
-        const importData = await this.db.import.get(importId);
-        if (!importData) {
-            throw new Error('Import not found');
+    async runImport(feedId: number) {
+        const feed = await this.feedDb.transit.get(feedId);
+        if (!feed) {
+            throw new Error('Feed not found');
         }
 
-        if (!importData.files?.size) {
+        if (!feed.files?.size) {
             throw new Error('No files in import');
         }
 
-        const imported = importData.imported ?? [];
+        const imported = feed.imported ?? [];
 
-        for (let [fileName, fileContent] of importData.files.entries()) {
+        for (let [fileName, fileContent] of feed.files.entries()) {
             if (imported.includes(fileName)) {
                 continue;
             }
 
-            this.db.import.update(importId, {
+            this.feedDb.transit.update(feedId, {
                 current_file: fileName
             });
 
@@ -123,19 +124,19 @@ class DataImporter {
             const tableName = getTableName(file.name);
 
             if (tableName) {
-                await this.importCSV(file, tableName);
+                await this.importCSV(feedId, file, tableName);
             }
 
             imported.push(fileName);
-            this.db.import.update(importId, {
+            this.feedDb.transit.update(feedId, {
                 imported,
                 current_file: null,
-                done: imported.length === importData.files.size ? 1 : 0
+                done: imported.length === feed.files.size ? 1 : 0
             });
         }
     }
 
-    private importCSV(file: File, tableName: string) {
+    private importCSV(feedId: number, file: File, tableName: string) {
         return new Promise<void>((resolve, reject) => {
             Papa.parse(file, {
                 header: true,
@@ -146,8 +147,8 @@ class DataImporter {
                 encoding: "UTF-8",
                 chunk: (results: ParseResult<any>, parser) => {
                     parser.pause();
-                    const table = this.db.table(tableName);
-                    table.bulkPut(results.data)
+                    const table = this.transitDb.table(tableName);
+                    table.bulkPut(results.data.map(item => ({...item, feed_id: feedId})))
                         .then(() => parser.resume())
                         .catch(reject);
                 },
@@ -163,4 +164,4 @@ class DataImporter {
 }
 
 
-export {DataImporter};
+export {FeedImporter};

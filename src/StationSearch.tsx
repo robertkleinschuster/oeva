@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {db, Route, Stop, StopTime, Trip} from './GTFSDB';
+import {transitDB, Route, Stop, StopTime, Trip} from './TransitDB.ts';
 import {Input} from "framework7-react";
 
 interface Departure extends StopTime {
@@ -16,7 +16,7 @@ const StationSearch = () => {
     useEffect(() => {
         if (searchTerm.length > 1) { // Trigger search after at least 2 characters
             const search = async () => {
-                const foundStations = await db.stops
+                const foundStations = await transitDB.stops
                     .where('stop_name')
                     .startsWithIgnoreCase(searchTerm)
                     .toArray();
@@ -32,7 +32,7 @@ const StationSearch = () => {
 
     const handleSelectStation = async (station: Stop) => {
         setSelectedStation(station);
-        const stationDepartures = await db.stopTimes
+        const stationDepartures = await transitDB.stopTimes
             .where('stop_id')
             .equals(station.stop_id)
             .sortBy('departure_time');
@@ -40,8 +40,8 @@ const StationSearch = () => {
         // Assuming you want to join data from trips and routes tables to get more details
         // This is a simplistic approach; you might need to adjust based on your schema and required data
         const departuresWithDetails = await Promise.all(stationDepartures.map(async (departure) => {
-            const trip = await db.trips.get(departure.trip_id);
-            const route = trip ? await db.routes.get(trip.route_id) : undefined;
+            const trip = await transitDB.trips.get(departure.trip_id);
+            const route = trip ? await transitDB.routes.get(trip.route_id) : undefined;
             return {...departure, trip, route};
         }));
         console.log(departuresWithDetails)

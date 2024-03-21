@@ -1,21 +1,22 @@
 import {Icon, List, ListItem, Navbar, Page, Button} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {db} from "../GTFSDB.ts";
+import {transitDB} from "../TransitDB.ts";
 import {useEffect, useState} from "react";
-import {ImportSheet} from "../components/ImportSheet.tsx";
-import {DataImporter} from "../DataImporter.ts";
+import {FeedSheet} from "../components/FeedSheet.tsx";
+import {FeedImporter} from "../FeedImporter.ts";
 import axios from "axios";
-import {ImportStatus} from "../components/ImportStatus.tsx";
-import {CreateImportSheet} from "../components/CreateImportSheet.tsx";
+import {FeedStatus} from "../components/FeedStatus.tsx";
+import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
+import {feedDb} from "../FeedDb.ts";
 
-export const Import = () => {
-    const imports = useLiveQuery(() => db.import.toArray());
+export const Feeds = () => {
+    const imports = useLiveQuery(() => feedDb.transit.toArray());
     const [loaded, setLoaded] = useState(false)
     const [create, setCreate] = useState(false)
 
     useEffect(() => {
         if (imports) {
-            const dataImporter = new DataImporter(db, axios)
+            const dataImporter = new FeedImporter(feedDb, transitDB, axios)
             for (const importData of imports) {
                 if (!importData.done && importData.id) {
                     void dataImporter.run(importData.id)
@@ -31,8 +32,8 @@ export const Import = () => {
     }, [imports]);
 
     const [selected, setSelected] = useState<number | null>(null)
-    return <Page>
-        <Navbar title="Import" backLink>
+    return <Page name="feeds">
+        <Navbar title="Feeds" backLink>
             <Button slot="right" onClick={() => {
                 setCreate(true)
             }}>Neu</Button>
@@ -44,14 +45,14 @@ export const Import = () => {
                 key={importData.id}
             >
                 <div slot="footer">
-                    <ImportStatus importData={importData}/>
+                    <FeedStatus feed={importData}/>
                 </div>
                 {importData.done ? <Icon slot="after" f7="checkmark"/> : <Icon slot="after" f7="hourglass"/>}
             </ListItem>)}
         </List>
-        <ImportSheet importId={selected} onSheetClosed={() => setSelected(null)}/>
-        <CreateImportSheet open={create} onCreate={async (url, name) => {
-            const dataImporter = new DataImporter(db, axios)
+        <FeedSheet feedId={selected} onSheetClosed={() => setSelected(null)}/>
+        <AddFeedSheet open={create} onCreate={async (url, name) => {
+            const dataImporter = new FeedImporter(feedDb, transitDB, axios)
             const importId = await dataImporter.createImport(url, name)
             setCreate(false)
             await dataImporter.run(importId)
