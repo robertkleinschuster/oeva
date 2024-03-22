@@ -1,6 +1,7 @@
 import {Home} from "./routes/Home.tsx";
 import {Feeds} from "./routes/Feeds.tsx";
 import {Router} from "framework7/types";
+import {Stations} from "./routes/Stations.tsx";
 
 export default [
     {
@@ -10,5 +11,9 @@ export default [
     {
         path: "/feeds",
         component: Feeds
-    }
+    },
+    {
+        path: "/stations",
+        component: Stations,
+    },
 ] satisfies Router.RouteParameters[];

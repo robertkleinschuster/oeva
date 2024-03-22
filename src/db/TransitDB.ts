@@ -76,7 +76,7 @@ export interface StopTime {
     feed_id: number;
 }
 
-interface Calendar {
+export interface Calendar {
     service_id: string;
     monday: number;
     tuesday: number;
@@ -90,7 +90,7 @@ interface Calendar {
     feed_id: number;
 }
 
-interface CalendarDate {
+export interface CalendarDate {
     service_id: string;
     date: string;
     exception_type: number;
@@ -145,14 +145,14 @@ export class TransitDB extends Dexie {
     public stops: Dexie.Table<Stop, string>;
     public routes: Dexie.Table<Route, string>;
     public trips: Dexie.Table<Trip, string>;
-    public stopTimes: Dexie.Table<StopTime, number>;
+    public stopTimes: Dexie.Table<StopTime, {trip_id: string, stop_id: string}>;
     public calendar: Dexie.Table<Calendar, string>;
-    public calendarDates: Dexie.Table<CalendarDate, number>;
-    public shapes: Dexie.Table<Shape, number>;
-    public frequencies: Dexie.Table<Frequency, number>;
-    public transfers: Dexie.Table<Transfer, number>;
-    public levels: Dexie.Table<Level, number>;
-    public pathways: Dexie.Table<Pathway, number>;
+    public calendarDates: Dexie.Table<CalendarDate, {service_id: string, date: string}>;
+    public shapes: Dexie.Table<Shape, string>;
+    public frequencies: Dexie.Table<Frequency, string>;
+    public transfers: Dexie.Table<Transfer, {from_stop_id: string, to_stop_id: string}>;
+    public levels: Dexie.Table<Level, string>;
+    public pathways: Dexie.Table<Pathway, string>;
 
     public constructor() {
         super('Transit');
@@ -165,7 +165,7 @@ export class TransitDB extends Dexie {
             calendar: 'service_id,[service_id+start_date+end_date],feed_id',
             calendarDates: '[service_id+date],service_id,feed_id',
             shapes: 'shape_id,feed_id',
-            frequencies: '[trip_id+start_time],feed_id',
+            frequencies: '[trip_id+start_time],trip_id,feed_id',
             transfers: '[from_stop_id+to_stop_id],feed_id',
             levels: 'level_id,level_index,level_name,feed_id',
             pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional],feed_id',
