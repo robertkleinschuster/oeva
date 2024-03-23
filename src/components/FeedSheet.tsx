@@ -11,22 +11,6 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
     const feed = useLiveQuery(() => feedId ? feedDb.transit.get(feedId) : undefined, [feedId])
 
-    const stops = useLiveQuery(() => feedId ? feedDb.dependency.where({
-        feed: 'transit',
-        feed_id: feedId,
-        table: 'stops'
-    }).count() : 0, [feedId]);
-    const routes = useLiveQuery(() => feedId ? feedDb.dependency.where({
-        feed: 'transit',
-        feed_id: feedId,
-        table: 'routes'
-    }).count() : 0, [feedId]);
-    const trips = useLiveQuery(() => feedId ? feedDb.dependency.where({
-        feed: 'transit',
-        feed_id: feedId,
-        table: 'trips'
-    }).count() : 0, [feedId]);
-
     return <Sheet push backdrop closeByBackdropClick opened={Boolean(feed)} onSheetClosed={onSheetClosed}
                   style={{height: "auto"}}>
         {feed ? <PageContent>
@@ -34,9 +18,6 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                 <Block>
                     <FeedStatus feed={feed}/>
                     <p>Quelle: {feed.url}</p>
-                    <p>Haltepunkte: {stops}</p>
-                    <p>Routen: {routes}</p>
-                    <p>Fahrten: {trips}</p>
                     <List outline>
                         <ListItem>
                             <span>Verwendet IFOPT</span>
@@ -61,7 +42,7 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                             }}>Importieren</Button>
                             <Button disabled={feed.status !== TransitFeedStatus.DONE} onClick={async () => {
                                 await dataImporter.startOptimize(feed.id!)
-                            }}>Optimieren</Button>
+                            }}>Verarbeiten</Button>
                         </p>
 
                 </Block>

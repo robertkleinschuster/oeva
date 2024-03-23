@@ -20,7 +20,7 @@ class FeedImporter {
             url,
             files: null,
             imported: [],
-            current_file: null,
+            current_step: null,
             is_ifopt: is_ifopt,
             status: TransitFeedStatus.DRAFT,
             downloaded_megabytes: 0,
@@ -32,7 +32,7 @@ class FeedImporter {
     async startDownload(feedId: number) {
         this.feedDb.transit.update(feedId, {
             imported: [],
-            current_file: null,
+            current_step: null,
             downloaded_megabytes: 0,
             download_progress: 0,
             status: TransitFeedStatus.DOWNLOADING,
@@ -42,19 +42,23 @@ class FeedImporter {
     async startImport(feedId: number) {
         this.feedDb.transit.update(feedId, {
             imported: [],
-            current_file: null,
+            current_step: null,
             status: TransitFeedStatus.IMPORTING,
         });
     }
 
     async startOptimize(feedId: number) {
         this.feedDb.transit.update(feedId, {
-            status: TransitFeedStatus.OPTIMIZING,
+            status: TransitFeedStatus.PROCESSING,
         });
     }
 
     async run(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
+
+        this.feedDb.transit.update(feedId, {
+            last_start: (new Date).getTime()
+        });
 
         if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
@@ -65,11 +69,11 @@ class FeedImporter {
         if (feed?.status === TransitFeedStatus.IMPORTING) {
             await this.importData(feedId)
             this.feedDb.transit.update(feedId, {
-                status: TransitFeedStatus.OPTIMIZING
+                status: TransitFeedStatus.PROCESSING
             });
         }
-        if (feed?.status === TransitFeedStatus.OPTIMIZING) {
-            await this.optimizeData(feedId)
+        if (feed?.status === TransitFeedStatus.PROCESSING) {
+            await this.processData(feedId)
             this.feedDb.transit.update(feedId, {
                 status: TransitFeedStatus.DONE
             });
@@ -146,7 +150,7 @@ class FeedImporter {
             }
 
             this.feedDb.transit.update(feedId, {
-                current_file: fileName,
+                current_step: fileName,
                 status: TransitFeedStatus.IMPORTING
             });
 
@@ -160,12 +164,12 @@ class FeedImporter {
             imported.push(fileName);
             this.feedDb.transit.update(feedId, {
                 imported,
-                current_file: null,
+                current_step: null,
             });
         }
     }
 
-    async optimizeData(feedId: number) {
+    async processData(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found');
@@ -176,6 +180,10 @@ class FeedImporter {
             table: 'stops',
             feed_id: feedId
         }).toArray(stops => stops.map(stop => stop.dependency_id))
+
+        this.feedDb.transit.update(feedId, {
+            current_step: 'stops'
+        });
 
         this.transitDb.stops
             .where('stop_id')

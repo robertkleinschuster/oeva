@@ -1,4 +1,4 @@
-import {Button, Icon, List, ListItem, Navbar, Page} from "framework7-react";
+import {Button, Icon, List, ListItem, Navbar, Page, Preloader} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {transitDB} from "../db/TransitDB.ts";
 import {useEffect, useState} from "react";
@@ -11,17 +11,22 @@ import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
 
 const runningFeeds = new Set<number>();
+
 async function runFeeds(feeds: TransitFeed[]) {
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
     for (const feed of feeds) {
         if (feed.id && !runningFeeds.has(feed.id)) {
             runningFeeds.add(feed.id)
             try {
-                if (feed.status != TransitFeedStatus.DONE ) {
+                if (feed.status != TransitFeedStatus.DONE) {
                     await dataImporter.run(feed.id)
                 }
             } catch (error) {
+                runningFeeds.delete(feed.id)
                 console.error(error)
+                feedDb.transit.update(feed.id, {
+                    status: TransitFeedStatus.ERROR
+                });
             }
             runningFeeds.delete(feed.id)
         }
@@ -39,7 +44,7 @@ export const Feeds = () => {
         }
     }, [feeds]);
 
-    return <Page name="feeds">
+    return <Page name="feeds" onPageInit={() => feeds && runFeeds(feeds)}>
         <Navbar title="Feeds" backLink>
             <Button slot="right" onClick={() => {
                 showAddDialog(true)
@@ -54,7 +59,9 @@ export const Feeds = () => {
                 <div slot="footer">
                     <FeedStatus feed={feed}/>
                 </div>
-                {runningFeeds.has(feed.id!) ? <Icon slot="after" f7="hourglass"/> : <Icon slot="after" f7="checkmark"/>}
+                {runningFeeds.has(feed.id!) ? <Preloader slot="after"/> : null}
+                {feed.status === TransitFeedStatus.DONE ? <Icon slot="after" color="green" f7="checkmark_circle"/> : null}
+                {feed.status === TransitFeedStatus.ERROR ? <Icon slot="after" f7="exclamationmark_triangle"/> : null}
             </ListItem>)}
         </List>
         <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
