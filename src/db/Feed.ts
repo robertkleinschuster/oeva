@@ -1,3 +1,5 @@
+import {IndexableType} from "dexie";
+
 export enum TransitFeedStatus {
     DRAFT,
     DOWNLOADING,
@@ -18,4 +20,11 @@ export interface TransitFeed {
     download_progress: number;
     status: TransitFeedStatus;
     timestamp: number;
+}
+
+export interface FeedDependency {
+    feed: string;
+    feed_id: number;
+    dependency_id: IndexableType;
+    table: string;
 }

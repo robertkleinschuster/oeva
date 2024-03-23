@@ -7,6 +7,7 @@ import {FeedDB} from "../db/FeedDb.ts";
 import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import lunr from "lunr";
+import {IndexableType} from "dexie";
 
 class FeedImporter {
 
@@ -245,8 +246,18 @@ class FeedImporter {
                 chunk: (results: ParseResult<any>, parser) => {
                     parser.pause();
                     const table = this.transitDb.table(tableName);
-                    table.bulkPut(results.data.map(item => ({...item, feed_id: feedId})))
-                        .then(() => parser.resume())
+                    table.bulkPut(results.data, undefined, {allKeys: true})
+                        .then((keys) => {
+                            const dependencies = (keys as IndexableType[])
+                                .map(key => ({
+                                    feed: 'transit',
+                                    feed_id: feedId,
+                                    dependency_id: key,
+                                    table: tableName
+                                }))
+                            this.feedDb.dependency.bulkPut(dependencies)
+                            parser.resume()
+                        })
                         .catch(reject);
                 },
                 complete: () => {

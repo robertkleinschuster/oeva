@@ -10,7 +10,6 @@ interface Agency {
     agency_fare_url?: string;
     agency_email?: string;
     tokens: string[];
-    feed_id: number;
 }
 
 export interface Stop {
@@ -29,7 +28,6 @@ export interface Stop {
     level_id?: string;
     platform_code?: string;
     tokens: string[];
-    feed_id: number;
 }
 
 export interface Route {
@@ -46,7 +44,6 @@ export interface Route {
     continuous_pickup?: number;
     continuous_drop_off?: number;
     tokens: string[];
-    feed_id: number;
 }
 
 export interface Trip {
@@ -61,7 +58,6 @@ export interface Trip {
     wheelchair_accessible?: number;
     bikes_allowed?: number;
     tokens: string[];
-    feed_id: number;
 }
 
 export interface StopTime {
@@ -77,7 +73,6 @@ export interface StopTime {
     continuous_drop_off?: number;
     shape_dist_traveled?: number;
     timepoint?: number;
-    feed_id: number;
 }
 
 export interface Calendar {
@@ -91,14 +86,12 @@ export interface Calendar {
     sunday: number;
     start_date: string;
     end_date: string;
-    feed_id: number;
 }
 
 export interface CalendarDate {
     service_id: string;
     date: string;
     exception_type: number;
-    feed_id: number;
 }
 
 interface Shape {
@@ -107,7 +100,6 @@ interface Shape {
     shape_pt_lon: number;
     shape_pt_sequence: number;
     shape_dist_traveled?: number;
-    feed_id: number;
 }
 
 interface Frequency {
@@ -116,7 +108,6 @@ interface Frequency {
     end_time: string;
     headway_secs: number;
     exact_times?: number;
-    feed_id: number;
 }
 
 interface Transfer {
@@ -124,14 +115,12 @@ interface Transfer {
     to_stop_id: string;
     transfer_type: number;
     min_transfer_time?: number;
-    feed_id: number;
 }
 
 interface Level {
     level_id: string;
     level_index: string;
     level_name: string;
-    feed_id: number;
 }
 
 interface Pathway {
@@ -141,7 +130,6 @@ interface Pathway {
     pathway_mode: number;
     is_bidirectional: boolean;
     traversal_time: number;
-    feed_id: number;
 }
 
 export class TransitDB extends Dexie {
@@ -160,19 +148,19 @@ export class TransitDB extends Dexie {
 
     public constructor() {
         super('Transit');
-        this.version(2).stores({
-            agencies: 'agency_id,*tokens,feed_id',
-            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],*tokens,feed_id',
-            routes: 'route_id,route_type,*tokens,feed_id',
-            trips: 'trip_id,route_id,shape_id,direction_id,*tokens,feed_id',
-            stopTimes: '[trip_id+stop_id],trip_id,stop_id,feed_id',
-            calendar: 'service_id,[service_id+start_date+end_date],feed_id',
-            calendarDates: '[service_id+date],service_id,feed_id',
-            shapes: 'shape_id,feed_id',
-            frequencies: '[trip_id+start_time],trip_id,feed_id',
-            transfers: '[from_stop_id+to_stop_id],feed_id',
-            levels: 'level_id,level_index,level_name,feed_id',
-            pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional],feed_id',
+        this.version(3).stores({
+            agencies: 'agency_id,*tokens',
+            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],*tokens',
+            routes: 'route_id,route_type,*tokens',
+            trips: 'trip_id,route_id,shape_id,direction_id,*tokens',
+            stopTimes: '[trip_id+stop_id],trip_id,stop_id',
+            calendar: 'service_id,[service_id+start_date+end_date]',
+            calendarDates: '[service_id+date],service_id',
+            shapes: 'shape_id',
+            frequencies: '[trip_id+start_time],trip_id',
+            transfers: '[from_stop_id+to_stop_id]',
+            levels: 'level_id,level_index,level_name',
+            pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional]',
         });
 
         this.agencies = this.table('agencies');

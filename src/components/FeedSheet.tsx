@@ -10,12 +10,19 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
     const feed = useLiveQuery(() => feedId ? feedDb.transit.get(feedId) : undefined, [feedId])
 
+    const stops = useLiveQuery(() => feedId ? feedDb.dependency.where({feed: 'transit', feed_id: feedId, table: 'stops'}).count() : 0, [feedId]);
+    const routes = useLiveQuery(() => feedId ? feedDb.dependency.where({feed: 'transit', feed_id: feedId, table: 'routes'}).count() : 0, [feedId]);
+    const trips = useLiveQuery(() => feedId ? feedDb.dependency.where({feed: 'transit', feed_id: feedId, table: 'trips'}).count() : 0, [feedId]);
+
     return <Sheet push backdrop closeByBackdropClick opened={Boolean(feed)} onSheetClosed={onSheetClosed} style={{height: "auto"}}>
         {feed ? <PageContent>
                 <BlockTitle large>{feed.name}</BlockTitle>
                 <Block>
                     <FeedStatus feed={feed}/>
                     <p>Quelle: {feed.url}</p>
+                    <p>Haltepunkte: {stops}</p>
+                    <p>Routen: {routes}</p>
+                    <p>Fahrten: {trips}</p>
                     <List outline>
                         <ListItem>
                             <span>Verwendet IFOPT</span>
@@ -29,18 +36,6 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                     <p>
                         <Button color="red" onClick={async () => {
                             feedDb.transit.delete(feed.id!)
-                            transitDB.stops.where({feed_id: feed.id}).delete()
-                            transitDB.stopTimes.where({feed_id: feed.id}).delete()
-                            transitDB.routes.where({feed_id: feed.id}).delete()
-                            transitDB.agencies.where({feed_id: feed.id}).delete()
-                            transitDB.calendar.where({feed_id: feed.id}).delete()
-                            transitDB.calendarDates.where({feed_id: feed.id}).delete()
-                            transitDB.transfers.where({feed_id: feed.id}).delete()
-                            transitDB.trips.where({feed_id: feed.id}).delete()
-                            transitDB.levels.where({feed_id: feed.id}).delete()
-                            transitDB.pathways.where({feed_id: feed.id}).delete()
-                            transitDB.shapes.where({feed_id: feed.id}).delete()
-                            transitDB.frequencies.where({feed_id: feed.id}).delete()
                         }}>Löschen</Button>
                     </p>
                     <p className="grid grid-cols-3 grid-gap">
