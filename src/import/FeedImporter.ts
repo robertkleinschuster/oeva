@@ -252,8 +252,9 @@ class FeedImporter {
                                     dependency_id: key,
                                     table: tableName
                                 }))
-                            this.feedDb.dependency.bulkPut(dependencies)
-                            parser.resume()
+                            this.feedDb.dependency.bulkPut(dependencies).then(() => {
+                                parser.resume()
+                            })
                         })
                         .catch(reject);
                 },
