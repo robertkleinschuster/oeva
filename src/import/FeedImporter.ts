@@ -173,30 +173,27 @@ class FeedImporter {
             throw new Error('Feed not found');
         }
 
+        const stops = await this.feedDb.dependency.where({
+            feed: 'transit',
+            table: 'stops',
+            feed_id: feedId
+        }).toArray(stops => stops.map(stop => stop.dependency_id))
+
         this.transitDb.stops
-            .where({feed_id: feedId})
+            .where('stop_id')
+            .anyOf(stops)
             .toArray((stops) => {
                 for (const stop of stops) {
+                    if (feed.is_ifopt && stop.stop_id.includes(':')) {
+                        const ifopt = decodeIFOPT(stop.stop_id)
+                        stop.parent_station = encodeIFOPT(ifopt, true)
+                    }
                     this.transitDb.stops.update(stop.stop_id, {
-                        tokens: lunr.tokenizer(stop.stop_name).map(String)
+                        tokens: lunr.tokenizer(stop.stop_name).map(String),
+                        parent_station: stop.parent_station
                     })
                 }
             })
-
-        if (feed.is_ifopt) {
-            this.transitDb.stops
-                .where({feed_id: feedId})
-                .toArray((stops) => {
-                    for (const stop of stops) {
-                        if (!stop.parent_station && stop.stop_id.includes(':')) {
-                            const ifopt = decodeIFOPT(stop.stop_id)
-                            this.transitDb.stops.update(stop.stop_id, {
-                                parent_station: encodeIFOPT(ifopt, true)
-                            })
-                        }
-                    }
-                })
-        }
     }
 
     private importCSV(feedId: number, file: File, tableName: string) {

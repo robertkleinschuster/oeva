@@ -8,7 +8,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20231214',
             start_date: '20221214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 1,
@@ -24,7 +23,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 0,
@@ -40,7 +38,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 1,
@@ -53,7 +50,6 @@ describe('Schedule', () => {
             service_id: '1',
             date: '20240323',
             exception_type: ExceptionType.NOT_RUNNING,
-            feed_id: 1
         }
         expect(isServiceRunningOn(service, exception, new Date('2024-03-23'))).toBe(false)
     })
@@ -62,7 +58,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 0,
@@ -75,7 +70,6 @@ describe('Schedule', () => {
             service_id: '1',
             date: '20240323',
             exception_type: ExceptionType.RUNNING,
-            feed_id: 1
         }
         expect(isServiceRunningOn(service, exception, new Date('2024-03-23'))).toBe(true)
     })
@@ -84,7 +78,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 1,
@@ -101,7 +94,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 0,
@@ -114,7 +106,6 @@ describe('Schedule', () => {
             service_id: '1',
             date: '20240323',
             exception_type: ExceptionType.RUNNING,
-            feed_id: 1
         }
         expect(() => isServiceRunningOn(service, exception, new Date('2024-03-22'))).toThrow('Schedule exception does not match requested date')
     })
@@ -123,7 +114,6 @@ describe('Schedule', () => {
             service_id: '1',
             end_date: '20241214',
             start_date: '20231214',
-            feed_id: 1,
             friday: 1,
             monday: 1,
             saturday: 0,
@@ -136,7 +126,6 @@ describe('Schedule', () => {
             service_id: '2',
             date: '20240323',
             exception_type: ExceptionType.RUNNING,
-            feed_id: 1
         }
         expect(() => isServiceRunningOn(service, exception, new Date('2024-03-23'))).toThrow('Schedule exception does not match service id')
     })
