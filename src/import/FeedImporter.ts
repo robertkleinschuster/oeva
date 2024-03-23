@@ -6,6 +6,7 @@ import {getFiles, getTableName} from "../db/TransitMapping.ts";
 import {FeedDB} from "../db/FeedDb.ts";
 import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
+import lunr from "lunr";
 
 class FeedImporter {
 
@@ -170,6 +171,17 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
+
+        this.transitDb.stops
+            .where({feed_id: feedId})
+            .toArray((stops) => {
+                for (const stop of stops) {
+                    this.transitDb.stops.update(stop.stop_id, {
+                        tokens: lunr.tokenizer(stop.stop_name).map(String)
+                    })
+                }
+            })
+
         if (feed.is_ifopt) {
             this.transitDb.stops
                 .where({feed_id: feedId})

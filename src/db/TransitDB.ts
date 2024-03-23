@@ -9,6 +9,7 @@ interface Agency {
     agency_phone?: string;
     agency_fare_url?: string;
     agency_email?: string;
+    tokens: string[];
     feed_id: number;
 }
 
@@ -27,6 +28,7 @@ export interface Stop {
     wheelchair_boarding?: number;
     level_id?: string;
     platform_code?: string;
+    tokens: string[];
     feed_id: number;
 }
 
@@ -43,6 +45,7 @@ export interface Route {
     route_sort_order?: number;
     continuous_pickup?: number;
     continuous_drop_off?: number;
+    tokens: string[];
     feed_id: number;
 }
 
@@ -57,6 +60,7 @@ export interface Trip {
     shape_id?: string;
     wheelchair_accessible?: number;
     bikes_allowed?: number;
+    tokens: string[];
     feed_id: number;
 }
 
@@ -156,11 +160,11 @@ export class TransitDB extends Dexie {
 
     public constructor() {
         super('Transit');
-        this.version(1).stores({
-            agencies: 'agency_id,feed_id',
-            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],feed_id',
-            routes: 'route_id,route_type,feed_id',
-            trips: 'trip_id,route_id,shape_id,direction_id,feed_id',
+        this.version(2).stores({
+            agencies: 'agency_id,*tokens,feed_id',
+            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],*tokens,feed_id',
+            routes: 'route_id,route_type,*tokens,feed_id',
+            trips: 'trip_id,route_id,shape_id,direction_id,*tokens,feed_id',
             stopTimes: '[trip_id+stop_id],trip_id,stop_id,feed_id',
             calendar: 'service_id,[service_id+start_date+end_date],feed_id',
             calendarDates: '[service_id+date],service_id,feed_id',

@@ -1,5 +1,6 @@
 import {Calendar, CalendarDate, Route, Stop, StopTime, transitDB, Trip} from "../db/TransitDB.ts";
-import {formatServiceDate, parseServiceDate, parseStopTime} from "./DateTime.ts";
+import {formatServiceDate, parseStopTime} from "./DateTime.ts";
+import {isServiceRunningOn} from "./Schedule.ts";
 
 export interface TripDetail {
     departure: Date | null;
@@ -40,7 +41,7 @@ export class TripDetailRepository {
                     if (service && route) {
                         const exception = await transitDB.calendarDates
                             .get({service_id: service.service_id, date: formatServiceDate(date)});
-                        if (await this.isServiceActiveOn(service, exception, date)) {
+                        if (isServiceRunningOn(service, exception, date)) {
                             const tripStopTimes = await transitDB.stopTimes.where({trip_id: trip.trip_id}).toArray()
                             const isDestination = stopTime.stop_sequence === Math.max(...tripStopTimes.map(s => s.stop_sequence));
                             const isOrigin = stopTime.stop_sequence === Math.min(...tripStopTimes.map(s => s.stop_sequence))
@@ -84,25 +85,6 @@ export class TripDetailRepository {
 
             return 0;
         });
-    }
-
-
-    private async isServiceActiveOn(service: Calendar, exception: CalendarDate | undefined, date: Date) {
-        const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayOfWeek = weekdays[date.getDay()] as keyof Calendar;
-
-        if (exception) {
-            if (exception.exception_type === 1) {
-                return true;
-            }
-            if (exception.exception_type === 2) {
-                return false;
-            }
-        }
-
-        return service[dayOfWeek] === 1
-            && date >= parseServiceDate(service.start_date, date)
-            && date <= parseServiceDate(service.end_date, date);
     }
 }
 
