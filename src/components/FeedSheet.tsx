@@ -29,7 +29,7 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                         </ListItem>
                     </List>
                         <p>
-                            <Button disabled={feed.status !== TransitFeedStatus.DONE} color="red" onClick={async () => {
+                            <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} color="red" onClick={async () => {
                                 feedDb.transit.delete(feed.id!)
                             }}>Löschen</Button>
                         </p>

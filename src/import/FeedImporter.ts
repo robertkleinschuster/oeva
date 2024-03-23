@@ -94,7 +94,7 @@ class FeedImporter {
                     downloaded_megabytes = newMegabyts
                     this.feedDb.transit.update(feedId, {
                         downloaded_megabytes: downloaded_megabytes,
-                        download_progress: event.progress,
+                        download_progress: event.progress ? Math.round(event.progress * 100) : undefined,
                         status: TransitFeedStatus.DOWNLOADING
                     });
                 }
