@@ -15,7 +15,7 @@ export interface TransitFeed {
     current_file: string | null;
     is_ifopt: boolean;
     files: Map<string, Blob> | null;
-    imported: string[] | null;
+    imported: string[];
     downloaded_megabytes: number;
     download_progress: number;
     status: TransitFeedStatus;

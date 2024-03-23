@@ -19,7 +19,7 @@ class FeedImporter {
             name,
             url,
             files: null,
-            imported: null,
+            imported: [],
             current_file: null,
             is_ifopt: is_ifopt,
             status: TransitFeedStatus.DRAFT,
@@ -31,7 +31,7 @@ class FeedImporter {
 
     async startDownload(feedId: number) {
         this.feedDb.transit.update(feedId, {
-            imported: null,
+            imported: [],
             current_file: null,
             downloaded_megabytes: 0,
             download_progress: 0,
@@ -41,7 +41,7 @@ class FeedImporter {
 
     async startImport(feedId: number) {
         this.feedDb.transit.update(feedId, {
-            imported: null,
+            imported: [],
             current_file: null,
             status: TransitFeedStatus.IMPORTING,
         });
@@ -49,8 +49,6 @@ class FeedImporter {
 
     async startOptimize(feedId: number) {
         this.feedDb.transit.update(feedId, {
-            imported: null,
-            current_file: null,
             status: TransitFeedStatus.OPTIMIZING,
         });
     }

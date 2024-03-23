@@ -78,7 +78,7 @@ describe('FeedImporter', () => {
             name,
             url,
             files: null,
-            imported: null,
+            imported: [],
             is_ifopt: true,
             timestamp: expect.any(Number),
             current_file: null,
@@ -94,7 +94,7 @@ describe('FeedImporter', () => {
             id: importId,
             url: 'http://example.com/data.zip',
             name: 'Test Data',
-            imported: null,
+            imported: [],
             files: null,
             is_ifopt: false,
             current_file: null,
@@ -126,7 +126,7 @@ describe('FeedImporter', () => {
             id: feedId,
             url: 'http://example.com/gtfs_example.zip',
             name: 'Test Data',
-            imported: null,
+            imported: [],
             files: new Map<string, Blob>([
                 ['agency.txt', new Blob(["route_id,agency_id,route_short_name,route_long_name,route_type\n1001,1,10,Example Route,3"], {type: 'text/csv'})],
                 ['stops.txt', new Blob(["stop_id,stop_name,stop_lat,stop_lon\n1,Example Stop,50.0,-50.0"], {type: 'text/csv'})],
@@ -140,6 +140,7 @@ describe('FeedImporter', () => {
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
+        mockedFeedDb.dependency.bulkPut.mockResolvedValue(0);
         // @ts-ignore
         mockedTransitDb.stops.bulkPut.mockResolvedValue([])
         mockedTransitDb.stops.update.mockResolvedValue(0)
