@@ -4,45 +4,76 @@ import {Axios} from "axios";
 import {TransitDB} from '../db/TransitDB.ts';
 import {getFiles, getTableName} from "../db/TransitMapping.ts";
 import {FeedDB} from "../db/FeedDb.ts";
+import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT.ts";
+import {TransitFeedStatus} from "../db/Feed.ts";
 
 class FeedImporter {
 
     constructor(private feedDb: FeedDB, private transitDb: TransitDB, private axios: Axios) {
     }
 
-    async createImport(url: string, name: string) {
+    async create(url: string, name: string, is_ifopt: boolean) {
         return this.feedDb.transit.add({
             name,
             url,
             files: null,
             imported: null,
             current_file: null,
-            done: 0,
-            downloading: 0,
-            downloaded_bytes: 0,
+            is_ifopt: is_ifopt,
+            status: TransitFeedStatus.DRAFT,
+            downloaded_megabytes: 0,
             download_progress: 0,
             timestamp: (new Date()).getTime()
         });
     }
 
-    async restartImport(feedId: number) {
+    async startDownload(feedId: number) {
         this.feedDb.transit.update(feedId, {
-            files: null,
             imported: null,
             current_file: null,
-            done: 0,
-            downloading: 0,
-            downloaded_bytes: 0,
+            downloaded_megabytes: 0,
             download_progress: 0,
+            status: TransitFeedStatus.DOWNLOADING,
+        });
+    }
+
+    async startImport(feedId: number) {
+        this.feedDb.transit.update(feedId, {
+            imported: null,
+            current_file: null,
+            status: TransitFeedStatus.IMPORTING,
+        });
+    }
+
+    async startOptimize(feedId: number) {
+        this.feedDb.transit.update(feedId, {
+            imported: null,
+            current_file: null,
+            status: TransitFeedStatus.OPTIMIZING,
         });
     }
 
     async run(feedId: number) {
-        const importData = await this.feedDb.transit.get(feedId);
-        if (!importData?.files) {
+        const feed = await this.feedDb.transit.get(feedId);
+
+        if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
+            this.feedDb.transit.update(feedId, {
+                status: TransitFeedStatus.IMPORTING
+            });
         }
-        await this.runImport(feedId)
+        if (feed?.status === TransitFeedStatus.IMPORTING) {
+            await this.importData(feedId)
+            this.feedDb.transit.update(feedId, {
+                status: TransitFeedStatus.OPTIMIZING
+            });
+        }
+        if (feed?.status === TransitFeedStatus.OPTIMIZING) {
+            await this.optimizeData(feedId)
+            this.feedDb.transit.update(feedId, {
+                status: TransitFeedStatus.DONE
+            });
+        }
     }
 
     async downloadData(feedId: number) {
@@ -50,28 +81,26 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-
-        this.feedDb.transit.update(feedId, {
-            downloading: 1
-        });
-
+        let downloaded_megabytes = 0
         const response = await this.axios.get(feed.url, {
             responseType: 'blob',
             onDownloadProgress: (event) => {
-                this.feedDb.transit.update(feedId, {
-                    downloaded_bytes: event.loaded,
-                    download_progress: event.progress
-                });
+                const newMegabyts = Math.ceil(event.loaded / 1000000);
+                if (newMegabyts - 5 > downloaded_megabytes) {
+                    downloaded_megabytes = newMegabyts
+                    this.feedDb.transit.update(feedId, {
+                        downloaded_megabytes: downloaded_megabytes,
+                        download_progress: event.progress,
+                        status: TransitFeedStatus.DOWNLOADING
+                    });
+                }
             }
         });
-        await this.prepareImport(feedId, response.data);
 
-        this.feedDb.transit.update(feedId, {
-            downloading: 0
-        });
+        await this.saveData(feedId, response.data);
     }
 
-    async prepareImport(feedId: number, file: File | Blob) {
+    async saveData(feedId: number, file: File | Blob) {
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
         const requiredGTFSFiles = getFiles();
@@ -99,7 +128,7 @@ class FeedImporter {
         };
     }
 
-    async runImport(feedId: number) {
+    async importData(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found');
@@ -117,7 +146,8 @@ class FeedImporter {
             }
 
             this.feedDb.transit.update(feedId, {
-                current_file: fileName
+                current_file: fileName,
+                status: TransitFeedStatus.IMPORTING
             });
 
             const file = new File([fileContent], fileName, {type: 'text/csv'});
@@ -131,8 +161,28 @@ class FeedImporter {
             this.feedDb.transit.update(feedId, {
                 imported,
                 current_file: null,
-                done: imported.length === feed.files.size ? 1 : 0
             });
+        }
+    }
+
+    async optimizeData(feedId: number) {
+        const feed = await this.feedDb.transit.get(feedId);
+        if (!feed) {
+            throw new Error('Feed not found');
+        }
+        if (feed.is_ifopt) {
+            this.transitDb.stops
+                .where({feed_id: feedId})
+                .toArray((stops) => {
+                    for (const stop of stops) {
+                        if (!stop.parent_station && stop.stop_id.includes(':')) {
+                            const ifopt = decodeIFOPT(stop.stop_id)
+                            this.transitDb.stops.update(stop.stop_id, {
+                                parent_station: encodeIFOPT(ifopt, true)
+                            })
+                        }
+                    }
+                })
         }
     }
 

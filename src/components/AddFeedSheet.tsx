@@ -1,14 +1,15 @@
-import {Block, BlockTitle, Button, List, ListInput, PageContent, Sheet} from "framework7-react";
+import {Block, BlockTitle, Button, List, ListInput, ListItem, PageContent, Sheet} from "framework7-react";
 import {useEffect, useState} from "react";
 
 export const AddFeedSheet = ({open, onCreate, onAbort}: {
     open: boolean,
-    onCreate: (url: string, name: string) => void,
+    onCreate: (url: string, name: string, isIfopt: boolean) => void,
     onAbort: () => void
 }) => {
     const [error, setError] = useState<boolean>()
     const [name, setName] = useState<string>('')
     const [url, setURL] = useState<string>('')
+    const [isIfopt, setIsIfopt] = useState<boolean>(false)
 
     useEffect(() => {
         if (!open) {
@@ -39,12 +40,16 @@ export const AddFeedSheet = ({open, onCreate, onAbort}: {
                                errorMessage="Pflichtfeld"
                                label="URL"
                                onInput={(e) => setURL(e.target.value)}/>
+                    <ListItem checkbox
+                              checked={isIfopt}
+                              title="Verwendet IFOPT"
+                              onChange={(e) => setIsIfopt(e.target.checked)}/>
                 </List>
                 <p className="grid grid-cols-2 grid-gap">
                     <Button onClick={async () => {
                         if (name && url) {
                             setError(false)
-                            onCreate(url, name)
+                            onCreate(url, name, isIfopt)
                         } else {
                             setError(true)
                         }

@@ -20,16 +20,17 @@ export class TripDetailRepository {
     async findByStops(stopIds: string[], date: Date): Promise<TripDetail[]> {
         const trips: TripDetail[] = [];
 
-        const stops = await transitDB.stops.where('stop_id')
-            .startsWithAnyOf(stopIds.map(stopId => {
-                if (stopId.includes(':')) {
-                    return stopId.split(':', 3).join(':')
-                }
-                return stopId;
-            }))
+        const stops = await transitDB.stops
+            .where('stop_id')
+            .anyOf(stopIds)
             .toArray();
 
-        for (const stop of stops) {
+        const siblingStops = await transitDB.stops
+            .where('parent_station')
+            .anyOf(stops.filter(stop => stop.parent_station).map(stop => stop.parent_station) as string[])
+            .toArray()
+
+        for (const stop of siblingStops) {
             const stopTimes = await transitDB.stopTimes.where({stop_id: stop.stop_id}).toArray();
             for (const stopTime of stopTimes) {
                 const trip = await transitDB.trips.get(stopTime.trip_id);

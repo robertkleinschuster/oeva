@@ -1,10 +1,11 @@
 import {FeedImporter} from './FeedImporter.ts';
 import {transitDB} from '../db/TransitDB.ts';
-import {feedDb, TransitFeed} from "../db/FeedDb.ts";
+import {feedDb} from "../db/FeedDb.ts";
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import axios from "axios";
 import fs from 'fs';
 import path from 'path';
+import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
 
 jest.mock('../db/TransitDB.ts', () => {
     const mockTable = () => ({
@@ -64,12 +65,12 @@ describe('FeedImporter', () => {
     beforeEach(() => {
         jest.resetAllMocks()
     })
-    test('createImport should interact with the database', async () => {
+    test('create should add a draft import', async () => {
         const url = 'http://example.com/data.zip';
         const name = 'Test Import';
         const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
 
-        await dataImporter.createImport(url, name);
+        await dataImporter.create(url, name, true);
 
         // Verify if the add method was called with the correct parameters
         expect(feedDb.transit.add).toHaveBeenCalledWith({
@@ -77,12 +78,23 @@ describe('FeedImporter', () => {
             url,
             files: null,
             imported: null,
-            done: 0,
+            is_ifopt: true,
             timestamp: expect.any(Number),
             current_file: null,
             download_progress: 0,
-            downloaded_bytes: 0,
-            downloading: 0,
+            downloaded_megabytes: 0,
+            status: TransitFeedStatus.DRAFT
+        });
+    });
+    test('startDownload should set the import to downloading', async () => {
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+
+        await dataImporter.startDownload(1);
+
+        expect(feedDb.transit.update).toHaveBeenCalledWith(
+            1,
+            {
+            status: TransitFeedStatus.DOWNLOADING
         });
     });
     test('should download data successfully', async () => {
@@ -94,12 +106,12 @@ describe('FeedImporter', () => {
             name: 'Test Data',
             imported: null,
             files: null,
+            is_ifopt: false,
             current_file: null,
-            done: 0,
             timestamp: 0,
-            downloading: 0,
-            downloaded_bytes: 0,
+            downloaded_megabytes: 0,
             download_progress: 0,
+            status: TransitFeedStatus.DOWNLOADING
         };
 
         // Mock the db.import.get to return the mock import data
@@ -130,11 +142,11 @@ describe('FeedImporter', () => {
                 ['stops.txt', new Blob(["stop_id,stop_name,stop_lat,stop_lon\n1,Example Stop,50.0,-50.0"], {type: 'text/csv'})],
             ]),
             current_file: null,
-            done: 0,
+            is_ifopt: false,
             timestamp: 0,
-            downloading: 0,
-            downloaded_bytes: 0,
+            downloaded_megabytes: 0,
             download_progress: 0,
+            status: TransitFeedStatus.IMPORTING
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
@@ -144,7 +156,7 @@ describe('FeedImporter', () => {
         mockedTransitDb.table.mockReturnValue(mockedTransitDb.stops)
 
         const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
-        await dataImporter.runImport(feedId)
+        await dataImporter.importData(feedId)
 
         expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
             1,
@@ -198,7 +210,7 @@ describe('FeedImporter', () => {
 
         const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
 
-        await dataImporter.prepareImport(importId, mockFile);
+        await dataImporter.saveData(importId, mockFile);
 
         expect(mockedFeedDb.transit.update).toHaveBeenCalledWith(importId, {
             files: new Map([

@@ -1,4 +1,4 @@
-import {Icon, List, ListItem, Navbar, Page, Button} from "framework7-react";
+import {Button, Icon, List, ListItem, Navbar, Page} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {transitDB} from "../db/TransitDB.ts";
 import {useEffect, useState} from "react";
@@ -8,56 +8,63 @@ import axios from "axios";
 import {FeedStatus} from "../components/FeedStatus.tsx";
 import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
 import {feedDb} from "../db/FeedDb.ts";
+import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
+
+const runningFeeds = new Set<number>();
+async function runFeeds(feeds: TransitFeed[]) {
+    const dataImporter = new FeedImporter(feedDb, transitDB, axios)
+    for (const feed of feeds) {
+        if (feed.id && !runningFeeds.has(feed.id)) {
+            runningFeeds.add(feed.id)
+            try {
+                if (feed.status != TransitFeedStatus.DONE ) {
+                    await dataImporter.run(feed.id)
+                }
+            } catch (error) {
+                console.error(error)
+            }
+            runningFeeds.delete(feed.id)
+        }
+    }
+}
 
 export const Feeds = () => {
-    const imports = useLiveQuery(() => feedDb.transit.toArray());
-    const [loaded, setLoaded] = useState(false)
-    const [create, setCreate] = useState(false)
+    const feeds = useLiveQuery(() => feedDb.transit.toArray());
+    const [addDialog, showAddDialog] = useState(false)
+    const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null)
 
     useEffect(() => {
-        if (imports) {
-            const dataImporter = new FeedImporter(feedDb, transitDB, axios)
-            for (const importData of imports) {
-                if (!importData.done && importData.id) {
-                    void dataImporter.run(importData.id)
-                }
-            }
+        if (feeds) {
+            void runFeeds(feeds)
         }
-    }, [loaded]);
+    }, [feeds]);
 
-    useEffect(() => {
-        if (!loaded && imports) {
-            setLoaded(true)
-        }
-    }, [imports]);
-
-    const [selected, setSelected] = useState<number | null>(null)
     return <Page name="feeds">
         <Navbar title="Feeds" backLink>
             <Button slot="right" onClick={() => {
-                setCreate(true)
+                showAddDialog(true)
             }}>Neu</Button>
         </Navbar>
         <List strong>
-            {imports?.map(importData => <ListItem
-                onClick={() => setSelected(importData.id!)}
-                title={importData.name}
-                key={importData.id}
+            {feeds?.map(feed => <ListItem
+                onClick={() => setSelectedFeedId(feed.id!)}
+                title={feed.name}
+                key={feed.id}
             >
                 <div slot="footer">
-                    <FeedStatus feed={importData}/>
+                    <FeedStatus feed={feed}/>
                 </div>
-                {importData.done ? <Icon slot="after" f7="checkmark"/> : <Icon slot="after" f7="hourglass"/>}
+                {runningFeeds.has(feed.id!) ? <Icon slot="after" f7="hourglass"/> : <Icon slot="after" f7="checkmark"/>}
             </ListItem>)}
         </List>
-        <FeedSheet feedId={selected} onSheetClosed={() => setSelected(null)}/>
-        <AddFeedSheet open={create} onCreate={async (url, name) => {
+        <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
+        <AddFeedSheet open={addDialog} onCreate={async (url, name, isIfopt) => {
             const dataImporter = new FeedImporter(feedDb, transitDB, axios)
-            const importId = await dataImporter.createImport(url, name)
-            setCreate(false)
-            await dataImporter.run(importId)
+            const importId = await dataImporter.create(url, name, isIfopt)
+            showAddDialog(false)
+            await dataImporter.startDownload(importId)
         }} onAbort={() => {
-            setCreate(false)
+            showAddDialog(false)
         }}/>
     </Page>
 };
