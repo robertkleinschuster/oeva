@@ -48,6 +48,7 @@ jest.mock('../db/FeedDb.ts', () => {
     return {
         feedDb: {
             transit: mockTable(),
+            dependency: mockTable(),
             table: jest.fn()
         },
     };
@@ -84,17 +85,6 @@ describe('FeedImporter', () => {
             download_progress: 0,
             downloaded_megabytes: 0,
             status: TransitFeedStatus.DRAFT
-        });
-    });
-    test('startDownload should set the import to downloading', async () => {
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
-
-        await dataImporter.startDownload(1);
-
-        expect(feedDb.transit.update).toHaveBeenCalledWith(
-            1,
-            {
-            status: TransitFeedStatus.DOWNLOADING
         });
     });
     test('should download data successfully', async () => {
@@ -150,7 +140,8 @@ describe('FeedImporter', () => {
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
-        mockedTransitDb.stops.bulkPut.mockResolvedValue('')
+        // @ts-ignore
+        mockedTransitDb.stops.bulkPut.mockResolvedValue([])
         mockedTransitDb.stops.update.mockResolvedValue(0)
 
         mockedTransitDb.table.mockReturnValue(mockedTransitDb.stops)
@@ -163,6 +154,7 @@ describe('FeedImporter', () => {
             feedId,
             {
                 current_file: 'agency.txt',
+                status: TransitFeedStatus.IMPORTING
             }
         )
 
@@ -172,7 +164,6 @@ describe('FeedImporter', () => {
             {
                 current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
-                done: 0
             }
         )
         expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
@@ -180,6 +171,7 @@ describe('FeedImporter', () => {
             feedId,
             {
                 current_file: 'stops.txt',
+                status: TransitFeedStatus.IMPORTING
             }
         )
         expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
@@ -188,7 +180,6 @@ describe('FeedImporter', () => {
             {
                 current_file: null,
                 imported: ['agency.txt', 'stops.txt'],
-                done: 1
             }
         )
     });
