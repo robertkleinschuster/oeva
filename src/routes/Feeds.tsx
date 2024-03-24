@@ -18,19 +18,19 @@ async function runFeeds(feeds: TransitFeed[]) {
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
     for (const feed of feeds) {
         if (feed.id && !runningFeeds.has(feed.id)) {
-            runningFeeds.add(feed.id)
-            try {
-                if (feed.status != TransitFeedStatus.DONE) {
+            if (feed.status != TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR) {
+                try {
+                    runningFeeds.add(feed.id)
                     await dataImporter.run(feed.id)
+                } catch (error) {
+                    runningFeeds.delete(feed.id)
+                    console.error(error)
+                    feedDb.transit.update(feed.id, {
+                        status: TransitFeedStatus.ERROR
+                    });
                 }
-            } catch (error) {
                 runningFeeds.delete(feed.id)
-                console.error(error)
-                feedDb.transit.update(feed.id, {
-                    status: TransitFeedStatus.ERROR
-                });
             }
-            runningFeeds.delete(feed.id)
         }
     }
 }
@@ -64,7 +64,8 @@ export const Feeds = () => {
                     <FeedStatus feed={feed}/>
                 </div>
                 {runningFeeds.has(feed.id!) ? <Preloader slot="after"/> : null}
-                {feed.status === TransitFeedStatus.DONE ? <Icon slot="after" color="green" f7="checkmark_circle"/> : null}
+                {feed.status === TransitFeedStatus.DONE ?
+                    <Icon slot="after" color="green" f7="checkmark_circle"/> : null}
                 {feed.status === TransitFeedStatus.ERROR ? <Icon slot="after" f7="exclamationmark_triangle"/> : null}
             </ListItem>)}
         </List>
