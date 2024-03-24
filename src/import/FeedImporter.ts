@@ -9,6 +9,52 @@ import {TransitFeedStatus} from "../db/Feed.ts";
 import lunr from "lunr";
 import {IndexableType} from "dexie";
 
+const dynamicallyTypedColumns = new Set([
+    'stop_lat',
+    'stop_lon',
+    'location_type',
+    'route_type',
+    'route_sort_order',
+    'continuous_pickup',
+    'continuous_drop_off',
+    'direction_id',
+    'wheelchair_accessible',
+    'bikes_allowed',
+    'stop_sequence',
+    'pickup_type',
+    'drop_off_type',
+    'shape_dist_traveled',
+    'timepoint',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+    'exception_type',
+    'shape_pt_lat',
+    'shape_pt_lon',
+    'shape_pt_sequence',
+    'headway_secs',
+    'exact_times',
+    'transfer_type',
+    'min_transfer_time',
+    'pathway_mode',
+    'traversal_time',
+])
+
+const dependencyTables = new Set([
+    'stops',
+    'trips',
+    'routes',
+    'shapes',
+    'agencies',
+    'calendar',
+    'levels',
+    'pathways',
+])
+
 class FeedImporter {
 
     constructor(private feedDb: FeedDB, private transitDb: TransitDB, private axios: Axios) {
@@ -207,40 +253,7 @@ class FeedImporter {
             Papa.parse(file, {
                 header: true,
                 dynamicTyping: (column) => {
-                    return [
-                        'stop_lat',
-                        'stop_lon',
-                        'location_type',
-                        'route_type',
-                        'route_sort_order',
-                        'continuous_pickup',
-                        'continuous_drop_off',
-                        'direction_id',
-                        'wheelchair_accessible',
-                        'bikes_allowed',
-                        'stop_sequence',
-                        'pickup_type',
-                        'drop_off_type',
-                        'shape_dist_traveled',
-                        'timepoint',
-                        'monday',
-                        'tuesday',
-                        'wednesday',
-                        'thursday',
-                        'friday',
-                        'saturday',
-                        'sunday',
-                        'exception_type',
-                        'shape_pt_lat',
-                        'shape_pt_lon',
-                        'shape_pt_sequence',
-                        'headway_secs',
-                        'exact_times',
-                        'transfer_type',
-                        'min_transfer_time',
-                        'pathway_mode',
-                        'traversal_time',
-                    ].includes(column as string);
+                    return dynamicallyTypedColumns.has(column.toString());
                 },
                 skipEmptyLines: true,
                 chunkSize: 10000,
@@ -251,16 +264,7 @@ class FeedImporter {
                     const table = this.transitDb.table(tableName);
                     table.bulkPut(results.data, undefined, {allKeys: true})
                         .then((keys) => {
-                            if ([
-                                'stops',
-                                'trips',
-                                'routes',
-                                'shapes',
-                                'agencies',
-                                'calendar',
-                                'levels',
-                                'pathways',
-                            ].includes(tableName)) {
+                            if (dependencyTables.has(tableName)) {
                                 const dependencies = (keys as IndexableType[])
                                     .map(key => ({
                                         feed: 'transit',
