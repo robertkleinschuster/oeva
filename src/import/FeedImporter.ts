@@ -251,16 +251,29 @@ class FeedImporter {
                     const table = this.transitDb.table(tableName);
                     table.bulkPut(results.data, undefined, {allKeys: true})
                         .then((keys) => {
-                            const dependencies = (keys as IndexableType[])
-                                .map(key => ({
-                                    feed: 'transit',
-                                    feed_id: feedId,
-                                    dependency_id: key,
-                                    table: tableName
-                                }))
-                            this.feedDb.dependency.bulkPut(dependencies).then(() => {
+                            if ([
+                                'stops',
+                                'trips',
+                                'routes',
+                                'shapes',
+                                'agencies',
+                                'calendar',
+                                'levels',
+                                'pathways',
+                            ].includes(tableName)) {
+                                const dependencies = (keys as IndexableType[])
+                                    .map(key => ({
+                                        feed: 'transit',
+                                        feed_id: feedId,
+                                        dependency_id: key,
+                                        table: tableName
+                                    }))
+                                this.feedDb.dependency.bulkPut(dependencies).then(() => {
+                                    parser.resume()
+                                })
+                            } else {
                                 parser.resume()
-                            })
+                            }
                         })
                         .catch(reject);
                 },
