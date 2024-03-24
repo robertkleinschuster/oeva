@@ -256,7 +256,7 @@ class FeedImporter {
                     return dynamicallyTypedColumns.has(column.toString());
                 },
                 skipEmptyLines: true,
-                chunkSize: 10000,
+                chunkSize: 5000,
                 worker: false,
                 encoding: "UTF-8",
                 chunk: (results: ParseResult<any>, parser) => {
