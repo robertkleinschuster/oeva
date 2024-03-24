@@ -1,5 +1,5 @@
 import {Trips} from "../components/Trips.tsx";
-import {TripDetail, TripDetailRepository} from "../transit/TripDetailRepository.ts";
+import {TripAtStop, TripDetailRepository} from "../transit/TripDetailRepository.ts";
 import {useEffect, useRef, useState} from "react";
 import {f7, Navbar, Page, Searchbar, Subnavbar} from "framework7-react";
 import {Stop, transitDB} from "../db/TransitDB.ts";
@@ -8,7 +8,7 @@ import lunr from "lunr";
 
 export const Stations = () => {
     const [stop, setStop] = useState<Stop | null>(null)
-    const [trips, setTrips] = useState<TripDetail[]>([])
+    const [trips, setTrips] = useState<TripAtStop[]>([])
     const autocompleteSearchbar = useRef<Autocomplete.Autocomplete | null>(null);
 
     useEffect(() => {
