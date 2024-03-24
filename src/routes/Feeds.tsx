@@ -9,6 +9,8 @@ import {FeedStatus} from "../components/FeedStatus.tsx";
 import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
 import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
+import {StorageQuota} from "../components/StorageQuota.tsx";
+import {StoragePrompt} from "../components/StoragePrompt.tsx";
 
 const runningFeeds = new Set<number>();
 
@@ -44,12 +46,14 @@ export const Feeds = () => {
         }
     }, [feeds]);
 
+
     return <Page name="feeds" onPageInit={() => feeds && runFeeds(feeds)}>
         <Navbar title="Feeds" backLink>
             <Button slot="right" onClick={() => {
                 showAddDialog(true)
             }}>Neu</Button>
         </Navbar>
+        <StorageQuota/>
         <List strong>
             {feeds?.map(feed => <ListItem
                 onClick={() => setSelectedFeedId(feed.id!)}
@@ -64,6 +68,7 @@ export const Feeds = () => {
                 {feed.status === TransitFeedStatus.ERROR ? <Icon slot="after" f7="exclamationmark_triangle"/> : null}
             </ListItem>)}
         </List>
+        <StoragePrompt/>
         <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
         <AddFeedSheet open={addDialog} onCreate={async (url, name, isIfopt) => {
             const dataImporter = new FeedImporter(feedDb, transitDB, axios)

@@ -34,7 +34,7 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                             }}>Löschen</Button>
                         </p>
                         <p className="grid grid-cols-3 grid-gap">
-                            <Button disabled={feed.status !== TransitFeedStatus.DONE} onClick={async () => {
+                            <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} onClick={async () => {
                                 await dataImporter.startDownload(feed.id!)
                             }}>Herunterladen</Button>
                             <Button disabled={feed.status !== TransitFeedStatus.DONE} onClick={async () => {

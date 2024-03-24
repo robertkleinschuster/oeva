@@ -243,7 +243,7 @@ class FeedImporter {
                     ].includes(column as string);
                 },
                 skipEmptyLines: true,
-                chunkSize: 5000,
+                chunkSize: 10000,
                 worker: false,
                 encoding: "UTF-8",
                 chunk: (results: ParseResult<any>, parser) => {
