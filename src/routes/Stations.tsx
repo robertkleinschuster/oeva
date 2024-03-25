@@ -1,5 +1,5 @@
 import {Trips} from "../components/Trips.tsx";
-import {TripDetailRepository} from "../transit/TripDetailRepository.ts";
+import {StopoverRepository} from "../transit/StopoverRepository.ts";
 import {useEffect, useRef, useState} from "react";
 import {f7, Navbar, Page, Searchbar, Subnavbar} from "framework7-react";
 import {Autocomplete} from "framework7/types";
@@ -14,8 +14,8 @@ export const Stations = () => {
 
     useEffect(() => {
         if (station?.id) {
-            const repo = new TripDetailRepository();
-            repo.findByStops(station.id, new Date())
+            const repo = new StopoverRepository();
+            repo.findByStation(station.id, new Date())
                 .then(setStopovers);
         }
     }, [station]);

@@ -11,6 +11,8 @@ export interface Stopover {
     arrival_time: string|undefined;
     line: string;
     direction: string | undefined;
+    stop: string;
+    station: string;
     is_origin: boolean;
     is_destination: boolean;
     service: Calendar,

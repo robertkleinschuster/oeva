@@ -1,6 +1,7 @@
 import {describe, expect, it} from "@jest/globals";
 import {Calendar, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
 import {createStopover} from "./StopoverFactory.ts";
+import {Station} from "../db/Schedule.ts";
 
 describe('StopoverFactory', () => {
     const stopTime: StopTime = {
@@ -44,20 +45,29 @@ describe('StopoverFactory', () => {
         tuesday: 1,
         wednesday: 1
     }
+    const station: Station = {
+        id: '90',
+        name: 'Graz Hbf',
+        keywords: [],
+        locations: [],
+        stopIds: [],
+        latitude: 0,
+        longitude: 0,
+    }
     it('should throw error for mismatched data', () => {
         expect(() => createStopover(stopTime, {
             ...stop,
             stop_id: '99'
-        }, trip, route, [], service, [], 1)).toThrowError('Data mismatch')
+        }, trip, route, station, [], service, [], 1)).toThrowError('Data mismatch')
         expect(() => createStopover(stopTime, stop, {
             ...trip,
             trip_id: '99'
-        }, route, [], service, [], 1)).toThrowError('Data mismatch')
+        }, route, station, [], service, [], 1)).toThrowError('Data mismatch')
         expect(() => createStopover(stopTime, stop, trip, {
             ...route,
             route_id: '99'
-        }, [], service, [], 1)).toThrowError('Data mismatch')
-        expect(() => createStopover(stopTime, stop, trip, route, [{
+        }, station, [], service, [], 1)).toThrowError('Data mismatch')
+        expect(() => createStopover(stopTime, stop, trip, route, station, [{
             ...stopTime,
             trip_id: '99'
         }], service, [], 1)).toThrowError('Data mismatch')
@@ -66,18 +76,18 @@ describe('StopoverFactory', () => {
         expect(() => createStopover(stopTime, {
             ...stop,
             parent_station: undefined
-        }, trip, route, [], service, [], 1)).toThrowError('Stop has no parent station')
+        }, trip, route, station, [], service, [], 1)).toThrowError('Stop has no parent station')
     })
     it('should throw error for stop time without time', () => {
         expect(() => createStopover({
             ...stopTime,
             departure_time: undefined,
             arrival_time: undefined
-        }, stop, trip, route, [], service, [], 1)).toThrowError('Stop time has no departure or arrival time')
+        }, stop, trip, route, station, [], service, [], 1)).toThrowError('Stop time has no departure or arrival time')
 
     })
     it('should create stopover from gtfs data', () => {
-        const stopover = createStopover(stopTime, stop, trip, route, [], service, [], 1);
+        const stopover = createStopover(stopTime, stop, trip, route, station, [], service, [], 1);
         expect(stopover.trip_id).toEqual(trip.trip_id)
         expect(stopover.service_id).toEqual(trip.service_id)
         expect(stopover.route_id).toEqual(trip.route_id)
@@ -91,7 +101,7 @@ describe('StopoverFactory', () => {
             ...trip,
             trip_short_name: '',
             trip_headsign: 'Zentralfriedhof'
-        }, {...route, route_short_name: '3/5'}, [], service, [], 1);
+        }, {...route, route_short_name: '3/5'}, station, [], service, [], 1);
         expect(stopover2.direction).toEqual('Zentralfriedhof')
         expect(stopover2.line).toEqual('3/5')
     })

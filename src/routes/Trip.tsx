@@ -1,12 +1,16 @@
 import {useEffect, useState} from "react";
-import {TripDetail, TripDetailRepository} from "../transit/TripDetailRepository.ts";
+import {StopoverRepository} from "../transit/StopoverRepository.ts";
 import {Block, BlockTitle, Navbar, Page} from "framework7-react";
+import {Stopover} from "../db/Schedule.ts";
+import {Trip as TripType} from "../db/Transit.ts"
 
 export const Trip = ({tripId}: {tripId: string}) =>{
-    const [trip, setTrip] = useState<TripDetail>()
+    const [trip, setTrip] = useState<TripType>()
+    const [stopovers, setStopovers] = useState<Stopover[]>()
     useEffect(() => {
-        const repo = new TripDetailRepository()
-        repo.findById(tripId, new Date()).then(setTrip)
+        const repo = new StopoverRepository()
+        repo.findTrip(tripId).then(setTrip)
+        repo.findByTrip(tripId, new Date()).then(setStopovers)
     }, []);
 
     if (!trip) {
@@ -16,19 +20,19 @@ export const Trip = ({tripId}: {tripId: string}) =>{
     }
 
     return <Page>
-        <Navbar title={trip.trip.trip_short_name} backLink/>
-        <BlockTitle>{trip.trip.trip_short_name} {trip.trip.trip_headsign}</BlockTitle>
+        <Navbar title={trip.trip_short_name} backLink/>
+        <BlockTitle>{trip.trip_short_name} {trip.trip_headsign}</BlockTitle>
         <Block strong inset>
             <div className="timeline">
-                {trip.stops?.map(stop => <div className="timeline-item">
+                {stopovers?.map(stop => <div className="timeline-item">
                         <div className="timeline-item-date">
-                            {stop.arrival?.toLocaleTimeString()}
+                            {stop.arrival_time}
                             <br/>
-                            {stop.departure?.toLocaleTimeString()}
+                            {stop.departure_time}
                         </div>
                         <div className="timeline-item-divider"></div>
                         <div className="timeline-item-content">
-                            {stop.stop.stop_name}
+                            {stop.station}
                         </div>
                     </div>
                 )}

@@ -1,11 +1,12 @@
 import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
-import {Stopover} from "../db/Schedule.ts";
+import {Station, Stopover} from "../db/Schedule.ts";
 
 export function createStopover(
     stopTime: StopTime,
     stop: Stop,
     trip: Trip,
     route: Route,
+    station: Station,
     tripStopTimes: StopTime[],
     service: Calendar,
     exceptions: CalendarDate[],
@@ -52,6 +53,8 @@ export function createStopover(
         is_origin,
         is_destination,
         service,
+        stop: stop.stop_name,
+        station: station.name,
         exceptions: new Map(exceptions.map(exception => [exception.date, exception]))
     };
 }

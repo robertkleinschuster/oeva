@@ -323,8 +323,10 @@ class FeedImporter {
                         .equals(trip.service_id)
                         .toArray()
                     const route = await this.transitDb.routes.get(trip.route_id)
-                    if (trip && stop && route && service) {
-                        chunk.push(createStopover(stopTime, stop, trip, route, tripStopTimes, service, exceptions, sequence++))
+                    const station = stop?.parent_station ? await scheduleDB.station.get(stop?.parent_station) : undefined
+
+                    if (trip && stop && route && station && service) {
+                        chunk.push(createStopover(stopTime, stop, trip, route, station, tripStopTimes, service, exceptions, sequence++))
                     }
                 }
             }
