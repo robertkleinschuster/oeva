@@ -1,23 +1,24 @@
 import {Trips} from "../components/Trips.tsx";
-import {TripAtStop, TripDetailRepository} from "../transit/TripDetailRepository.ts";
+import {TripDetailRepository} from "../transit/TripDetailRepository.ts";
 import {useEffect, useRef, useState} from "react";
 import {f7, Navbar, Page, Searchbar, Subnavbar} from "framework7-react";
-import {Stop, transitDB} from "../db/TransitDB.ts";
 import {Autocomplete} from "framework7/types";
 import lunr from "lunr";
+import {scheduleDB} from "../db/ScheduleDB.ts";
+import {Station, Stopover} from "../db/Schedule.ts";
 
 export const Stations = () => {
-    const [stop, setStop] = useState<Stop | null>(null)
-    const [trips, setTrips] = useState<TripAtStop[]>([])
+    const [station, setStation] = useState<Station | null>(null)
+    const [stopovers, setStopovers] = useState<Stopover[]>([])
     const autocompleteSearchbar = useRef<Autocomplete.Autocomplete | null>(null);
 
     useEffect(() => {
-        if (stop?.stop_id) {
+        if (station?.id) {
             const repo = new TripDetailRepository();
-            repo.findByStops([stop.stop_id], new Date())
-                .then(setTrips);
+            repo.findByStops(station.id, new Date())
+                .then(setStopovers);
         }
-    }, [stop]);
+    }, [station]);
 
     const onPageInit = () => {
         autocompleteSearchbar.current = f7.autocomplete.create({
@@ -26,8 +27,8 @@ export const Stations = () => {
             dropdownPlaceholderText: 'Tippe z.B. "Graz"',
             searchbarPlaceholder: 'Station Suchen',
             searchbarSpellcheck: false,
-            textProperty: 'stop_name',
-            valueProperty: 'stop_name',
+            textProperty: 'name',
+            valueProperty: 'name',
             updateInputValueOnSelect: true,
             async source(query, render) {
                 if (query.length === 0) {
@@ -35,15 +36,15 @@ export const Stations = () => {
                     return;
                 }
                 const tokens = lunr.tokenizer(query).map(String);
-                const stops = await transitDB.stops.where('tokens')
+                const stations = await scheduleDB.station.where('keywords')
                     .startsWithAnyOfIgnoreCase(tokens)
                     .toArray()
 
-                const results = new Map<string, Stop>;
+                const results = new Map<string, Station>;
 
-                stops.sort((a, b) => {
-                    const aLength = a.tokens.filter(token => tokens.includes(token)).length
-                    const bLength = b.tokens.filter(token => tokens.includes(token)).length
+                stations.sort((a, b) => {
+                    const aLength = a.keywords.filter(token => tokens.includes(token)).length
+                    const bLength = b.keywords.filter(token => tokens.includes(token)).length
 
                     if (aLength > bLength) {
                         return -1;
@@ -52,9 +53,9 @@ export const Stations = () => {
                         return 1;
                     }
                     return 0;
-                }).forEach(stop => {
-                    if (!results.has(stop.stop_name)) {
-                        results.set(stop.stop_name, stop)
+                }).forEach(station => {
+                    if (!results.has(station.name)) {
+                        results.set(station.name, station)
                     }
                 })
 
@@ -63,7 +64,7 @@ export const Stations = () => {
             on: {
                 change: (values) => {
                     if (values.length) {
-                        setStop(values.pop())
+                        setStation(values.pop())
                     }
                 }
             }
@@ -86,6 +87,6 @@ export const Stations = () => {
             </Subnavbar>
         </Navbar>
 
-        <Trips trips={trips.filter(trip => trip.departure)}/>
+        <Trips stopovers={stopovers.filter(trip => !trip.is_destination)}/>
     </Page>
 }

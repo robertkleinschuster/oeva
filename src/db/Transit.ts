@@ -45,9 +45,9 @@ export interface Route {
 }
 
 export interface Trip {
+    trip_id: string;
     route_id: string;
     service_id: string;
-    trip_id: string;
     trip_headsign?: string;
     trip_short_name?: string;
     direction_id?: number;

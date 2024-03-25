@@ -8,6 +8,11 @@ import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import lunr from "lunr";
 import {IndexableType} from "dexie";
+import {StopTime} from "../db/Transit.ts";
+import {scheduleDB} from "../db/ScheduleDB.ts";
+import {createStopover} from "./StopoverFactory.ts";
+import {Station} from "../db/Schedule.ts";
+import {parseStopTime} from "../transit/DateTime.ts";
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -221,31 +226,116 @@ class FeedImporter {
             throw new Error('Feed not found');
         }
 
-        const stops = await this.feedDb.dependency.where({
+        await this.feedDb.transit.update(feedId, {
+            current_step: 'stations'
+        });
+
+        const stopIds = await this.feedDb.dependency.where({
             feed: 'transit',
             table: 'stops',
             feed_id: feedId
         }).toArray(stops => stops.map(stop => stop.dependency_id))
 
-        this.feedDb.transit.update(feedId, {
-            current_step: 'stops'
+        const stops = await this.transitDb.stops
+            .where('stop_id')
+            .anyOf(stopIds)
+            .toArray()
+
+        for (const stop of stops) {
+            const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
+
+            const station: Station = await scheduleDB.station.get(stationId) ?? {
+                id: stationId,
+                name: stop.stop_name,
+                keywords: [],
+                latitude: stop.stop_lat,
+                longitude: stop.stop_lon,
+                stopIds: [],
+                locations: []
+            }
+
+            station.stopIds.push(stop.stop_id)
+            const keywords = new Set(station.keywords)
+            for (const keyword of lunr.tokenizer(stop.stop_name).map(String)) {
+                keywords.add(keyword)
+            }
+            station.keywords = Array.from(keywords)
+            station.locations.push({
+                latitude: stop.stop_lat,
+                longitude: stop.stop_lon,
+            })
+
+            await scheduleDB.station.put(station)
+            await this.transitDb.stops.update(stop, {
+                parent_station: stationId
+            })
+        }
+
+        await this.feedDb.transit.update(feedId, {
+            current_step: 'stopovers'
         });
 
-        this.transitDb.stops
+        const stopTimes = await this.transitDb.stopTimes
             .where('stop_id')
-            .anyOf(stops)
-            .toArray((stops) => {
-                for (const stop of stops) {
-                    if (feed.is_ifopt && stop.stop_id.includes(':')) {
-                        const ifopt = decodeIFOPT(stop.stop_id)
-                        stop.parent_station = encodeIFOPT(ifopt, true)
+            .anyOf(stopIds)
+            .sortBy('stop_sequence');
+
+        const tripStopTimeMap = new Map<string, StopTime[]>()
+
+        stopTimes.sort((a, b) => {
+            const date = new Date()
+            const timeA = a.departure_time ?? a.arrival_time;
+            const timeB = b.departure_time ?? b.arrival_time;
+            if (!timeA || !timeB) {
+                return 0;
+            }
+
+            return parseStopTime(timeA, date).getTime() - parseStopTime(timeB, date).getTime()
+        })
+
+        for (const stopTime of stopTimes) {
+            const tripStopTimes = tripStopTimeMap.get(stopTime.trip_id) ?? [];
+            tripStopTimes.push(stopTime)
+            tripStopTimeMap.set(stopTime.trip_id, tripStopTimes)
+            if (tripStopTimeMap.size % 500 === 0) {
+                await this.feedDb.transit.update(feedId, {
+                    current_step: `stopovers loading trips ${tripStopTimeMap.size}`
+                });
+            }
+        }
+
+        await this.feedDb.transit.update(feedId, {
+            current_step: `stopovers`
+        });
+
+        let sequence = 0;
+        let tripCount = 0;
+        let chunk = [];
+        for (const tripStopTimes of tripStopTimeMap.values()) {
+            tripCount++;
+            for (const stopTime of tripStopTimes) {
+                const trip = await this.transitDb.trips.get(stopTime.trip_id)
+                const stop = await this.transitDb.stops.get(stopTime.stop_id)
+                if (trip) {
+                    const service = await this.transitDb.calendar.get(trip?.service_id)
+                    const exceptions = await this.transitDb.calendarDates
+                        .where('service_id')
+                        .equals(trip.service_id)
+                        .toArray()
+                    const route = await this.transitDb.routes.get(trip.route_id)
+                    if (trip && stop && route && service) {
+                        chunk.push(createStopover(stopTime, stop, trip, route, tripStopTimes, service, exceptions, sequence++))
                     }
-                    this.transitDb.stops.update(stop.stop_id, {
-                        tokens: lunr.tokenizer(stop.stop_name).map(String),
-                        parent_station: stop.parent_station
-                    })
                 }
-            })
+            }
+            if (chunk.length >= 1000) {
+                await scheduleDB.stopover.bulkPut(chunk)
+                await this.feedDb.transit.update(feedId, {
+                    current_step: `stopovers (trip ${tripCount} / ${tripStopTimeMap.size})`
+                });
+                chunk = []
+            }
+        }
     }
 
     private importCSV(feedId: number, file: File, tableName: string) {
