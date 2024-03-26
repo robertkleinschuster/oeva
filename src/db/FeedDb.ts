@@ -7,9 +7,9 @@ export class FeedDB extends Dexie {
 
     public constructor() {
         super('Feed');
-        this.version(4).stores({
+        this.version(5).stores({
             dependency: '[feed+table+feed_id+dependency_id],[feed+table+feed_id],[feed+table+dependency_id]',
-            transit: '++id,[name+done]',
+            transit: '++id,status',
         });
         this.dependency = this.table('dependency')
         this.transit = this.table('transit')

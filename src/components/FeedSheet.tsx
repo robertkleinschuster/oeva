@@ -37,10 +37,10 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                             <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} onClick={async () => {
                                 await dataImporter.startDownload(feed.id!)
                             }}>Herunterladen</Button>
-                            <Button disabled={feed.status !== TransitFeedStatus.DONE} onClick={async () => {
+                            <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} onClick={async () => {
                                 await dataImporter.startImport(feed.id!)
                             }}>Importieren</Button>
-                            <Button disabled={feed.status !== TransitFeedStatus.DONE} onClick={async () => {
+                            <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} onClick={async () => {
                                 await dataImporter.startOptimize(feed.id!)
                             }}>Verarbeiten</Button>
                         </p>
