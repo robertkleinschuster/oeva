@@ -11,36 +11,8 @@ import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import {StorageQuota} from "../components/StorageQuota.tsx";
 import {StoragePrompt} from "../components/StoragePrompt.tsx";
+import {FeedRunner} from "../import/FeedRunner.ts";
 
-const runningFeeds = new Set<number>();
-window.addEventListener('load', () => {
-    setInterval(async () => {
-        await runFeeds()
-    }, 5000)
-})
-
-async function runFeeds() {
-    const feeds = await feedDb.transit.toArray()
-    const dataImporter = new FeedImporter(feedDb, transitDB, axios)
-    for (const feed of feeds) {
-        if (feed.id && !runningFeeds.has(feed.id)) {
-            if (feed.status != TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR) {
-                try {
-                    runningFeeds.add(feed.id)
-                    await dataImporter.run(feed.id)
-                } catch (error) {
-                    runningFeeds.delete(feed.id)
-                    console.error(error)
-                    feedDb.transit.update(feed.id, {
-                        status: TransitFeedStatus.ERROR,
-                        progress: error
-                    });
-                }
-                runningFeeds.delete(feed.id)
-            }
-        }
-    }
-}
 
 export const Feeds = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray());
@@ -63,7 +35,7 @@ export const Feeds = () => {
                 <div slot="footer">
                     <FeedStatus feed={feed}/>
                 </div>
-                {runningFeeds.has(feed.id!) ? <Preloader slot="after"/> : null}
+                {FeedRunner.running === feed.id ? <Preloader slot="after"/> : null}
                 {feed.status === TransitFeedStatus.DONE ?
                     <Icon slot="after" color="green" f7="checkmark_circle"/> : null}
                 {feed.status === TransitFeedStatus.ERROR ? <Icon slot="after" f7="exclamationmark_triangle"/> : null}
