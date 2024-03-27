@@ -32,7 +32,8 @@ async function runFeeds() {
                     runningFeeds.delete(feed.id)
                     console.error(error)
                     feedDb.transit.update(feed.id, {
-                        status: TransitFeedStatus.ERROR
+                        status: TransitFeedStatus.ERROR,
+                        progress: error
                     });
                 }
                 runningFeeds.delete(feed.id)

@@ -7,5 +7,6 @@ export const FeedStatus = ({feed}: {feed: TransitFeed}) => {
         {feed.status === TransitFeedStatus.IMPORTING ? <>Importieren: {feed.progress} ({feed.imported.length + 1} / {feed.files?.size})</> : null}
         {feed.status === TransitFeedStatus.PROCESSING ? <>Verarbeiten: {feed.progress}</> : null}
         {feed.status === TransitFeedStatus.DONE ? <>Abgeschlossen</> : null}
+        {feed.status === TransitFeedStatus.ERROR ? <>{feed.progress}</> : null}
     </p>
 }
