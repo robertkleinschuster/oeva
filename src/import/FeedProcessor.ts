@@ -60,7 +60,7 @@ export async function processStopTimes(feedId: number) {
 
     const interval = setInterval(async () => {
         const percent = Math.ceil((index / stationCount) * 100)
-        const station = stations.at(index)
+        const station = stations.at(index - (feed.index ?? 0))
         await feedDb.transit.update(feedId, {
             progress: `stopovers ${percent} % (station ${index} / ${stationCount}: ${station?.name})`,
             index: index
@@ -154,7 +154,7 @@ export async function processStops(feedId: number) {
 
     const interval = setInterval(async () => {
         const percent = Math.ceil((index / stopCount) * 100)
-        const stop = stops.at(index)
+        const stop = stops.at(index - (feed.index ?? 0))
         await feedDb.transit.update(feedId, {
             progress: `stations ${percent} % (${index} / ${stopCount}: ${stop?.stop_name})`,
             index: index

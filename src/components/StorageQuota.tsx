@@ -5,6 +5,7 @@ import {Card, CardContent, CardFooter, Progressbar} from "framework7-react";
 export const StorageQuota = () => {
     const [quota, setQuota] = useState<StorageEstimate | undefined>()
     useEffect(() => {
+        showEstimatedQuota().then(setQuota)
         const interval = setInterval(() => {
             showEstimatedQuota().then(setQuota)
         }, 2000)
@@ -26,7 +27,6 @@ export const StorageQuota = () => {
                 {formatter.format(usageInMB)} von {formatter.format(quotaInMB)} Verwendet
             </CardFooter>
         </Card>
-
     }
 
     return <></>
