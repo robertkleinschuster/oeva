@@ -9,11 +9,18 @@ export enum TransitFeedStatus {
     ERROR,
 }
 
+export enum TransitFeedStep {
+    STATIONS,
+    STOPOVERS
+}
+
 export interface TransitFeed {
     id?: number;
     url: string;
     name: string;
-    current_step: string | null;
+    step?: TransitFeedStep
+    index?: number;
+    progress?: string;
     is_ifopt: boolean;
     files: Map<string, Blob> | null;
     imported: string[];

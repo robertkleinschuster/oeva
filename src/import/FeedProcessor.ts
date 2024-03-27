@@ -6,11 +6,32 @@ import {feedDb} from "../db/FeedDb.ts";
 import {transitDB} from "../db/TransitDB.ts";
 import {parseStopTime} from "../transit/DateTime.ts";
 import {createStopover} from "./StopoverFactory.ts";
+import {TransitFeedStep} from "../db/Feed.ts";
+
+self.onmessage = async (e: MessageEvent<number>) => {
+    const feedId = e.data;
+    const feed = await feedDb.transit.get(feedId);
+    if (!feed) {
+        throw new Error('Feed not found')
+    }
+    if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
+        await processStops(feedId)
+    }
+    if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
+        await processStopTimes(feedId)
+    }
+    self.postMessage('done')
+};
 
 export async function processStopTimes(feedId: number) {
     await feedDb.transit.update(feedId, {
-        current_step: 'stopovers'
+        step: TransitFeedStep.STOPOVERS
     });
+
+    const feed = await feedDb.transit.get(feedId);
+    if (!feed) {
+        throw new Error('Feed not found')
+    }
 
     const stopIds = await feedDb.dependency.where({
         feed: 'transit',
@@ -24,18 +45,22 @@ export async function processStopTimes(feedId: number) {
     const stations = await scheduleDB.station
         .where('stopIds')
         .anyOf(stopIds)
+        .offset(feed.index && feed.index > 0 ? feed.index - 1 : 0)
         .toArray()
 
-    let index = 1;
-    for (const station of stations) {
+    let index = feed.index ?? 0;
+    const interval = setInterval(async () => {
         const percent = Math.ceil((index / stations.length) * 100)
-
+        const station = stations.at(index)
         await feedDb.transit.update(feedId, {
-            current_step: `stopovers ${percent} % (station ${index} / ${stations.length}: ${station.name})`
+            progress: `stopovers ${percent} % (station ${index} / ${stations.length}: ${station?.name})`,
+            index: index
         });
+    }, 1000)
 
+    let stopovers: Stopover[] = [];
+    for (const station of stations) {
         index++
-        const stopovers: Stopover[] = [];
         const stopTimes = await transitDB.stopTimes
             .where('stop_id')
             .anyOf(station.stopIds)
@@ -84,15 +109,18 @@ export async function processStopTimes(feedId: number) {
             }
         }
 
-        if (stopovers.length) {
-            await scheduleDB.stopover.bulkPut(stopovers)
+        if (stopovers.length > 5000) {
+            await scheduleDB.stopover.bulkPut(stopovers);
+            stopovers = []
         }
     }
+    await scheduleDB.stopover.bulkPut(stopovers);
+    clearInterval(interval)
 }
 
 export async function processStops(feedId: number) {
     await feedDb.transit.update(feedId, {
-        current_step: 'stations'
+        step: TransitFeedStep.STATIONS
     });
 
     const feed = await feedDb.transit.get(feedId);
@@ -109,20 +137,22 @@ export async function processStops(feedId: number) {
     const stops = await transitDB.stops
         .where('stop_id')
         .anyOf(stopIds)
+        .offset(feed.index && feed.index > 0 ? feed.index - 1 : 0)
         .toArray()
 
-    let index = 0;
-    for (const stop of stops) {
+    let index = feed.index ?? 0;
+
+    const interval = setInterval(async () => {
         const percent = Math.ceil((index / stops.length) * 100)
+        const stop = stops.at(index)
+        await feedDb.transit.update(feedId, {
+            progress: `stations ${percent} % (${index} / ${stops.length}: ${stop?.stop_name})`,
+            index: index
+        });
+    }, 1000);
 
-        if (index % 10 == 0) {
-            await feedDb.transit.update(feedId, {
-                current_step: `stations ${percent} % (${index} / ${stops.length}: ${stop.stop_name})`
-            });
-        }
-
+    for (const stop of stops) {
         index++;
-
         const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
         const station: Station = await scheduleDB.station.get(stationId) ?? {
             id: stationId,
@@ -150,4 +180,5 @@ export async function processStops(feedId: number) {
             parent_station: stationId
         })
     }
+    clearInterval(interval)
 }

@@ -81,7 +81,7 @@ describe('FeedImporter', () => {
             imported: [],
             is_ifopt: true,
             timestamp: expect.any(Number),
-            current_step: null,
+            progress: null,
             download_progress: 0,
             downloaded_megabytes: 0,
             status: TransitFeedStatus.DRAFT
@@ -97,7 +97,6 @@ describe('FeedImporter', () => {
             imported: [],
             files: null,
             is_ifopt: false,
-            current_step: null,
             timestamp: 0,
             downloaded_megabytes: 0,
             download_progress: 0,
@@ -131,7 +130,6 @@ describe('FeedImporter', () => {
                 ['agency.txt', new Blob(["route_id,agency_id,route_short_name,route_long_name,route_type\n1001,1,10,Example Route,3"], {type: 'text/csv'})],
                 ['stops.txt', new Blob(["stop_id,stop_name,stop_lat,stop_lon\n1,Example Stop,50.0,-50.0"], {type: 'text/csv'})],
             ]),
-            current_step: null,
             is_ifopt: false,
             timestamp: 0,
             downloaded_megabytes: 0,
@@ -154,7 +152,7 @@ describe('FeedImporter', () => {
             1,
             feedId,
             {
-                current_step: 'agency.txt',
+                progress: 'agency.txt',
                 status: TransitFeedStatus.IMPORTING
             }
         )
@@ -163,7 +161,7 @@ describe('FeedImporter', () => {
             2,
             feedId,
             {
-                current_step: null,
+                progress: null,
                 imported: ['agency.txt', 'stops.txt'],
             }
         )
@@ -171,7 +169,7 @@ describe('FeedImporter', () => {
             3,
             feedId,
             {
-                current_step: 'stops.txt',
+                progress: 'stops.txt',
                 status: TransitFeedStatus.IMPORTING
             }
         )
@@ -179,7 +177,7 @@ describe('FeedImporter', () => {
             4,
             feedId,
             {
-                current_step: null,
+                progress: null,
                 imported: ['agency.txt', 'stops.txt'],
             }
         )

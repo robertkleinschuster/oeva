@@ -6,7 +6,9 @@ import {getFiles, getTableName} from "../db/TransitMapping.ts";
 import {FeedDB} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import {IndexableType} from "dexie";
-import {processStops, processStopTimes} from "./FeedProcessor.ts";
+import FeedProcessorWorker from "./FeedProcessor.ts?worker"
+
+const processorWorker = new FeedProcessorWorker()
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -65,7 +67,6 @@ class FeedImporter {
             url,
             files: null,
             imported: [],
-            current_step: null,
             is_ifopt: is_ifopt,
             status: TransitFeedStatus.DRAFT,
             downloaded_megabytes: 0,
@@ -77,7 +78,6 @@ class FeedImporter {
     async startDownload(feedId: number) {
         this.feedDb.transit.update(feedId, {
             imported: [],
-            current_step: null,
             downloaded_megabytes: 0,
             download_progress: 0,
             status: TransitFeedStatus.DOWNLOADING,
@@ -87,7 +87,6 @@ class FeedImporter {
     async startImport(feedId: number) {
         this.feedDb.transit.update(feedId, {
             imported: [],
-            current_step: null,
             status: TransitFeedStatus.IMPORTING,
         });
     }
@@ -107,22 +106,24 @@ class FeedImporter {
 
         if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
-            this.feedDb.transit.update(feedId, {
-                status: TransitFeedStatus.IMPORTING
-            });
+            await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
         }
         if (feed?.status === TransitFeedStatus.IMPORTING) {
             await this.importData(feedId)
-            this.feedDb.transit.update(feedId, {
-                status: TransitFeedStatus.PROCESSING
-            });
+            await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
         }
         if (feed?.status === TransitFeedStatus.PROCESSING) {
             await this.processData(feedId)
-            this.feedDb.transit.update(feedId, {
-                status: TransitFeedStatus.DONE
-            });
+            await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
+    }
+
+    async updateStatus(feedId: number, status: TransitFeedStatus) {
+        this.feedDb.transit.update(feedId, {
+            status: status,
+            step: undefined,
+            index: undefined
+        });
     }
 
     async downloadData(feedId: number) {
@@ -195,7 +196,7 @@ class FeedImporter {
             }
 
             this.feedDb.transit.update(feedId, {
-                current_step: fileName,
+                progress: fileName,
                 status: TransitFeedStatus.IMPORTING
             });
 
@@ -209,19 +210,23 @@ class FeedImporter {
             imported.push(fileName);
             this.feedDb.transit.update(feedId, {
                 imported,
-                current_step: null,
+                progress: null,
             });
         }
     }
 
-    async processData(feedId: number) {
+    async processData(feedId: number): Promise<void> {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found');
         }
 
-        await processStops(feedId)
-        await processStopTimes(feedId)
+        processorWorker.postMessage(feedId)
+
+        return new Promise(resolve => {
+                processorWorker.onmessage = () => resolve()
+            }
+        )
     }
 
     private importCSV(feedId: number, file: File, tableName: string) {

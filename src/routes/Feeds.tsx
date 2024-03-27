@@ -1,20 +1,25 @@
 import {Button, Icon, List, ListItem, Navbar, Page, Preloader} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {transitDB} from "../db/TransitDB.ts";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {FeedSheet} from "../components/FeedSheet.tsx";
 import {FeedImporter} from "../import/FeedImporter.ts";
 import axios from "axios";
 import {FeedStatus} from "../components/FeedStatus.tsx";
 import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
 import {feedDb} from "../db/FeedDb.ts";
-import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
+import {TransitFeedStatus} from "../db/Feed.ts";
 import {StorageQuota} from "../components/StorageQuota.tsx";
 import {StoragePrompt} from "../components/StoragePrompt.tsx";
 
 const runningFeeds = new Set<number>();
 
-async function runFeeds(feeds: TransitFeed[]) {
+setInterval(async () => {
+    await runFeeds()
+}, 5000)
+
+async function runFeeds() {
+    const feeds = await feedDb.transit.toArray()
     const dataImporter = new FeedImporter(feedDb, transitDB, axios)
     for (const feed of feeds) {
         if (feed.id && !runningFeeds.has(feed.id)) {
@@ -40,14 +45,7 @@ export const Feeds = () => {
     const [addDialog, showAddDialog] = useState(false)
     const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null)
 
-    useEffect(() => {
-        if (feeds) {
-            void runFeeds(feeds)
-        }
-    }, [feeds]);
-
-
-    return <Page name="feeds" onPageInit={() => feeds && runFeeds(feeds)}>
+    return <Page name="feeds">
         <Navbar title="Feeds" backLink>
             <Button slot="right" onClick={() => {
                 showAddDialog(true)
