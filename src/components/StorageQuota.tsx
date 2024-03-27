@@ -5,7 +5,10 @@ import {Card, CardContent, CardFooter, Progressbar} from "framework7-react";
 export const StorageQuota = () => {
     const [quota, setQuota] = useState<StorageEstimate | undefined>()
     useEffect(() => {
-        showEstimatedQuota().then(setQuota)
+        const interval = setInterval(() => {
+            showEstimatedQuota().then(setQuota)
+        }, 2000)
+        return () => clearInterval(interval)
     }, []);
 
     if (quota?.quota && quota?.usage) {
