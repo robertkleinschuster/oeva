@@ -15,19 +15,23 @@ self.onmessage = async (e: MessageEvent<number>) => {
         throw new Error('Feed not found')
     }
     if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
+        await feedDb.transit.update(feedId, {
+            step: TransitFeedStep.STATIONS,
+            index: feed.step === undefined ? 0 : feed.index
+        });
         await processStops(feedId)
     }
     if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
+        await feedDb.transit.update(feedId, {
+            step: TransitFeedStep.STOPOVERS,
+            index: feed.step === undefined ? 0 : feed.index
+        });
         await processStopTimes(feedId)
     }
     self.postMessage('done')
 };
 
 export async function processStopTimes(feedId: number) {
-    await feedDb.transit.update(feedId, {
-        step: TransitFeedStep.STOPOVERS
-    });
-
     const feed = await feedDb.transit.get(feedId);
     if (!feed) {
         throw new Error('Feed not found')
@@ -40,27 +44,31 @@ export async function processStopTimes(feedId: number) {
     }).toArray(
         dependencies => dependencies.map(dependency => dependency.dependency_id)
     )
+    let index = feed.index ?? 0;
 
     const date = new Date()
     const stations = await scheduleDB.station
         .where('stopIds')
         .anyOf(stopIds)
-        .offset(feed.index && feed.index > 0 ? feed.index - 1 : 0)
+        .offset(index)
         .toArray()
 
-    let index = feed.index ?? 0;
+    const stationCount = await scheduleDB.station
+        .where('stopIds')
+        .anyOf(stopIds)
+        .count()
+
     const interval = setInterval(async () => {
-        const percent = Math.ceil((index / stations.length) * 100)
+        const percent = Math.ceil((index / stationCount) * 100)
         const station = stations.at(index)
         await feedDb.transit.update(feedId, {
-            progress: `stopovers ${percent} % (station ${index} / ${stations.length}: ${station?.name})`,
+            progress: `stopovers ${percent} % (station ${index} / ${stationCount}: ${station?.name})`,
             index: index
         });
-    }, 1000)
+    }, 2000)
 
     let stopovers: Stopover[] = [];
     for (const station of stations) {
-        index++
         const stopTimes = await transitDB.stopTimes
             .where('stop_id')
             .anyOf(station.stopIds)
@@ -113,16 +121,13 @@ export async function processStopTimes(feedId: number) {
             await scheduleDB.stopover.bulkPut(stopovers);
             stopovers = []
         }
+        index++
     }
     await scheduleDB.stopover.bulkPut(stopovers);
     clearInterval(interval)
 }
 
 export async function processStops(feedId: number) {
-    await feedDb.transit.update(feedId, {
-        step: TransitFeedStep.STATIONS
-    });
-
     const feed = await feedDb.transit.get(feedId);
     if (!feed) {
         throw new Error('Feed not found')
@@ -134,25 +139,29 @@ export async function processStops(feedId: number) {
         feed_id: feedId
     }).toArray(stops => stops.map(stop => stop.dependency_id))
 
+    let index = feed.index ?? 0;
+
     const stops = await transitDB.stops
         .where('stop_id')
         .anyOf(stopIds)
-        .offset(feed.index && feed.index > 0 ? feed.index - 1 : 0)
+        .offset(index)
         .toArray()
 
-    let index = feed.index ?? 0;
+    const stopCount = await transitDB.stops
+        .where('stop_id')
+        .anyOf(stopIds)
+        .count()
 
     const interval = setInterval(async () => {
-        const percent = Math.ceil((index / stops.length) * 100)
+        const percent = Math.ceil((index / stopCount) * 100)
         const stop = stops.at(index)
         await feedDb.transit.update(feedId, {
-            progress: `stations ${percent} % (${index} / ${stops.length}: ${stop?.stop_name})`,
+            progress: `stations ${percent} % (${index} / ${stopCount}: ${stop?.stop_name})`,
             index: index
         });
-    }, 1000);
+    }, 2000);
 
     for (const stop of stops) {
-        index++;
         const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
         const station: Station = await scheduleDB.station.get(stationId) ?? {
             id: stationId,
@@ -179,6 +188,7 @@ export async function processStops(feedId: number) {
         await transitDB.stops.update(stop, {
             parent_station: stationId
         })
+        index++;
     }
     clearInterval(interval)
 }

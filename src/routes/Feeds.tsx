@@ -13,10 +13,11 @@ import {StorageQuota} from "../components/StorageQuota.tsx";
 import {StoragePrompt} from "../components/StoragePrompt.tsx";
 
 const runningFeeds = new Set<number>();
-
-setInterval(async () => {
-    await runFeeds()
-}, 5000)
+window.addEventListener('load', () => {
+    setInterval(async () => {
+        await runFeeds()
+    }, 5000)
+})
 
 async function runFeeds() {
     const feeds = await feedDb.transit.toArray()

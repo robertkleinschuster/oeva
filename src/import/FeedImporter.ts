@@ -165,7 +165,7 @@ class FeedImporter {
             fileMap.set(fileName, fileContent);
         }
 
-        this.feedDb.transit.update(feedId, {
+        await this.feedDb.transit.update(feedId, {
             files: fileMap
         });
 
@@ -195,7 +195,7 @@ class FeedImporter {
                 continue;
             }
 
-            this.feedDb.transit.update(feedId, {
+            await this.feedDb.transit.update(feedId, {
                 progress: fileName,
                 status: TransitFeedStatus.IMPORTING
             });
@@ -208,7 +208,7 @@ class FeedImporter {
             }
 
             imported.push(fileName);
-            this.feedDb.transit.update(feedId, {
+            await this.feedDb.transit.update(feedId, {
                 imported,
                 progress: null,
             });
@@ -223,8 +223,9 @@ class FeedImporter {
 
         processorWorker.postMessage(feedId)
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
                 processorWorker.onmessage = () => resolve()
+                processorWorker.onerror = reject
             }
         )
     }
