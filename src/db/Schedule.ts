@@ -6,7 +6,8 @@ export interface Stopover {
     trip_id: string;
     route_id: string;
     service_id: string;
-    sequence: number;
+    sequence_at_station: number;
+    sequence_in_trip: number;
     departure_time: string|undefined;
     arrival_time: string|undefined;
     line: string;

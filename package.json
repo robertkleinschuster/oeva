@@ -13,9 +13,9 @@
   "dependencies": {
     "@date-fns/utc": "^1.2.0",
     "@types/papaparse": "^5.3.14",
-    "axios": "^1.6.7",
+    "axios": "^1.6.8",
     "date-fns": "^3.6.0",
-    "dexie": "^3.2.6",
+    "dexie": "^4.0.1",
     "dexie-react-hooks": "^1.1.7",
     "framework7": "^8.3.2",
     "framework7-icons": "^5.0.5",

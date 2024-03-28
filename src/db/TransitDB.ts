@@ -30,19 +30,19 @@ export class TransitDB extends Dexie {
 
     public constructor() {
         super('Transit');
-        this.version(3).stores({
-            agencies: 'agency_id,*tokens',
-            stops: 'stop_id,stop_name,parent_station,[stop_lat+stop_lon],*tokens',
-            routes: 'route_id,route_type,*tokens',
-            trips: 'trip_id,route_id,shape_id,direction_id,*tokens',
+        this.version(4).stores({
+            agencies: 'agency_id',
+            stops: 'stop_id,parent_station',
+            routes: 'route_id',
+            trips: 'trip_id',
             stopTimes: '[trip_id+stop_id],trip_id,stop_id',
-            calendar: 'service_id,[service_id+start_date+end_date]',
+            calendar: 'service_id',
             calendarDates: '[service_id+date],service_id',
             shapes: 'shape_id',
             frequencies: '[trip_id+start_time],trip_id',
             transfers: '[from_stop_id+to_stop_id]',
-            levels: 'level_id,level_index,level_name',
-            pathways: 'pathway_id,[from_stop_id+to_stop_id+is_bidirectional]',
+            levels: 'level_id',
+            pathways: 'pathway_id',
         });
 
         this.agencies = this.table('agencies');

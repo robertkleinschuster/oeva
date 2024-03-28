@@ -7,9 +7,9 @@ export class ScheduleDB extends Dexie {
 
     public constructor() {
         super('Schedule');
-        this.version(4).stores({
-            stopover: '[station_id+trip_id],trip_id,station_id,sequence',
-            station: 'id,[latitude+longitude],*stopIds,*keywords',
+        this.version(5).stores({
+            stopover: '[station_id+trip_id],trip_id,station_id,sequence_at_station,sequence_in_trip',
+            station: 'id,*stopIds,*keywords',
         });
 
         this.stopover = this.table('stopover');

@@ -1,4 +1,3 @@
-import {transitDB} from "../db/TransitDB.ts";
 import {formatServiceDate} from "./DateTime.ts";
 import {isServiceRunningOn} from "./Schedule.ts";
 import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
@@ -24,33 +23,19 @@ export interface TripAtStop extends TripDetail {
 
 
 export class StopoverRepository {
-    async findTrip(tripId: string): Promise<Trip> {
-        const trip = await transitDB.trips.get(tripId);
-        if (!trip) {
-            throw new Error('Trip not found.')
-        }
-        return trip;
-    }
-
-    async findByTrip(tripId: string, date: Date): Promise<Stopover[]> {
+    async findByTrip(tripId: string): Promise<Stopover[]> {
         return scheduleDB.stopover
             .where('trip_id')
             .equals(tripId)
-            .filter(stopover => isServiceRunningOn(stopover.service, stopover.exceptions.get(formatServiceDate(date)), date))
-            .sortBy('sequence')
+            .sortBy('sequence_in_trip')
     }
 
     async findByStation(stationId: string, date: Date): Promise<Stopover[]> {
-        const station = scheduleDB.station.get(stationId)
-        if (!station) {
-            throw new Error('Station not found')
-        }
-
         return scheduleDB.stopover
             .where('station_id')
             .equals(stationId)
             .filter(stopover => isServiceRunningOn(stopover.service, stopover.exceptions.get(formatServiceDate(date)), date))
-            .sortBy('sequence')
+            .sortBy('sequence_at_station')
     }
 }
 

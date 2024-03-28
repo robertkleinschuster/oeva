@@ -209,7 +209,7 @@ class FeedImporter {
             imported.push(fileName);
             await this.feedDb.transit.update(feedId, {
                 imported,
-                progress: null,
+                progress: undefined,
             });
         }
     }
