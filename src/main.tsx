@@ -27,6 +27,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </React.StrictMode>,
 )
 
-window.addEventListener('DOMContentLoaded', () => {
-    worker.postMessage('run')
-})
+worker.postMessage('run')
