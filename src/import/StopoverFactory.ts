@@ -34,10 +34,10 @@ export function createStopover(
         }
     }
 
-    tripStopTimes.sort((a, b) => a.stop_sequence - b.stop_sequence);
+    const sorted = [...tripStopTimes].sort((a, b) => a.stop_sequence - b.stop_sequence);
 
-    const is_origin = tripStopTimes.length > 0 && stopTime.stop_id === tripStopTimes[0].stop_id
-    const is_destination = tripStopTimes.length > 0 && stopTime.stop_id === tripStopTimes[tripStopTimes.length - 1].stop_id
+    const is_origin = sorted.length > 0 && stopTime.stop_id === sorted[0].stop_id
+    const is_destination = sorted.length > 0 && stopTime.stop_id === sorted[sorted.length - 1].stop_id
 
     return {
         station_id: stop.parent_station,

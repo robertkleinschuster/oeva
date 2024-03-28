@@ -36,7 +36,7 @@ class FeedRunner {
             setTimeout(async ()=> {
                 await this.run()
                 resolve()
-            }, 5000)
+            }, 1000)
         })
     }
 }

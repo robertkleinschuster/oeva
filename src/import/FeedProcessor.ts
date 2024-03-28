@@ -4,10 +4,11 @@ import {ScheduleDB} from "../db/ScheduleDB.ts";
 import lunr from "lunr";
 import {FeedDB} from "../db/FeedDb.ts";
 import {TransitDB} from "../db/TransitDB.ts";
-import {parseStopTime} from "../transit/DateTime.ts";
 import {createStopover} from "./StopoverFactory.ts";
 
 export class FeedProcessor {
+    private offset: number = 0
+
     constructor(private feedDb: FeedDB, private transitDb: TransitDB, private scheduleDb: ScheduleDB) {
     }
 
@@ -17,54 +18,49 @@ export class FeedProcessor {
             throw new Error('Feed not found')
         }
 
-        let offset = feed.index ?? 0;
+        this.offset = feed.index ?? 0
+
+        const count = await this.feedDb.dependency
+            .where('[feed+table+feed_id]')
+            .equals(['transit', 'trips', feedId])
+            .count()
 
         const ids = await this.feedDb.dependency
             .where('[feed+table+feed_id]')
             .equals(['transit', 'trips', feedId])
+            .offset(this.offset)
             .toArray(deps => deps.map(d => d.dependency_id))
-
-        if (!ids.length) {
-            return;
-        }
-
-        const date = new Date()
-
-        const count = await this.transitDb.trips
-            .where('trip_id')
-            .anyOf(ids)
-            .count()
 
         const trips = await this.transitDb.trips
             .where('trip_id')
             .anyOf(ids)
-            .offset(offset)
             .toArray()
 
         const interval = setInterval(async () => {
-            const percent = Math.ceil((offset / count) * 100)
-            const trip = trips.at(offset - (feed.index ?? 0))
+            const percent = Math.ceil((this.offset / count) * 100)
+            const trip = trips.at(this.offset - (feed.index ?? 0))
             const route = trip ? await this.transitDb.routes.get(trip.route_id) : undefined;
             await this.feedDb.transit.update(feedId, {
-                progress: `stopovers ${percent} %, trip ${offset} / ${count}: ${route?.route_short_name} ${trip?.trip_short_name} ${trip?.trip_headsign}`,
-                index: offset
+                progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${route?.route_short_name} ${trip?.trip_short_name} ${trip?.trip_headsign}`,
+                index: this.offset
             });
         }, 1000)
 
-        let index = 0;
-        let stopovers: Stopover[] = [];
         for (const trip of trips) {
+            const stopovers: Stopover[] = [];
+
             const stopTimes = await this.transitDb.stopTimes
                 .where({trip_id: trip.trip_id})
-                .sortBy('stop_sequence')
-                .then(stopTimes => stopTimes.sort((a, b) => {
-                        const timeA = a.departure_time ?? a.arrival_time;
-                        const timeB = b.departure_time ?? b.arrival_time;
-                        if (!timeA || !timeB) {
-                            return 0;
+                .toArray(stopTimes => stopTimes.sort((a, b) => {
+                        const timeA = a.departure_time ?? a.arrival_time
+                        const timeB = b.departure_time ?? b.arrival_time
+                        if (timeA && timeB) {
+                            const [hoursA, minutesA] = timeA.split(':').map(Number);
+                            const [hoursB, minutesB] = timeB.split(':').map(Number);
+                            return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB)
+                        } else {
+                            return 0
                         }
-
-                        return parseStopTime(timeA, date).getTime() - parseStopTime(timeB, date).getTime()
                     })
                 );
 
@@ -96,19 +92,11 @@ export class FeedProcessor {
                 }
             }
 
-            if (stopovers.length > 500) {
-                await this.scheduleDb.stopover.bulkPut(stopovers);
-                offset += index
-                stopovers = []
-            }
-            index++;
+            await this.scheduleDb.stopover.bulkPut(stopovers);
+            this.offset++
         }
 
         clearInterval(interval)
-
-        if (stopovers.length) {
-            await this.scheduleDb.stopover.bulkPut(stopovers);
-        }
     }
 
     async processStops(feedId: number) {
@@ -117,34 +105,30 @@ export class FeedProcessor {
             throw new Error('Feed not found')
         }
 
-        const stopCount = await this.feedDb.dependency
+        this.offset = feed.index ?? 0;
+
+        const count = await this.feedDb.dependency
             .where('[feed+table+feed_id]')
             .equals(['transit', 'stops', feedId])
             .count()
 
-        let index = feed.index ?? 0;
-
-        const stopIds = await this.feedDb.dependency
+        const ids = await this.feedDb.dependency
             .where('[feed+table+feed_id]')
             .equals(['transit', 'stops', feedId])
-            .offset(index)
+            .offset(this.offset)
             .toArray(deps => deps.map(d => d.dependency_id))
-
-        if (!stopIds.length) {
-            return;
-        }
 
         const stops = await this.transitDb.stops
             .where('stop_id')
-            .anyOf(stopIds)
+            .anyOf(ids)
             .toArray()
 
         const interval = setInterval(async () => {
-            const percent = Math.ceil((index / stopCount) * 100)
-            const stop = stops.at(index - (feed.index ?? 0))
+            const percent = Math.ceil((this.offset / count) * 100)
+            const stop = stops.at(this.offset - (feed.index ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `stations ${percent} %, ${index} / ${stopCount}: ${stop?.stop_name}`,
-                index: index
+                progress: `stations ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
+                index: this.offset
             });
         }, 1000);
 
@@ -175,7 +159,7 @@ export class FeedProcessor {
             await this.transitDb.stops.update(stop, {
                 parent_station: stationId
             })
-            index++;
+            this.offset++;
         }
         clearInterval(interval)
     }
