@@ -13,7 +13,6 @@ import Framework7React from 'framework7-react';
 // Import feed runner as web worker with vite ?worker feature
 import FeedRunnerWorker from "./import/FeedRunner.ts?worker";
 import {WorkerContextProvider} from "./WorkerContext.tsx";
-import {isStoragePersisted, persist} from "./db/StorageManager.ts";
 
 // Init F7-React Plugin
 Framework7.use(Framework7React);
@@ -28,10 +27,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </React.StrictMode>,
 )
 
-void (async () => {
-    const persisted = await isStoragePersisted()
-    if (!persisted) {
-        await persist()
-    }
+window.addEventListener('DOMContentLoaded', () => {
     worker.postMessage('run')
-})()
+})
