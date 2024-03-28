@@ -28,13 +28,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </React.StrictMode>,
 )
 
-isStoragePersisted().then(persisted => {
+void (async () => {
+    const persisted = await isStoragePersisted()
     if (!persisted) {
-        persist().then(() => {
-            worker.postMessage('run')
-        })
-    } else {
+        await persist()
         worker.postMessage('run')
     }
-})
-
+})()
