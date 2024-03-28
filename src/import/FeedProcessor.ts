@@ -18,6 +18,7 @@ export class FeedProcessor {
         if (!feed) {
             throw new Error('Feed not found')
         }
+        const date = new Date()
 
         this.offset = feed.index ?? 0
 
@@ -52,16 +53,17 @@ export class FeedProcessor {
 
             const stopTimes = await this.transitDb.stopTimes
                 .where({trip_id: trip.trip_id})
-                .toArray(stopTimes => stopTimes.sort((a, b) => {
-                        const timeA = a.departure_time ?? a.arrival_time
-                        const timeB = b.departure_time ?? b.arrival_time
-                        if (timeA && timeB) {
-                            return parseStopTime(timeA, new Date()).getTime() - parseStopTime(timeB, new Date()).getTime()
-                        } else {
-                            return 0
-                        }
-                    })
-                );
+                .toArray();
+
+            stopTimes.sort((a, b) => {
+                const timeA = a.departure_time ?? a.arrival_time
+                const timeB = b.departure_time ?? b.arrival_time
+                if (timeA && timeB) {
+                    return parseStopTime(timeA, date).getTime() - parseStopTime(timeB, date).getTime()
+                } else {
+                    return 0
+                }
+            })
 
             for (const stopTime of stopTimes) {
                 const stop = await this.transitDb.stops.get(stopTime.stop_id)
