@@ -171,11 +171,10 @@ class FeedImporter {
         for (const fileName of fileNames) {
             const fileContent = await content.files[fileName].async('blob');
             fileMap.set(fileName, fileContent);
+            await this.feedDb.transit.update(feedId, {
+                files: fileMap
+            });
         }
-
-        await this.feedDb.transit.update(feedId, {
-            files: fileMap
-        });
     }
 
     async importData(feedId: number) {
