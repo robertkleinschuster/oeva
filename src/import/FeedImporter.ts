@@ -3,12 +3,10 @@ import JSZip from 'jszip';
 import {Axios} from "axios";
 import {TransitDB} from '../db/TransitDB.ts';
 import {getFiles, getTableName} from "../db/TransitMapping.ts";
-import {FeedDB} from "../db/FeedDb.ts";
-import {TransitFeedStatus} from "../db/Feed.ts";
+import {feedDb, FeedDB} from "../db/FeedDb.ts";
+import {TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
 import {IndexableType} from "dexie";
-import FeedProcessorWorker from "./FeedProcessor.ts?worker"
-
-const processorWorker = new FeedProcessorWorker()
+import {processStops, processStopTimes} from "./FeedProcessor.ts"
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -160,7 +158,7 @@ class FeedImporter {
 
         const fileMap = new Map<string, Blob>();
 
-        for (let fileName of fileNames) {
+        for (const fileName of fileNames) {
             const fileContent = await content.files[fileName].async('blob');
             fileMap.set(fileName, fileContent);
         }
@@ -190,7 +188,7 @@ class FeedImporter {
 
         const imported = feed.imported ?? [];
 
-        for (let [fileName, fileContent] of feed.files.entries()) {
+        for (const [fileName, fileContent] of feed.files.entries()) {
             if (imported.includes(fileName)) {
                 continue;
             }
@@ -221,13 +219,20 @@ class FeedImporter {
             throw new Error('Feed not found');
         }
 
-        processorWorker.postMessage(feedId)
-
-        return new Promise((resolve, reject) => {
-                processorWorker.onmessage = () => resolve()
-                processorWorker.onerror = reject
-            }
-        )
+        if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
+            await feedDb.transit.update(feedId, {
+                step: TransitFeedStep.STATIONS,
+                index: feed.step === undefined ? 0 : feed.index
+            });
+            await processStops(feedId)
+        }
+        if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
+            await feedDb.transit.update(feedId, {
+                step: TransitFeedStep.STOPOVERS,
+                index: feed.step === undefined ? 0 : feed.index
+            });
+            await processStopTimes(feedId)
+        }
     }
 
     private importCSV(feedId: number, file: File, tableName: string) {
@@ -241,7 +246,7 @@ class FeedImporter {
                 chunkSize: 5000,
                 worker: false,
                 encoding: "UTF-8",
-                chunk: (results: ParseResult<any>, parser) => {
+                chunk: (results: ParseResult<object>, parser) => {
                     parser.pause();
                     const table = this.transitDb.table(tableName);
                     table.bulkPut(results.data, undefined, {allKeys: true})

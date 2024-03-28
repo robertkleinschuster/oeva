@@ -4,28 +4,45 @@ import {FeedImporter} from "./FeedImporter.ts";
 import {transitDB} from "../db/TransitDB.ts";
 import axios from "axios";
 
-export class FeedRunner {
-    static running: number | undefined
+class FeedRunner {
+    running: number | undefined
 
-    run() {
-        feedDb.transit.where('status')
-            .noneOf([TransitFeedStatus.ERROR, TransitFeedStatus.DONE])
-            .each(async feed => {
-                if (FeedRunner.running === undefined) {
-                    FeedRunner.running = feed.id
-                    console.log('running', FeedRunner.running)
-                    try {
-                        const dataImporter = new FeedImporter(feedDb, transitDB, axios)
-                        await dataImporter.run(feed.id!)
-                    } catch (error) {
-                        console.error(error)
-                        feedDb.transit.update(feed.id!, {
-                            status: TransitFeedStatus.ERROR,
-                            progress: error
-                        });
-                    }
-                    FeedRunner.running = undefined
+    async run() {
+        if (this.running === undefined) {
+            const feed = await feedDb.transit
+                .where('status')
+                .noneOf([TransitFeedStatus.ERROR, TransitFeedStatus.DONE])
+                .first()
+            if (feed) {
+                this.running = feed.id
+                self.postMessage(feed.id)
+                try {
+                    const dataImporter = new FeedImporter(feedDb, transitDB, axios)
+                    await dataImporter.run(feed.id!)
+                } catch (error) {
+                    console.error(error)
+                    feedDb.transit.update(feed.id!, {
+                        status: TransitFeedStatus.ERROR,
+                        progress: error
+                    });
                 }
-            })
+                this.running = undefined
+                self.postMessage(undefined)
+            }
+        }
+
+        return new Promise<void>(resolve => {
+            setTimeout(async ()=> {
+                await this.run()
+                resolve()
+            }, 5000)
+        })
+    }
+}
+
+self.onmessage = (e) => {
+    if (e.data === 'run') {
+        const runner = new FeedRunner()
+        void runner.run()
     }
 }

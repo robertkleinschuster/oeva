@@ -6,30 +6,6 @@ import {feedDb} from "../db/FeedDb.ts";
 import {transitDB} from "../db/TransitDB.ts";
 import {parseStopTime} from "../transit/DateTime.ts";
 import {createStopover} from "./StopoverFactory.ts";
-import {TransitFeedStep} from "../db/Feed.ts";
-
-self.onmessage = async (e: MessageEvent<number>) => {
-    const feedId = e.data;
-    const feed = await feedDb.transit.get(feedId);
-    if (!feed) {
-        throw new Error('Feed not found')
-    }
-    if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
-        await feedDb.transit.update(feedId, {
-            step: TransitFeedStep.STATIONS,
-            index: feed.step === undefined ? 0 : feed.index
-        });
-        await processStops(feedId)
-    }
-    if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
-        await feedDb.transit.update(feedId, {
-            step: TransitFeedStep.STOPOVERS,
-            index: feed.step === undefined ? 0 : feed.index
-        });
-        await processStopTimes(feedId)
-    }
-    self.postMessage('done')
-};
 
 export async function processStopTimes(feedId: number) {
     const feed = await feedDb.transit.get(feedId);
