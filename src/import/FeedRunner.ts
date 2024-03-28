@@ -24,7 +24,7 @@ class FeedRunner {
                     console.error(error)
                     feedDb.transit.update(feed.id!, {
                         status: TransitFeedStatus.ERROR,
-                        progress: JSON.stringify(error)
+                        progress: String(error)
                     });
                 }
                 this.running = undefined
