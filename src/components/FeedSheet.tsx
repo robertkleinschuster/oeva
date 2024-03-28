@@ -6,9 +6,10 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {FeedStatus} from "./FeedStatus.tsx";
 import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
+import {scheduleDB} from "../db/ScheduleDB.ts";
 
 export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSheetClosed: () => void }) => {
-    const dataImporter = new FeedImporter(feedDb, transitDB, axios)
+    const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
     const feed = useLiveQuery(() => feedId ? feedDb.transit.get(feedId) : undefined, [feedId])
 
     return <Sheet push backdrop closeByBackdropClick opened={Boolean(feed)} onSheetClosed={onSheetClosed}

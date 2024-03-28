@@ -12,6 +12,7 @@ import {TransitFeedStatus} from "../db/Feed.ts";
 import {StorageQuota} from "../components/StorageQuota.tsx";
 import {StoragePrompt} from "../components/StoragePrompt.tsx";
 import {WorkerContext} from "../WorkerContext.tsx";
+import {scheduleDB} from "../db/ScheduleDB.ts";
 
 export const Feeds = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray());
@@ -44,7 +45,7 @@ export const Feeds = () => {
         <StoragePrompt/>
         <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
         <AddFeedSheet open={addDialog} onCreate={async (url, name, isIfopt) => {
-            const dataImporter = new FeedImporter(feedDb, transitDB, axios)
+            const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
             const importId = await dataImporter.create(url, name, isIfopt)
             showAddDialog(false)
             await dataImporter.startDownload(importId)
