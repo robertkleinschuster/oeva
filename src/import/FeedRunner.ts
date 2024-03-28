@@ -3,6 +3,7 @@ import {TransitFeedStatus} from "../db/Feed.ts";
 import {FeedImporter} from "./FeedImporter.ts";
 import {transitDB} from "../db/TransitDB.ts";
 import axios from "axios";
+import {scheduleDB} from "../db/ScheduleDB.ts";
 
 class FeedRunner {
     running: number | undefined
@@ -17,13 +18,13 @@ class FeedRunner {
                 this.running = feed.id
                 self.postMessage(feed.id)
                 try {
-                    const dataImporter = new FeedImporter(feedDb, transitDB, axios)
+                    const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
                     await dataImporter.run(feed.id!)
                 } catch (error) {
                     console.error(error)
                     feedDb.transit.update(feed.id!, {
                         status: TransitFeedStatus.ERROR,
-                        progress: error
+                        progress: JSON.stringify(error)
                     });
                 }
                 this.running = undefined

@@ -6,6 +6,26 @@ import axios from "axios";
 import fs from 'fs';
 import path from 'path';
 import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
+import {scheduleDB} from "../db/ScheduleDB.ts";
+
+jest.mock('../db/ScheduleDB.ts', () => {
+    const mockTable = () => ({
+        add: jest.fn(),
+        get: jest.fn(),
+        update: jest.fn(),
+        bulkPut: jest.fn(),
+    });
+
+    return {
+        transitDB: {
+            station: mockTable(),
+            stopover: mockTable(),
+            table: jest.fn()
+        },
+    };
+});
+
+const mockedScheduleDb = scheduleDB as jest.Mocked<typeof scheduleDB>;
 
 jest.mock('../db/TransitDB.ts', () => {
     const mockTable = () => ({
@@ -69,7 +89,7 @@ describe('FeedImporter', () => {
     test('create should add a draft import', async () => {
         const url = 'http://example.com/data.zip';
         const name = 'Test Import';
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
 
         await dataImporter.create(url, name, true);
 
@@ -81,7 +101,6 @@ describe('FeedImporter', () => {
             imported: [],
             is_ifopt: true,
             timestamp: expect.any(Number),
-            progress: null,
             download_progress: 0,
             downloaded_megabytes: 0,
             status: TransitFeedStatus.DRAFT
@@ -113,7 +132,7 @@ describe('FeedImporter', () => {
             data: zipFileBuffer,
         }));
 
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
         await expect(dataImporter.downloadData(importId)).resolves.not.toThrow();
 
         // Verify axios was called with the correct URL
@@ -145,7 +164,7 @@ describe('FeedImporter', () => {
 
         mockedTransitDb.table.mockReturnValue(mockedTransitDb.stops)
 
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
         await dataImporter.importData(feedId)
 
         expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(
@@ -186,7 +205,7 @@ describe('FeedImporter', () => {
         const feedId = 2;
         mockedFeedDb.transit.get.mockResolvedValue(null);
 
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
         await expect(dataImporter.downloadData(feedId)).rejects.toThrow('Feed not found');
     });
 
@@ -198,7 +217,7 @@ describe('FeedImporter', () => {
 
         const mockFile = new Blob([zipFileBuffer], {type: 'application/zip'});
 
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedAxios);
+        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
 
         await dataImporter.saveData(importId, mockFile);
 

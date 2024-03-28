@@ -3,10 +3,11 @@ import JSZip from 'jszip';
 import {Axios} from "axios";
 import {TransitDB} from '../db/TransitDB.ts';
 import {getFiles, getTableName} from "../db/TransitMapping.ts";
-import {feedDb, FeedDB} from "../db/FeedDb.ts";
+import {FeedDB} from "../db/FeedDb.ts";
 import {TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
 import {IndexableType} from "dexie";
-import {processStops, processStopTimes} from "./FeedProcessor.ts"
+import {ScheduleDB} from "../db/ScheduleDB.ts";
+import {FeedProcessor} from "./FeedProcessor.ts";
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -56,7 +57,7 @@ const dependencyTables = new Set([
 
 class FeedImporter {
 
-    constructor(private feedDb: FeedDB, private transitDb: TransitDB, private axios: Axios) {
+    constructor(private feedDb: FeedDB, private transitDb: TransitDB, private scheduleDb: ScheduleDB, private axios: Axios) {
     }
 
     async create(url: string, name: string, is_ifopt: boolean) {
@@ -218,20 +219,20 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-
+        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb)
         if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
-            await feedDb.transit.update(feedId, {
+            await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STATIONS,
                 index: feed.step === undefined ? 0 : feed.index
             });
-            await processStops(feedId)
+            await processor.processStops(feedId)
         }
         if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
-            await feedDb.transit.update(feedId, {
+            await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STOPOVERS,
                 index: feed.step === undefined ? 0 : feed.index
             });
-            await processStopTimes(feedId)
+            await processor.processStopTimes(feedId)
         }
     }
 
