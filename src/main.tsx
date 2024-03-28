@@ -32,6 +32,6 @@ void (async () => {
     const persisted = await isStoragePersisted()
     if (!persisted) {
         await persist()
-        worker.postMessage('run')
     }
+    worker.postMessage('run')
 })()
