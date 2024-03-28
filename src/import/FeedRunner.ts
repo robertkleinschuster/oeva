@@ -13,25 +13,29 @@ class FeedRunner {
             await feedDb.open()
         }
         if (this.running === undefined) {
-            const feed = await feedDb.transit
-                .where('status')
-                .noneOf([TransitFeedStatus.ERROR, TransitFeedStatus.DONE])
-                .first()
-            if (feed) {
-                this.running = feed.id
-                self.postMessage(feed.id)
-                try {
-                    const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
-                    await dataImporter.run(feed.id!)
-                } catch (error) {
-                    console.error(error)
-                    await feedDb.transit.update(feed.id!, {
-                        status: TransitFeedStatus.ERROR,
-                        progress: String(error)
-                    });
+            try {
+                const feed = await feedDb.transit
+                    .where('status')
+                    .noneOf([TransitFeedStatus.ERROR, TransitFeedStatus.DONE])
+                    .first()
+                if (feed) {
+                    this.running = feed.id
+                    self.postMessage(feed.id)
+                    try {
+                        const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
+                        await dataImporter.run(feed.id!)
+                    } catch (error) {
+                        console.error(error)
+                        await feedDb.transit.update(feed.id!, {
+                            status: TransitFeedStatus.ERROR,
+                            progress: String(error)
+                        });
+                    }
+                    this.running = undefined
+                    self.postMessage(undefined)
                 }
-                this.running = undefined
-                self.postMessage(undefined)
+            } catch (e) {
+                console.log(e)
             }
         }
 
