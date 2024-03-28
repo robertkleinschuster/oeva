@@ -10,7 +10,6 @@ import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
 import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import {StorageQuota} from "../components/StorageQuota.tsx";
-import {StoragePrompt} from "../components/StoragePrompt.tsx";
 import {WorkerContext} from "../WorkerContext.tsx";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 
@@ -42,7 +41,6 @@ export const Feeds = () => {
                 {feed.status === TransitFeedStatus.ERROR ? <Icon slot="after" f7="exclamationmark_triangle"/> : null}
             </ListItem>)}
         </List>
-        <StoragePrompt/>
         <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
         <AddFeedSheet open={addDialog} onCreate={async (url, name, isIfopt) => {
             const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
