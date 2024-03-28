@@ -176,14 +176,6 @@ class FeedImporter {
         await this.feedDb.transit.update(feedId, {
             files: fileMap
         });
-
-        const missingFiles = requiredGTFSFiles
-            .filter((requiredFile) => !fileNames.includes(requiredFile));
-
-        return {
-            savedFiles: Array.from(fileMap.keys()),
-            missingFiles: missingFiles,
-        };
     }
 
     async importData(feedId: number) {

@@ -9,6 +9,9 @@ class FeedRunner {
     running: number | undefined
 
     async run() {
+        if (!feedDb.isOpen()) {
+            await feedDb.open()
+        }
         if (this.running === undefined) {
             const feed = await feedDb.transit
                 .where('status')
