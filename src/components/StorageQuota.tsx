@@ -21,7 +21,7 @@ export const StorageQuota = () => {
         return <Card>
             <CardContent style={{paddingBottom: 0}}>
                 <p>{usageInPercent} %</p>
-                <Progressbar color="black" progress={usageInPercent} style={{height: '1rem'}}/>
+                <Progressbar color="orange" progress={usageInPercent} style={{height: '1rem'}}/>
             </CardContent>
             <CardFooter>
                 {formatter.format(usageInMB)} von {formatter.format(quotaInMB)} Verwendet

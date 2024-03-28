@@ -30,7 +30,7 @@ export class TransitDB extends Dexie {
 
     public constructor() {
         super('Transit');
-        this.version(4).stores({
+        this.version(5).stores({
             agencies: 'agency_id',
             stops: 'stop_id,parent_station',
             routes: 'route_id',
