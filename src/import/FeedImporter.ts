@@ -80,6 +80,9 @@ class FeedImporter {
             downloaded_megabytes: 0,
             download_progress: 0,
             status: TransitFeedStatus.DOWNLOADING,
+            progress: undefined,
+            index: undefined,
+            step: undefined
         });
     }
 
@@ -87,12 +90,18 @@ class FeedImporter {
         this.feedDb.transit.update(feedId, {
             imported: [],
             status: TransitFeedStatus.IMPORTING,
+            progress: undefined,
+            index: undefined,
+            step: undefined
         });
     }
 
-    async startOptimize(feedId: number) {
+    async startProcessing(feedId: number) {
         this.feedDb.transit.update(feedId, {
             status: TransitFeedStatus.PROCESSING,
+            progress: undefined,
+            index: undefined,
+            step: undefined
         });
     }
 
@@ -113,7 +122,6 @@ class FeedImporter {
         }
         if (feed?.status === TransitFeedStatus.PROCESSING) {
             await this.processData(feedId)
-            await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
     }
 
@@ -121,7 +129,8 @@ class FeedImporter {
         this.feedDb.transit.update(feedId, {
             status: status,
             step: undefined,
-            index: undefined
+            index: undefined,
+            progress: undefined
         });
     }
 
@@ -208,8 +217,7 @@ class FeedImporter {
 
             imported.push(fileName);
             await this.feedDb.transit.update(feedId, {
-                imported,
-                progress: undefined,
+                imported
             });
         }
     }
@@ -220,19 +228,21 @@ class FeedImporter {
             throw new Error('Feed not found');
         }
         const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb)
-        if (feed.step === undefined || feed.step === TransitFeedStep.STATIONS) {
+
+        if (feed.step === undefined) {
             await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STATIONS,
-                index: feed.step === undefined ? 0 : feed.index
+                index: undefined
             });
+        } else if (feed.step === TransitFeedStep.STATIONS) {
             await processor.processStops(feedId)
-        }
-        if (feed.step === undefined || feed.step === TransitFeedStep.STOPOVERS) {
             await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STOPOVERS,
-                index: feed.step === undefined ? 0 : feed.index
+                index: undefined
             });
+        } else if (feed.step === TransitFeedStep.STOPOVERS) {
             await processor.processStopTimes(feedId)
+            await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
     }
 

@@ -42,7 +42,7 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                                 await dataImporter.startImport(feed.id!)
                             }}>Importieren</Button>
                             <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} onClick={async () => {
-                                await dataImporter.startOptimize(feed.id!)
+                                await dataImporter.startProcessing(feed.id!)
                             }}>Verarbeiten</Button>
                         </p>
 

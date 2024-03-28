@@ -11,47 +11,51 @@ export class FeedProcessor {
     constructor(private feedDb: FeedDB, private transitDb: TransitDB, private scheduleDb: ScheduleDB) {
     }
 
-     async processStopTimes(feedId: number) {
+    async processStopTimes(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
         }
 
-        const stopIds = await this.feedDb.dependency.where({
-            feed: 'transit',
-            table: 'stops',
-            feed_id: feedId
-        }).toArray(
-            dependencies => dependencies.map(dependency => dependency.dependency_id)
-        )
-        let index = feed.index ?? 0;
+        let offset = feed.index ?? 0;
+
+        const ids = await this.feedDb.dependency
+            .where('[feed+table+feed_id]')
+            .equals(['transit', 'trips', feedId])
+            .toArray(deps => deps.map(d => d.dependency_id))
+
+        if (!ids.length) {
+            return;
+        }
 
         const date = new Date()
-        const stations = await this.scheduleDb.station
-            .where('stopIds')
-            .anyOf(stopIds)
-            .offset(index)
-            .toArray()
 
-        const stationCount = await this.scheduleDb.station
-            .where('stopIds')
-            .anyOf(stopIds)
+        const count = await this.transitDb.trips
+            .where('trip_id')
+            .anyOf(ids)
             .count()
 
-        const interval = setInterval(async () => {
-            const percent = Math.ceil((index / stationCount) * 100)
-            const station = stations.at(index - (feed.index ?? 0))
-            await this.feedDb.transit.update(feedId, {
-                progress: `stopovers ${percent} % (station ${index} / ${stationCount}: ${station?.name})`,
-                index: index
-            });
-        }, 2000)
+        const trips = await this.transitDb.trips
+            .where('trip_id')
+            .anyOf(ids)
+            .offset(offset)
+            .toArray()
 
+        const interval = setInterval(async () => {
+            const percent = Math.ceil((offset / count) * 100)
+            const trip = trips.at(offset - (feed.index ?? 0))
+            const route = trip ? await this.transitDb.routes.get(trip.route_id) : undefined;
+            await this.feedDb.transit.update(feedId, {
+                progress: `stopovers ${percent} %, trip ${offset} / ${count}: ${route?.route_short_name} ${trip?.trip_short_name} ${trip?.trip_headsign}`,
+                index: offset
+            });
+        }, 1000)
+
+        let index = 0;
         let stopovers: Stopover[] = [];
-        for (const station of stations) {
+        for (const trip of trips) {
             const stopTimes = await this.transitDb.stopTimes
-                .where('stop_id')
-                .anyOf(station.stopIds)
+                .where({trip_id: trip.trip_id})
                 .sortBy('stop_sequence')
                 .then(stopTimes => stopTimes.sort((a, b) => {
                         const timeA = a.departure_time ?? a.arrival_time;
@@ -65,16 +69,11 @@ export class FeedProcessor {
                 );
 
             for (const stopTime of stopTimes) {
-                const trip = await this.transitDb.trips.get(stopTime.trip_id)
                 const stop = await this.transitDb.stops.get(stopTime.stop_id)
                 const station = stop?.parent_station ? await this.scheduleDb.station.get(stop?.parent_station) : undefined
 
-                if (trip && stop && station) {
+                if (stop && station) {
                     const route = await this.transitDb.routes.get(trip.route_id)
-                    const tripStopTimes = await this.transitDb.stopTimes
-                        .where({trip_id: trip.trip_id})
-                        .toArray()
-
                     const service = await this.transitDb.calendar.get(trip.service_id)
                     const exceptions = await this.transitDb.calendarDates
                         .where('service_id')
@@ -88,7 +87,7 @@ export class FeedProcessor {
                             trip,
                             route,
                             station,
-                            tripStopTimes,
+                            stopTimes,
                             service,
                             exceptions,
                             stopovers.length
@@ -97,49 +96,57 @@ export class FeedProcessor {
                 }
             }
 
-            if (stopovers.length > 5000) {
+            if (stopovers.length > 500) {
                 await this.scheduleDb.stopover.bulkPut(stopovers);
+                offset += index
                 stopovers = []
             }
-            index++
+            index++;
         }
-        await this.scheduleDb.stopover.bulkPut(stopovers);
+
         clearInterval(interval)
+
+        if (stopovers.length) {
+            await this.scheduleDb.stopover.bulkPut(stopovers);
+        }
     }
 
-     async processStops(feedId: number) {
+    async processStops(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
         }
 
-        const stopIds = await this.feedDb.dependency.where({
-            feed: 'transit',
-            table: 'stops',
-            feed_id: feedId
-        }).toArray(stops => stops.map(stop => stop.dependency_id))
+        const stopCount = await this.feedDb.dependency
+            .where('[feed+table+feed_id]')
+            .equals(['transit', 'stops', feedId])
+            .count()
 
         let index = feed.index ?? 0;
+
+        const stopIds = await this.feedDb.dependency
+            .where('[feed+table+feed_id]')
+            .equals(['transit', 'stops', feedId])
+            .offset(index)
+            .toArray(deps => deps.map(d => d.dependency_id))
+
+        if (!stopIds.length) {
+            return;
+        }
 
         const stops = await this.transitDb.stops
             .where('stop_id')
             .anyOf(stopIds)
-            .offset(index)
             .toArray()
-
-        const stopCount = await this.transitDb.stops
-            .where('stop_id')
-            .anyOf(stopIds)
-            .count()
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((index / stopCount) * 100)
             const stop = stops.at(index - (feed.index ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `stations ${percent} % (${index} / ${stopCount}: ${stop?.stop_name})`,
+                progress: `stations ${percent} %, ${index} / ${stopCount}: ${stop?.stop_name}`,
                 index: index
             });
-        }, 2000);
+        }, 1000);
 
         for (const stop of stops) {
             const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
