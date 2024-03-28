@@ -5,6 +5,7 @@ import lunr from "lunr";
 import {FeedDB} from "../db/FeedDb.ts";
 import {TransitDB} from "../db/TransitDB.ts";
 import {createStopover} from "./StopoverFactory.ts";
+import {parseStopTime} from "../transit/DateTime.ts";
 
 export class FeedProcessor {
     private offset: number = 0
@@ -55,9 +56,7 @@ export class FeedProcessor {
                         const timeA = a.departure_time ?? a.arrival_time
                         const timeB = b.departure_time ?? b.arrival_time
                         if (timeA && timeB) {
-                            const [hoursA, minutesA] = timeA.split(':').map(Number);
-                            const [hoursB, minutesB] = timeB.split(':').map(Number);
-                            return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB)
+                            return parseStopTime(timeA, new Date()).getTime() - parseStopTime(timeB, new Date()).getTime()
                         } else {
                             return 0
                         }

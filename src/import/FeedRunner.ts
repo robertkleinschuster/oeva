@@ -22,7 +22,7 @@ class FeedRunner {
                     await dataImporter.run(feed.id!)
                 } catch (error) {
                     console.error(error)
-                    feedDb.transit.update(feed.id!, {
+                    await feedDb.transit.update(feed.id!, {
                         status: TransitFeedStatus.ERROR,
                         progress: String(error)
                     });
