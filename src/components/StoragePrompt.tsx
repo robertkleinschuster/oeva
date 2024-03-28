@@ -5,7 +5,7 @@ import {Block, f7, Link} from "framework7-react";
 export const StoragePrompt = () => {
     const [state, setState] = useState<PersistenceState>()
     useEffect(() => {
-        tryPersistWithoutPromtingUser().then(setState)
+        tryPersistWithoutPromtingUser().then(setState).catch(console.error)
     }, []);
 
     if (state === PersistenceState.UNSUPPORTED) {
