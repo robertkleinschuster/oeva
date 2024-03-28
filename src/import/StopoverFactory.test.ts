@@ -58,36 +58,36 @@ describe('StopoverFactory', () => {
         expect(() => createStopover(stopTime, {
             ...stop,
             stop_id: '99'
-        }, trip, route, station, [], service, [], 1)).toThrowError('Data mismatch')
+        }, trip, route, station, [], service, [])).toThrowError('Data mismatch')
         expect(() => createStopover(stopTime, stop, {
             ...trip,
             trip_id: '99'
-        }, route, station, [], service, [], 1)).toThrowError('Data mismatch')
+        }, route, station, [], service, [])).toThrowError('Data mismatch')
         expect(() => createStopover(stopTime, stop, trip, {
             ...route,
             route_id: '99'
-        }, station, [], service, [], 1)).toThrowError('Data mismatch')
+        }, station, [], service, [])).toThrowError('Data mismatch')
         expect(() => createStopover(stopTime, stop, trip, route, station, [{
             ...stopTime,
             trip_id: '99'
-        }], service, [], 1)).toThrowError('Data mismatch')
+        }], service, [])).toThrowError('Data mismatch')
     })
     it('should throw error for stop without parent station', () => {
         expect(() => createStopover(stopTime, {
             ...stop,
             parent_station: undefined
-        }, trip, route, station, [], service, [], 1)).toThrowError('Stop has no parent station')
+        }, trip, route, station, [], service, [])).toThrowError('Stop has no parent station')
     })
     it('should throw error for stop time without time', () => {
         expect(() => createStopover({
             ...stopTime,
             departure_time: undefined,
             arrival_time: undefined
-        }, stop, trip, route, station, [], service, [], 1)).toThrowError('Stop time has no departure or arrival time')
+        }, stop, trip, route, station, [], service, [])).toThrowError('Stop time has no departure or arrival time')
 
     })
     it('should create stopover from gtfs data', () => {
-        const stopover = createStopover(stopTime, stop, trip, route, station, [], service, [], 1);
+        const stopover = createStopover(stopTime, stop, trip, route, station, [], service, []);
         expect(stopover.trip_id).toEqual(trip.trip_id)
         expect(stopover.service_id).toEqual(trip.service_id)
         expect(stopover.route_id).toEqual(trip.route_id)
@@ -101,7 +101,7 @@ describe('StopoverFactory', () => {
             ...trip,
             trip_short_name: '',
             trip_headsign: 'Zentralfriedhof'
-        }, {...route, route_short_name: '3/5'}, station, [], service, [], 1);
+        }, {...route, route_short_name: '3/5'}, station, [], service, []);
         expect(stopover2.direction).toEqual('Zentralfriedhof')
         expect(stopover2.line).toEqual('3/5')
     })

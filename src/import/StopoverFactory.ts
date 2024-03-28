@@ -9,8 +9,7 @@ export function createStopover(
     station: Station,
     tripStopTimes: StopTime[],
     service: Calendar,
-    exceptions: CalendarDate[],
-    sequence: number
+    exceptions: CalendarDate[]
 ): Stopover {
     if (!stop.parent_station) {
         throw new Error('Stop has no parent station')
@@ -38,6 +37,16 @@ export function createStopover(
 
     const is_origin = sorted.length > 0 && stopTime.stop_id === sorted[0].stop_id
     const is_destination = sorted.length > 0 && stopTime.stop_id === sorted[sorted.length - 1].stop_id
+
+    const time = stopTime.departure_time ?? stopTime.arrival_time
+
+    let sequence = 0
+
+    if (time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        sequence = hours * 60 + minutes
+    }
+
 
     return {
         station_id: stop.parent_station,
