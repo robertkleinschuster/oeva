@@ -1,15 +1,15 @@
-import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
 import {Station, Stopover} from "../db/Schedule.ts";
 
 export function createStopover(
-    stopTime: StopTime,
-    stop: Stop,
-    trip: Trip,
-    route: Route,
+    stopTime: GTFSStopTime,
+    stop: GTFSStop,
+    trip: GTFSTrip,
+    route: GTFSRoute,
     station: Station,
-    tripStopTimes: StopTime[],
-    service: Calendar,
-    exceptions: CalendarDate[]
+    tripStopTimes: GTFSStopTime[],
+    service: GTFSCalendar,
+    exceptions: GTFSCalendarDate[]
 ): Stopover {
     if (!stop.parent_station) {
         throw new Error('Stop has no parent station')

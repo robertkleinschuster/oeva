@@ -1,4 +1,4 @@
-import {Calendar, CalendarDate} from "./GTFS.ts";
+import {GTFSCalendar, GTFSCalendarDate} from "./GTFS.ts";
 
 export enum RouteType {
     TRAM = 0,
@@ -31,8 +31,8 @@ export interface Stopover {
     station: string;
     is_origin: boolean;
     is_destination: boolean;
-    service: Calendar,
-    exceptions: Map<string, CalendarDate>
+    service: GTFSCalendar,
+    exceptions: Map<string, GTFSCalendarDate>
 }
 
 export interface Station {

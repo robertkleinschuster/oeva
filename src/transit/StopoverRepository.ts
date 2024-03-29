@@ -1,14 +1,14 @@
 import {formatServiceDate, parseStopTime} from "./DateTime.ts";
 import {isServiceRunningOn} from "./Schedule.ts";
-import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 import {RouteType, Stopover} from "../db/Schedule.ts";
 
 export interface TripDetail {
-    trip: Trip;
-    route: Route;
-    service: Calendar;
-    exception: CalendarDate | undefined;
+    trip: GTFSTrip;
+    route: GTFSRoute;
+    service: GTFSCalendar;
+    exception: GTFSCalendarDate | undefined;
     stops?: TripAtStop[];
 }
 
@@ -17,8 +17,8 @@ export interface TripAtStop extends TripDetail {
     arrival: Date | null;
     isDestination: boolean;
     isOrigin: boolean;
-    stop: Stop;
-    stopTime: StopTime;
+    stop: GTFSStop;
+    stopTime: GTFSStopTime;
 }
 
 

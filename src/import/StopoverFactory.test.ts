@@ -1,16 +1,16 @@
 import {describe, expect, it} from "@jest/globals";
-import {Calendar, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
+import {GTFSCalendar, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
 import {createStopover} from "./StopoverFactory.ts";
 import {Station} from "../db/Schedule.ts";
 
 describe('StopoverFactory', () => {
-    const stopTime: StopTime = {
+    const stopTime: GTFSStopTime = {
         stop_sequence: 1,
         stop_id: '1',
         trip_id: '2',
         departure_time: '08:37:00'
     }
-    const stop: Stop = {
+    const stop: GTFSStop = {
         stop_id: '1',
         parent_station: '90',
         stop_name: 'Ort',
@@ -18,7 +18,7 @@ describe('StopoverFactory', () => {
         stop_lon: 1,
         tokens: []
     }
-    const trip: Trip = {
+    const trip: GTFSTrip = {
         trip_id: '2',
         route_id: '3',
         service_id: '4',
@@ -26,14 +26,14 @@ describe('StopoverFactory', () => {
         trip_short_name: 'IC 311',
         tokens: []
     }
-    const route: Route = {
+    const route: GTFSRoute = {
         route_id: '3',
         route_type: 1,
         route_long_name: '',
         route_short_name: '',
         tokens: [],
     }
-    const service: Calendar = {
+    const service: GTFSCalendar = {
         service_id: '4',
         start_date: '20230101',
         end_date: '20221231',

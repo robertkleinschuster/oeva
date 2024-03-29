@@ -1,4 +1,4 @@
-export interface Agency {
+export interface GTFSAgency {
     agency_id: string;
     agency_name: string;
     agency_url: string;
@@ -10,7 +10,7 @@ export interface Agency {
     tokens: string[];
 }
 
-export interface Stop {
+export interface GTFSStop {
     stop_id: string;
     stop_code?: string;
     stop_name: string;
@@ -28,7 +28,7 @@ export interface Stop {
     tokens: string[];
 }
 
-export interface Route {
+export interface GTFSRoute {
     route_id: string;
     agency_id?: string;
     route_short_name: string;
@@ -44,7 +44,7 @@ export interface Route {
     tokens: string[];
 }
 
-export interface Trip {
+export interface GTFSTrip {
     trip_id: string;
     route_id: string;
     service_id: string;
@@ -58,7 +58,7 @@ export interface Trip {
     tokens: string[];
 }
 
-export interface StopTime {
+export interface GTFSStopTime {
     trip_id: string;
     arrival_time?: string;
     departure_time?: string;
@@ -73,7 +73,7 @@ export interface StopTime {
     timepoint?: number;
 }
 
-export interface Calendar {
+export interface GTFSCalendar {
     service_id: string;
     monday: number;
     tuesday: number;
@@ -86,13 +86,13 @@ export interface Calendar {
     end_date: string;
 }
 
-export interface CalendarDate {
+export interface GTFSCalendarDate {
     service_id: string;
     date: string;
     exception_type: number;
 }
 
-export interface Shape {
+export interface GTFSShape {
     shape_id: string;
     shape_pt_lat: number;
     shape_pt_lon: number;
@@ -100,7 +100,7 @@ export interface Shape {
     shape_dist_traveled?: number;
 }
 
-export interface Frequency {
+export interface GTFSFrequency {
     trip_id: string;
     start_time: string;
     end_time: string;
@@ -108,20 +108,20 @@ export interface Frequency {
     exact_times?: number;
 }
 
-export interface Transfer {
+export interface GTFSTransfer {
     from_stop_id: string;
     to_stop_id: string;
     transfer_type: number;
     min_transfer_time?: number;
 }
 
-export interface Level {
+export interface GTFSLevel {
     level_id: string;
     level_index: string;
     level_name: string;
 }
 
-export interface Pathway {
+export interface GTFSPathway {
     pathway_id: string;
     from_stop_id: string;
     to_stop_id: string;

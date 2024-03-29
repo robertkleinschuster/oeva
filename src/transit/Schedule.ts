@@ -1,4 +1,4 @@
-import {Calendar, CalendarDate} from "../db/GTFS.ts";
+import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS.ts";
 import {formatServiceDate, parseServiceDate} from "./DateTime.ts";
 
 export enum ExceptionType {
@@ -6,9 +6,9 @@ export enum ExceptionType {
     NOT_RUNNING = 2
 }
 
-export function isServiceRunningOn(service: Calendar, exception: CalendarDate | undefined, date: Date): boolean {
+export function isServiceRunningOn(service: GTFSCalendar, exception: GTFSCalendarDate | undefined, date: Date): boolean {
     const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayOfWeek = weekdays[date.getDay()] as keyof Calendar;
+    const dayOfWeek = weekdays[date.getDay()] as keyof GTFSCalendar;
 
     if (exception) {
         if (exception.service_id !== service.service_id) {
