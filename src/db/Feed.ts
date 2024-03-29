@@ -35,8 +35,8 @@ export enum FeedFileStatus {
 
 export interface FeedFile {
     feed_id: number;
-    filename: string;
-    mimeType: string;
+    name: string;
+    type: string;
     status: FeedFileStatus;
-    data: ArrayBuffer;
+    content: string;
 }

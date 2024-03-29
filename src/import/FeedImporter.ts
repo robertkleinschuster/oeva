@@ -160,12 +160,12 @@ class FeedImporter {
             .filter((name) => requiredGTFSFiles.includes(name));
 
         for (const fileName of fileNames) {
-            const fileContent = await content.files[fileName].async('arraybuffer');
+            const fileContent = await content.files[fileName].async('string');
             await this.feedDb.file.put({
                 feed_id: feedId,
-                filename: fileName,
-                mimeType: 'text/csv',
-                data: fileContent,
+                name: fileName,
+                type: 'text/csv',
+                content: fileContent,
                 status: FeedFileStatus.IMPORT_PENDING,
             })
         }
@@ -185,20 +185,19 @@ class FeedImporter {
             throw new Error('No files in import');
         }
 
-        for (const feedFile of files) {
+        for (const file of files) {
             await this.feedDb.transit.update(feedId, {
-                progress: `${feedFile.filename}, ${done} / ${originalDone + files.length}`,
+                progress: `${file.name}, ${done} / ${originalDone + files.length}`,
                 status: TransitFeedStatus.IMPORTING
             });
 
-            const file = new File([feedFile.data], feedFile.filename, {type: feedFile.mimeType});
             const tableName = getTableName(file.name);
 
             if (tableName) {
-                await this.importCSV(file, tableName);
+                await this.importCSV(file.content, tableName);
             }
 
-            await this.feedDb.file.update(feedFile, {
+            await this.feedDb.file.update(file, {
                 status: FeedFileStatus.IMPORTED
             })
             done++
@@ -235,9 +234,9 @@ class FeedImporter {
         }
     }
 
-    private importCSV(file: File, tableName: string) {
+    private importCSV(csv: string, tableName: string) {
         return new Promise<void>((resolve, reject) => {
-            Papa.parse(file, {
+            Papa.parse(csv, {
                 header: true,
                 dynamicTyping: (column) => {
                     return dynamicallyTypedColumns.has(column.toString());
@@ -246,7 +245,7 @@ class FeedImporter {
                 chunkSize: 5000,
                 worker: false,
                 encoding: "UTF-8",
-                chunk: (results: ParseResult<object>, parser) => {
+                chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
                     parser.pause();
                     const table = this.transitDb.table(tableName);
                     table.bulkPut(results.data)
@@ -258,7 +257,7 @@ class FeedImporter {
                 complete: () => {
                     resolve();
                 },
-                error: (error) => {
+                error: (error: Error) => {
                     reject(error);
                 },
             });
