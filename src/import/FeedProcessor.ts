@@ -32,7 +32,7 @@ export class FeedProcessor {
                 progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${route?.route_short_name} ${trip?.trip_short_name} ${trip?.trip_headsign}`,
                 offset: this.offset
             });
-        }, 1000)
+        }, 1500)
 
         for (const trip of trips) {
             const stopovers: Stopover[] = [];
@@ -97,7 +97,7 @@ export class FeedProcessor {
                 progress: `stations ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
                 offset: this.offset
             });
-        }, 1000);
+        }, 1500);
 
         for (const stop of stops) {
             const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
@@ -153,7 +153,7 @@ export class FeedProcessor {
                 progress: `trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name}`,
                 offset: this.offset
             });
-        }, 1000);
+        }, 1500);
 
         for (const trip of trips) {
             const route = await this.transitDb.routes.get(trip.route_id)

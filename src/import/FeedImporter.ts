@@ -127,21 +127,27 @@ class FeedImporter {
             throw new Error('Feed not found');
         }
         let downloaded_megabytes = 0
+        let progress = 0;
+
+        const interval = setInterval(() => {
+            this.feedDb.transit.update(feedId, {
+                downloaded_megabytes: downloaded_megabytes,
+                download_progress: progress ? Math.round(progress * 100) : undefined,
+                status: TransitFeedStatus.DOWNLOADING
+            });
+        }, 1500)
+
         const response = await this.axios.get(feed.url, {
             responseType: 'blob',
             onDownloadProgress: (event) => {
-                const newMegabyts = Math.ceil(event.loaded / 1000000);
-                if (newMegabyts - 5 > downloaded_megabytes) {
-                    downloaded_megabytes = newMegabyts
-                    this.feedDb.transit.update(feedId, {
-                        downloaded_megabytes: downloaded_megabytes,
-                        download_progress: event.progress ? Math.round(event.progress * 100) : undefined,
-                        status: TransitFeedStatus.DOWNLOADING
-                    });
+                downloaded_megabytes = Math.ceil(event.loaded / 1000000);
+                if (event.progress) {
+                    progress = event.progress
                 }
             }
         });
 
+        clearInterval(interval)
         await this.saveData(feedId, response.data);
     }
 
