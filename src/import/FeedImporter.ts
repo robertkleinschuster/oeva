@@ -4,7 +4,7 @@ import {Axios} from "axios";
 import {TransitDB} from '../db/TransitDB.ts';
 import {getFiles, getTableName} from "../db/TransitMapping.ts";
 import {FeedDB} from "../db/FeedDb.ts";
-import {TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
+import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
 import {IndexableType} from "dexie";
 import {ScheduleDB} from "../db/ScheduleDB.ts";
 import {FeedProcessor} from "./FeedProcessor.ts";
@@ -64,8 +64,6 @@ class FeedImporter {
         return this.feedDb.transit.add({
             name,
             url,
-            files: null,
-            imported: [],
             is_ifopt: is_ifopt,
             status: TransitFeedStatus.DRAFT,
             downloaded_megabytes: 0,
@@ -75,8 +73,7 @@ class FeedImporter {
     }
 
     async startDownload(feedId: number) {
-        this.feedDb.transit.update(feedId, {
-            imported: [],
+        await this.feedDb.transit.update(feedId, {
             downloaded_megabytes: 0,
             download_progress: 0,
             status: TransitFeedStatus.DOWNLOADING,
@@ -87,17 +84,19 @@ class FeedImporter {
     }
 
     async startImport(feedId: number) {
-        this.feedDb.transit.update(feedId, {
-            imported: [],
+        await this.feedDb.transit.update(feedId, {
             status: TransitFeedStatus.IMPORTING,
             progress: undefined,
             offset: undefined,
             step: undefined
         });
+        await this.feedDb.file
+            .where({feed_id: feedId, status: FeedFileStatus.IMPORTED})
+            .modify({status: FeedFileStatus.IMPORT_PENDING})
     }
 
     async startProcessing(feedId: number) {
-        this.feedDb.transit.update(feedId, {
+        await this.feedDb.transit.update(feedId, {
             status: TransitFeedStatus.PROCESSING,
             progress: undefined,
             offset: undefined,
@@ -166,50 +165,48 @@ class FeedImporter {
         const fileNames = Object.keys(content.files)
             .filter((name) => requiredGTFSFiles.includes(name));
 
-        const fileMap = new Map<string, Blob>();
-
         for (const fileName of fileNames) {
-            const fileContent = await content.files[fileName].async('blob');
-            fileMap.set(fileName, fileContent);
-            await this.feedDb.transit.update(feedId, {
-                files: fileMap
-            });
+            const fileContent = await content.files[fileName].async('arraybuffer');
+            await this.feedDb.file.put({
+                feed_id: feedId,
+                filename: fileName,
+                mimeType: 'text/csv',
+                data: fileContent,
+                status: FeedFileStatus.IMPORT_PENDING,
+            })
         }
     }
 
     async importData(feedId: number) {
-        const feed = await this.feedDb.transit.get(feedId);
-        if (!feed) {
-            throw new Error('Feed not found');
-        }
+        const files = await this.feedDb.file
+            .where({feed_id: feedId, status: FeedFileStatus.IMPORT_PENDING})
+            .toArray();
 
-        if (!feed.files?.size) {
+        let done = await this.feedDb.file
+            .where({feed_id: feedId, status: FeedFileStatus.IMPORTED})
+            .count();
+
+        if (!files.length) {
             throw new Error('No files in import');
         }
 
-        const imported = feed.imported ?? [];
-
-        for (const [fileName, fileContent] of feed.files.entries()) {
-            if (imported.includes(fileName)) {
-                continue;
-            }
-
+        for (const feedFile of files) {
             await this.feedDb.transit.update(feedId, {
-                progress: fileName,
+                progress: `${feedFile.filename}, ${done} / ${done + files.length}`,
                 status: TransitFeedStatus.IMPORTING
             });
 
-            const file = new File([fileContent], fileName, {type: 'text/csv'});
+            const file = new File([feedFile.data], feedFile.filename, {type: feedFile.mimeType});
             const tableName = getTableName(file.name);
 
             if (tableName) {
                 await this.importCSV(feedId, file, tableName);
             }
 
-            imported.push(fileName);
-            await this.feedDb.transit.update(feedId, {
-                imported
-            });
+            await this.feedDb.file.update(feedFile, {
+                status: FeedFileStatus.IMPORTED
+            })
+            done++
         }
     }
 

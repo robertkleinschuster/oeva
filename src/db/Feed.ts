@@ -22,13 +22,24 @@ export interface TransitFeed {
     offset?: number;
     progress?: string;
     is_ifopt: boolean;
-    files: Map<string, Blob> | null;
-    imported: string[];
     downloaded_megabytes: number;
     download_progress: number;
     status: TransitFeedStatus;
     timestamp: number;
     last_start?: number;
+}
+
+export enum FeedFileStatus {
+    IMPORT_PENDING,
+    IMPORTED,
+}
+
+export interface FeedFile {
+    feed_id: number;
+    filename: string;
+    mimeType: string;
+    status: FeedFileStatus;
+    data: ArrayBuffer;
 }
 
 export interface FeedDependency {
