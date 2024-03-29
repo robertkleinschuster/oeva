@@ -22,6 +22,7 @@ export interface Stopover {
     route_type: RouteType;
     sequence_in_trip: number;
     minutes: number | undefined;
+    time: string | undefined;
     departure_time: string | undefined;
     arrival_time: string | undefined;
     line: string;

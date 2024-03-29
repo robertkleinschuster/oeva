@@ -31,12 +31,12 @@ class FeedRunner {
                             progress: String(error)
                         });
                     }
-                    this.running = undefined
-                    self.postMessage(undefined)
                 }
             } catch (e) {
                 console.log(e)
             }
+            self.postMessage(undefined)
+            this.running = undefined
         }
 
         return new Promise<void>(resolve => {

@@ -56,6 +56,7 @@ export function createStopover(
         route_type: route.route_type,
         sequence_in_trip: stopTime.stop_sequence,
         minutes: minutesSum,
+        time: stopTime.departure_time ?? stopTime.departure_time,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,
         line: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
