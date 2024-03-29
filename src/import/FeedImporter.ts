@@ -81,7 +81,7 @@ class FeedImporter {
             download_progress: 0,
             status: TransitFeedStatus.DOWNLOADING,
             progress: undefined,
-            index: undefined,
+            offset: undefined,
             step: undefined
         });
     }
@@ -91,7 +91,7 @@ class FeedImporter {
             imported: [],
             status: TransitFeedStatus.IMPORTING,
             progress: undefined,
-            index: undefined,
+            offset: undefined,
             step: undefined
         });
     }
@@ -100,7 +100,7 @@ class FeedImporter {
         this.feedDb.transit.update(feedId, {
             status: TransitFeedStatus.PROCESSING,
             progress: undefined,
-            index: undefined,
+            offset: undefined,
             step: undefined
         });
     }
@@ -129,7 +129,7 @@ class FeedImporter {
         this.feedDb.transit.update(feedId, {
             status: status,
             step: undefined,
-            index: undefined,
+            offset: undefined,
             progress: undefined
         });
     }
@@ -223,13 +223,13 @@ class FeedImporter {
         if (feed.step === undefined) {
             await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STATIONS,
-                index: undefined
+                offset: undefined
             });
         } else if (feed.step === TransitFeedStep.STATIONS) {
             await processor.processStops(feedId)
             await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STOPOVERS,
-                index: undefined
+                offset: undefined
             });
         } else if (feed.step === TransitFeedStep.STOPOVERS) {
             await processor.processStopTimes(feedId)

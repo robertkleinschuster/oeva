@@ -87,6 +87,6 @@ export const Stations = () => {
             </Subnavbar>
         </Navbar>
 
-        <Trips stopovers={stopovers.filter(trip => !trip.is_destination)}/>
+        <Trips stopovers={stopovers.filter(trip => !trip.is_destination)} date={new Date}/>
     </Page>
 }

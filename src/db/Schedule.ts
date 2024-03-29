@@ -1,15 +1,29 @@
 import {Calendar, CalendarDate} from "./Transit.ts";
 
+export enum RouteType {
+    TRAM = 0,
+    SUBWAY = 1,
+    RAIL = 2,
+    BUS = 3,
+    FERRY = 4,
+    CABLE_TRAM = 5,
+    AERIAL_LIFT = 6,
+    FUNICULAR = 7,
+    TROLLEYBUS = 11,
+    MONORAIL = 12
+}
+
 export interface Stopover {
     station_id: string;
     stop_id: string;
     trip_id: string;
     route_id: string;
     service_id: string;
-    sequence_at_station: number;
+    route_type: RouteType;
     sequence_in_trip: number;
-    departure_time: string|undefined;
-    arrival_time: string|undefined;
+    minutes: number | undefined;
+    departure_time: string | undefined;
+    arrival_time: string | undefined;
     line: string;
     direction: string | undefined;
     stop: string;

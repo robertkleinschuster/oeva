@@ -180,7 +180,6 @@ describe('FeedImporter', () => {
             2,
             feedId,
             {
-                progress: null,
                 imported: ['agency.txt', 'stops.txt'],
             }
         )
@@ -196,7 +195,6 @@ describe('FeedImporter', () => {
             4,
             feedId,
             {
-                progress: null,
                 imported: ['agency.txt', 'stops.txt'],
             }
         )

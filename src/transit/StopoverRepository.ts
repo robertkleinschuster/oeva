@@ -35,7 +35,7 @@ export class StopoverRepository {
             .where('station_id')
             .equals(stationId)
             .filter(stopover => isServiceRunningOn(stopover.service, stopover.exceptions.get(formatServiceDate(date)), date))
-            .sortBy('sequence_at_station')
+            .sortBy('minutes')
     }
 }
 

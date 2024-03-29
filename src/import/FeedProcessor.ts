@@ -18,7 +18,7 @@ export class FeedProcessor {
             throw new Error('Feed not found')
         }
 
-        this.offset = feed.index ?? 0
+        this.offset = feed.offset ?? 0
 
         const count = await this.feedDb.dependency
             .where('[feed+table+feed_id]')
@@ -38,11 +38,11 @@ export class FeedProcessor {
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((this.offset / count) * 100)
-            const trip = trips.at(this.offset - (feed.index ?? 0))
+            const trip = trips.at(this.offset - (feed.offset ?? 0))
             const route = trip ? await this.transitDb.routes.get(trip.route_id) : undefined;
             await this.feedDb.transit.update(feedId, {
                 progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${route?.route_short_name} ${trip?.trip_short_name} ${trip?.trip_headsign}`,
-                index: this.offset
+                offset: this.offset
             });
         }, 1000)
 
@@ -93,7 +93,7 @@ export class FeedProcessor {
             throw new Error('Feed not found')
         }
 
-        this.offset = feed.index ?? 0;
+        this.offset = feed.offset ?? 0;
 
         const count = await this.feedDb.dependency
             .where('[feed+table+feed_id]')
@@ -113,10 +113,10 @@ export class FeedProcessor {
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((this.offset / count) * 100)
-            const stop = stops.at(this.offset - (feed.index ?? 0))
+            const stop = stops.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
                 progress: `stations ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
-                index: this.offset
+                offset: this.offset
             });
         }, 1000);
 

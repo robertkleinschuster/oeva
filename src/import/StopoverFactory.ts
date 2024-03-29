@@ -40,13 +40,12 @@ export function createStopover(
 
     const time = stopTime.departure_time ?? stopTime.arrival_time
 
-    let sequence = 0
+    let minutesSum = 0
 
     if (time) {
         const [hours, minutes] = time.split(':').map(Number);
-        sequence = hours * 60 + minutes
+        minutesSum = hours * 60 + minutes
     }
-
 
     return {
         station_id: stop.parent_station,
@@ -54,8 +53,9 @@ export function createStopover(
         service_id: trip.service_id,
         trip_id: trip.trip_id,
         route_id: trip.route_id,
-        sequence_at_station: sequence,
+        route_type: route.route_type,
         sequence_in_trip: stopTime.stop_sequence,
+        minutes: minutesSum,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,
         line: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,

@@ -19,7 +19,7 @@ export interface TransitFeed {
     url: string;
     name: string;
     step?: TransitFeedStep
-    index?: number;
+    offset?: number;
     progress?: string;
     is_ifopt: boolean;
     files: Map<string, Blob> | null;
