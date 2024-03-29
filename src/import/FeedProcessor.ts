@@ -130,4 +130,43 @@ export class FeedProcessor {
         }
         clearInterval(interval)
     }
+
+    async processTrips(feedId: number) {
+        const feed = await this.feedDb.transit.get(feedId);
+        if (!feed) {
+            throw new Error('Feed not found')
+        }
+
+        this.offset = feed.offset ?? 0;
+
+        const count = await this.transitDb.trips
+            .count()
+
+        const trips = await this.transitDb.trips
+            .offset(this.offset)
+            .toArray()
+
+        const interval = setInterval(async () => {
+            const percent = Math.ceil((this.offset / count) * 100)
+            const trip = trips.at(this.offset - (feed.offset ?? 0))
+            await this.feedDb.transit.update(feedId, {
+                progress: `trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name}`,
+                offset: this.offset
+            });
+        }, 1000);
+
+        for (const trip of trips) {
+            const route = await this.transitDb.routes.get(trip.route_id)
+            if (route) {
+                await this.scheduleDb.trip.put({
+                    id: trip.trip_id,
+                    name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
+                    keywords: [],
+                    stopIds: []
+                })
+            }
+            this.offset++;
+        }
+        clearInterval(interval)
+    }
 }

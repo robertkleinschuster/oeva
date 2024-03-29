@@ -214,6 +214,12 @@ class FeedImporter {
         } else if (feed.step === TransitFeedStep.STATIONS) {
             await processor.processStops(feedId)
             await this.feedDb.transit.update(feedId, {
+                step: TransitFeedStep.TRIPS,
+                offset: undefined
+            });
+        } else if (feed.step === TransitFeedStep.TRIPS) {
+            await processor.processTrips(feedId)
+            await this.feedDb.transit.update(feedId, {
                 step: TransitFeedStep.STOPOVERS,
                 offset: undefined
             });

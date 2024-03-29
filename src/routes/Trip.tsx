@@ -1,19 +1,19 @@
 import {useEffect, useState} from "react";
 import {StopoverRepository} from "../transit/StopoverRepository.ts";
-import {Block, BlockTitle, Navbar, Page} from "framework7-react";
+import {Block, Navbar, Page} from "framework7-react";
 import {Stopover} from "../db/Schedule.ts";
-import {Trip as TripType} from "../db/GTFS.ts"
-import {GTFSDB} from "../db/GTFSDB.ts";
+import {Trip as TripType} from "../db/Schedule.ts"
 import {parseStopTime} from "../transit/DateTime.ts";
+import {scheduleDB} from "../db/ScheduleDB.ts";
 
-export const Trip = ({tripId, feedId}: {tripId: string, feedId: number}) =>{
+export const Trip = ({tripId}: {tripId: string}) =>{
     const [trip, setTrip] = useState<TripType>()
     const [stopovers, setStopovers] = useState<Stopover[]>()
     const date = new Date();
+
     useEffect(() => {
-        const transitDB = new GTFSDB(feedId)
         const repo = new StopoverRepository()
-        transitDB.trips.get(tripId).then(setTrip)
+        scheduleDB.trip.get(tripId).then(setTrip)
         repo.findByTrip(tripId).then(setStopovers)
     }, [tripId]);
 
@@ -24,8 +24,7 @@ export const Trip = ({tripId, feedId}: {tripId: string, feedId: number}) =>{
     }
 
     return <Page>
-        <Navbar title={trip.trip_short_name} backLink/>
-        <BlockTitle>{trip.trip_short_name} {trip.trip_headsign}</BlockTitle>
+        <Navbar title={trip.name} backLink/>
         <Block strong inset>
             <div className="timeline">
                 {stopovers?.map(stop => <div className="timeline-item" key={stop.sequence_in_trip}>

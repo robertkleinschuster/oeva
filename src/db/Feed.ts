@@ -9,7 +9,8 @@ export enum TransitFeedStatus {
 
 export enum TransitFeedStep {
     STATIONS,
-    STOPOVERS
+    STOPOVERS,
+    TRIPS
 }
 
 export interface TransitFeed {

@@ -47,3 +47,10 @@ export interface Station {
         longitude: number;
     }[],
 }
+
+export interface Trip {
+    id: string;
+    name: string;
+    keywords: string[];
+    stopIds: string[];
+}
