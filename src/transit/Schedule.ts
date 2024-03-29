@@ -1,4 +1,4 @@
-import {Calendar, CalendarDate} from "../db/Transit.ts";
+import {Calendar, CalendarDate} from "../db/GTFS.ts";
 import {formatServiceDate, parseServiceDate} from "./DateTime.ts";
 
 export enum ExceptionType {

@@ -1,8 +1,7 @@
 import Dexie from 'dexie';
-import {FeedDependency, FeedFile, TransitFeed} from "./Feed.ts";
+import {FeedFile, TransitFeed} from "./Feed.ts";
 
 export class FeedDB extends Dexie {
-    public dependency: Dexie.Table<FeedDependency, number>
     public transit: Dexie.Table<TransitFeed, number>
     public file: Dexie.Table<FeedFile, number>
 
@@ -13,7 +12,6 @@ export class FeedDB extends Dexie {
             file: '[feed_id+filename],[feed_id+status]',
             transit: '++id,status',
         });
-        this.dependency = this.table('dependency')
         this.file = this.table('file')
         this.transit = this.table('transit')
     }

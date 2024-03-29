@@ -1,5 +1,5 @@
 import {describe, expect, it} from "@jest/globals";
-import {Calendar, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
+import {Calendar, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
 import {createStopover} from "./StopoverFactory.ts";
 import {Station} from "../db/Schedule.ts";
 

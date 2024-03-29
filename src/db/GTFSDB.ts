@@ -11,25 +11,25 @@ import {
     StopTime,
     Transfer,
     Trip
-} from "./Transit.ts";
+} from "./GTFS.ts";
 
 
-export class TransitDB extends Dexie {
+export class GTFSDB extends Dexie {
     public agencies: Dexie.Table<Agency, string>;
     public stops: Dexie.Table<Stop, string>;
     public routes: Dexie.Table<Route, string>;
     public trips: Dexie.Table<Trip, string>;
-    public stopTimes: Dexie.Table<StopTime, {trip_id: string, stop_id: string}>;
+    public stopTimes: Dexie.Table<StopTime, { trip_id: string, stop_id: string }>;
     public calendar: Dexie.Table<Calendar, string>;
-    public calendarDates: Dexie.Table<CalendarDate, {service_id: string, date: string}>;
+    public calendarDates: Dexie.Table<CalendarDate, { service_id: string, date: string }>;
     public shapes: Dexie.Table<Shape, string>;
     public frequencies: Dexie.Table<Frequency, string>;
-    public transfers: Dexie.Table<Transfer, {from_stop_id: string, to_stop_id: string}>;
+    public transfers: Dexie.Table<Transfer, { from_stop_id: string, to_stop_id: string }>;
     public levels: Dexie.Table<Level, string>;
     public pathways: Dexie.Table<Pathway, string>;
 
-    public constructor() {
-        super('Transit');
+    public constructor(feedId: number) {
+        super('GTFS_' + feedId.toString());
         this.version(5).stores({
             agencies: 'agency_id',
             stops: 'stop_id,parent_station',
@@ -59,5 +59,3 @@ export class TransitDB extends Dexie {
         this.pathways = this.table('pathways');
     }
 }
-
-export const transitDB = new TransitDB();

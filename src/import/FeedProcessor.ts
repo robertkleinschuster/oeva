@@ -3,13 +3,13 @@ import {Station, Stopover} from "../db/Schedule.ts";
 import {ScheduleDB} from "../db/ScheduleDB.ts";
 import lunr from "lunr";
 import {FeedDB} from "../db/FeedDb.ts";
-import {TransitDB} from "../db/TransitDB.ts";
+import {GTFSDB} from "../db/GTFSDB.ts";
 import {createStopover} from "./StopoverFactory.ts";
 
 export class FeedProcessor {
     private offset: number = 0
 
-    constructor(private feedDb: FeedDB, private transitDb: TransitDB, private scheduleDb: ScheduleDB) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB) {
     }
 
     async processStopTimes(feedId: number) {
@@ -20,21 +20,9 @@ export class FeedProcessor {
 
         this.offset = feed.offset ?? 0
 
-        const count = await this.feedDb.dependency
-            .where('[feed+table+feed_id]')
-            .equals(['transit', 'trips', feedId])
-            .count()
+        const count = await this.transitDb.trips.count()
 
-        const ids = await this.feedDb.dependency
-            .where('[feed+table+feed_id]')
-            .equals(['transit', 'trips', feedId])
-            .offset(this.offset)
-            .toArray(deps => deps.map(d => d.dependency_id))
-
-        const trips = await this.transitDb.trips
-            .where('trip_id')
-            .anyOf(ids)
-            .toArray()
+        const trips = await this.transitDb.trips.offset(this.offset).toArray()
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((this.offset / count) * 100)
@@ -95,20 +83,11 @@ export class FeedProcessor {
 
         this.offset = feed.offset ?? 0;
 
-        const count = await this.feedDb.dependency
-            .where('[feed+table+feed_id]')
-            .equals(['transit', 'stops', feedId])
+        const count = await this.transitDb.stops
             .count()
 
-        const ids = await this.feedDb.dependency
-            .where('[feed+table+feed_id]')
-            .equals(['transit', 'stops', feedId])
-            .offset(this.offset)
-            .toArray(deps => deps.map(d => d.dependency_id))
-
         const stops = await this.transitDb.stops
-            .where('stop_id')
-            .anyOf(ids)
+            .offset(this.offset)
             .toArray()
 
         const interval = setInterval(async () => {

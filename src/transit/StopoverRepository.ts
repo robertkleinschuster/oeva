@@ -1,6 +1,6 @@
 import {formatServiceDate, parseStopTime} from "./DateTime.ts";
 import {isServiceRunningOn} from "./Schedule.ts";
-import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
+import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 import {RouteType, Stopover} from "../db/Schedule.ts";
 

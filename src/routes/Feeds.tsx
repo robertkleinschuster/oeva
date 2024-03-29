@@ -1,6 +1,6 @@
 import {Button, Icon, List, ListItem, Navbar, Page, Preloader} from "framework7-react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {transitDB} from "../db/TransitDB.ts";
+import {GTFSDB} from "../db/GTFSDB.ts";
 import {useContext, useState} from "react";
 import {FeedSheet} from "../components/FeedSheet.tsx";
 import {FeedImporter} from "../import/FeedImporter.ts";
@@ -43,9 +43,9 @@ export const Feeds = () => {
         </List>
         <FeedSheet feedId={selectedFeedId} onSheetClosed={() => setSelectedFeedId(null)}/>
         <AddFeedSheet open={addDialog} onCreate={async (url, name, isIfopt) => {
-            const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
-            const importId = await dataImporter.create(url, name, isIfopt)
+            const importId = await FeedImporter.create(feedDb, url, name, isIfopt)
             showAddDialog(false)
+            const dataImporter = new FeedImporter(feedDb, new GTFSDB(importId), scheduleDB, axios)
             await dataImporter.startDownload(importId)
         }} onAbort={() => {
             showAddDialog(false)

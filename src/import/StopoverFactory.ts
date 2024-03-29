@@ -1,4 +1,4 @@
-import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/Transit.ts";
+import {Calendar, CalendarDate, Route, Stop, StopTime, Trip} from "../db/GTFS.ts";
 import {Station, Stopover} from "../db/Schedule.ts";
 
 export function createStopover(

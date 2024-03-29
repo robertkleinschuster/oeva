@@ -1,4 +1,4 @@
-import {Calendar, CalendarDate} from "./Transit.ts";
+import {Calendar, CalendarDate} from "./GTFS.ts";
 
 export enum RouteType {
     TRAM = 0,

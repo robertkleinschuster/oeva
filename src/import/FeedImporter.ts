@@ -1,11 +1,10 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {Axios} from "axios";
-import {TransitDB} from '../db/TransitDB.ts';
+import {GTFSDB} from '../db/GTFSDB.ts';
 import {getFiles, getTableName} from "../db/TransitMapping.ts";
 import {FeedDB} from "../db/FeedDb.ts";
 import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
-import {IndexableType} from "dexie";
 import {ScheduleDB} from "../db/ScheduleDB.ts";
 import {FeedProcessor} from "./FeedProcessor.ts";
 
@@ -44,24 +43,13 @@ const dynamicallyTypedColumns = new Set([
     'traversal_time',
 ])
 
-const dependencyTables = new Set([
-    'stops',
-    'trips',
-    'routes',
-    'shapes',
-    'agencies',
-    'calendar',
-    'levels',
-    'pathways',
-])
-
 class FeedImporter {
 
-    constructor(private feedDb: FeedDB, private transitDb: TransitDB, private scheduleDb: ScheduleDB, private axios: Axios) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private axios: Axios) {
     }
 
-    async create(url: string, name: string, is_ifopt: boolean) {
-        return this.feedDb.transit.add({
+    static async create(feedDb: FeedDB, url: string, name: string, is_ifopt: boolean) {
+        return feedDb.transit.add({
             name,
             url,
             is_ifopt: is_ifopt,
@@ -185,6 +173,7 @@ class FeedImporter {
         let done = await this.feedDb.file
             .where({feed_id: feedId, status: FeedFileStatus.IMPORTED})
             .count();
+        const originalDone = done;
 
         if (!files.length) {
             throw new Error('No files in import');
@@ -192,7 +181,7 @@ class FeedImporter {
 
         for (const feedFile of files) {
             await this.feedDb.transit.update(feedId, {
-                progress: `${feedFile.filename}, ${done} / ${done + files.length}`,
+                progress: `${feedFile.filename}, ${done} / ${originalDone + files.length}`,
                 status: TransitFeedStatus.IMPORTING
             });
 
@@ -200,7 +189,7 @@ class FeedImporter {
             const tableName = getTableName(file.name);
 
             if (tableName) {
-                await this.importCSV(feedId, file, tableName);
+                await this.importCSV(file, tableName);
             }
 
             await this.feedDb.file.update(feedFile, {
@@ -234,7 +223,7 @@ class FeedImporter {
         }
     }
 
-    private importCSV(feedId: number, file: File, tableName: string) {
+    private importCSV(file: File, tableName: string) {
         return new Promise<void>((resolve, reject) => {
             Papa.parse(file, {
                 header: true,
@@ -248,22 +237,9 @@ class FeedImporter {
                 chunk: (results: ParseResult<object>, parser) => {
                     parser.pause();
                     const table = this.transitDb.table(tableName);
-                    table.bulkPut(results.data, undefined, {allKeys: true})
-                        .then((keys) => {
-                            if (dependencyTables.has(tableName)) {
-                                const dependencies = (keys as IndexableType[])
-                                    .map(key => ({
-                                        feed: 'transit',
-                                        feed_id: feedId,
-                                        dependency_id: key,
-                                        table: tableName
-                                    }))
-                                this.feedDb.dependency.bulkPut(dependencies).then(() => {
-                                    parser.resume()
-                                })
-                            } else {
-                                parser.resume()
-                            }
+                    table.bulkPut(results.data)
+                        .then(() => {
+                            parser.resume()
                         })
                         .catch(reject);
                 },

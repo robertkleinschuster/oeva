@@ -1,5 +1,5 @@
 import {FeedImporter} from './FeedImporter.ts';
-import {transitDB} from '../db/TransitDB.ts';
+import {GTFSDB} from '../db/GTFSDB.ts';
 import {feedDb} from "../db/FeedDb.ts";
 import {beforeEach, describe, expect, jest, test} from "@jest/globals";
 import axios from "axios";
@@ -27,7 +27,7 @@ jest.mock('../db/ScheduleDB.ts', () => {
 
 const mockedScheduleDb = scheduleDB as jest.Mocked<typeof scheduleDB>;
 
-jest.mock('../db/TransitDB.ts', () => {
+jest.mock('../db/GTFSDB.ts', () => {
     const mockTable = () => ({
         add: jest.fn(),
         get: jest.fn(),
@@ -36,7 +36,7 @@ jest.mock('../db/TransitDB.ts', () => {
     });
 
     return {
-        transitDB: {
+        GTFSDB: jest.fn(() => ({
             agencies: mockTable(),
             stops: mockTable(),
             routes: mockTable(),
@@ -51,11 +51,12 @@ jest.mock('../db/TransitDB.ts', () => {
             pathways: mockTable(),
             import: mockTable(),
             table: jest.fn()
-        },
+        })),
     };
 });
 
-const mockedTransitDb = transitDB as jest.Mocked<typeof transitDB>;
+const transitDB = new GTFSDB(1)
+const mockedTransitDb = transitDB as jest.Mocked<GTFSDB>;
 
 jest.mock('../db/FeedDb.ts', () => {
     const mockTable = () => ({
@@ -69,7 +70,6 @@ jest.mock('../db/FeedDb.ts', () => {
     return {
         feedDb: {
             transit: mockTable(),
-            dependency: mockTable(),
             file: mockTable(),
             table: jest.fn()
         },
@@ -91,9 +91,8 @@ describe('FeedImporter', () => {
     test('create should add a draft import', async () => {
         const url = 'http://example.com/data.zip';
         const name = 'Test Import';
-        const dataImporter = new FeedImporter(mockedFeedDb, mockedTransitDb, mockedScheduleDb, mockedAxios);
 
-        await dataImporter.create(url, name, true);
+        await FeedImporter.create(feedDb, url, name, true);
 
         // Verify if the add method was called with the correct parameters
         expect(feedDb.transit.add).toHaveBeenCalledWith({
@@ -150,7 +149,6 @@ describe('FeedImporter', () => {
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
-        mockedFeedDb.dependency.bulkPut.mockResolvedValue(0);
         // @ts-ignore
         mockedTransitDb.stops.bulkPut.mockResolvedValue([])
         mockedTransitDb.stops.update.mockResolvedValue(0)

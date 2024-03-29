@@ -1,7 +1,7 @@
 import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import {FeedImporter} from "./FeedImporter.ts";
-import {transitDB} from "../db/TransitDB.ts";
+import {GTFSDB} from "../db/GTFSDB.ts";
 import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 
@@ -22,7 +22,7 @@ class FeedRunner {
                     this.running = feed.id
                     self.postMessage(feed.id)
                     try {
-                        const dataImporter = new FeedImporter(feedDb, transitDB, scheduleDB, axios)
+                        const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
                         await dataImporter.run(feed.id!)
                     } catch (error) {
                         console.error(error)
