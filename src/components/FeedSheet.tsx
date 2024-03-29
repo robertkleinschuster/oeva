@@ -32,9 +32,9 @@ export const FeedSheet = ({feedId, onSheetClosed}: { feedId: number | null, onSh
                     </List>
                         <p>
                             <Button disabled={feed.status !== TransitFeedStatus.DONE && feed.status !== TransitFeedStatus.ERROR} color="red" onClick={async () => {
-                                feedDb.transit.delete(feed.id!)
-                                feedDb.file.where({feed_id: feed?.id!}).delete()
-                                gtfsDB?.delete()
+                                await feedDb.transit.delete(feed.id!)
+                                await feedDb.file.where({feed_id: feed?.id!}).delete()
+                                await gtfsDB?.delete()
                             }}>Löschen</Button>
                         </p>
                         <p className="grid grid-cols-3 grid-gap">
