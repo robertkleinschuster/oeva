@@ -129,8 +129,8 @@ class FeedImporter {
         let downloaded_megabytes = 0
         let progress = 0;
 
-        const interval = setInterval(() => {
-            this.feedDb.transit.update(feedId, {
+        const interval = setInterval(async () => {
+            await this.feedDb.transit.update(feedId, {
                 downloaded_megabytes: downloaded_megabytes,
                 download_progress: progress ? Math.round(progress * 100) : undefined,
                 status: TransitFeedStatus.DOWNLOADING
