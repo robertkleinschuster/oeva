@@ -7,6 +7,7 @@ import {FeedDB} from "../db/FeedDb.ts";
 import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
 import {ScheduleDB} from "../db/ScheduleDB.ts";
 import {FeedProcessor} from "./FeedProcessor.ts";
+import pako from "pako"
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -160,12 +161,12 @@ class FeedImporter {
             .filter((name) => requiredGTFSFiles.includes(name));
 
         for (const fileName of fileNames) {
-            const fileContent = await content.files[fileName].async('string');
+            const fileContent = await content.files[fileName].async('arraybuffer');
             await this.feedDb.file.put({
                 feed_id: feedId,
                 name: fileName,
                 type: 'text/csv',
-                content: fileContent,
+                content: pako.deflate(fileContent),
                 status: FeedFileStatus.IMPORT_PENDING,
             })
         }
@@ -194,7 +195,7 @@ class FeedImporter {
             const tableName = getTableName(file.name);
 
             if (tableName) {
-                await this.importCSV(file.content, tableName);
+                await this.importCSV(pako.inflate(file.content, {to: "string"}), tableName);
             }
 
             await this.feedDb.file.update(file, {

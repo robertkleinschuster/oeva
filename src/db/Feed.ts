@@ -38,5 +38,5 @@ export interface FeedFile {
     name: string;
     type: string;
     status: FeedFileStatus;
-    content: string;
+    content: Uint8Array;
 }
