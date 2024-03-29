@@ -155,20 +155,21 @@ class FeedImporter {
     async saveData(feedId: number, file: File | Blob) {
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
+
         const requiredGTFSFiles = getFiles();
 
-        const fileNames = Object.keys(content.files)
-            .filter((name) => requiredGTFSFiles.includes(name));
-
-        for (const fileName of fileNames) {
-            const fileContent = await content.files[fileName].async('arraybuffer');
-            await this.feedDb.file.put({
-                feed_id: feedId,
-                name: fileName,
-                type: 'text/csv',
-                content: pako.deflate(fileContent),
-                status: FeedFileStatus.IMPORT_PENDING,
-            })
+        for (const fileName of requiredGTFSFiles) {
+            const file = content.file(fileName)
+            if (file) {
+                const fileContent = await file.async('uint8array');
+                await this.feedDb.file.put({
+                    feed_id: feedId,
+                    name: fileName,
+                    type: 'text/csv',
+                    content: pako.deflate(fileContent),
+                    status: FeedFileStatus.IMPORT_PENDING,
+                })
+            }
         }
     }
 
