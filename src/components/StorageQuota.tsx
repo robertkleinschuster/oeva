@@ -8,7 +8,7 @@ export const StorageQuota = () => {
         showEstimatedQuota().then(setQuota)
         const interval = setInterval(() => {
             showEstimatedQuota().then(setQuota)
-        }, 1000)
+        }, 60000)
         return () => clearInterval(interval)
     }, []);
 
