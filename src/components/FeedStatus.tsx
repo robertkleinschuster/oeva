@@ -8,7 +8,7 @@ export const FeedStatus: React.FC<{ feed: TransitFeed }> = ({feed}) => (
         {feed.status === TransitFeedStatus.IMPORTING ? <>Importieren: {feed.progress?.toString()}</> : null}
         {feed.status === TransitFeedStatus.PROCESSING ? <>Verarbeiten: {feed.progress?.toString()}</> : null}
         {feed.status === TransitFeedStatus.DONE ? <>Importiert</> : null}
-        {feed.status === TransitFeedStatus.ERROR ? <>{feed.progress?.toString()}</> : null}
+        {feed.status === TransitFeedStatus.ERROR ? <>Fehler: {feed.progress?.toString()}</> : null}
     </>
 )
 
