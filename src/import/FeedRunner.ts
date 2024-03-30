@@ -5,7 +5,7 @@ import {GTFSDB} from "../db/GTFSDB.ts";
 import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 
-class FeedRunner {
+export class FeedRunner {
     running: number | undefined
 
     async run() {
@@ -45,12 +45,5 @@ class FeedRunner {
                 resolve()
             }, 1000)
         })
-    }
-}
-
-self.onmessage = (e) => {
-    if (e.data === 'run') {
-        const runner = new FeedRunner()
-        void runner.run()
     }
 }

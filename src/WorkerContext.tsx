@@ -1,13 +1,14 @@
 import {createContext, ReactNode, useEffect, useState} from "react";
+import {FeedRunner} from "./import/FeedRunner.ts";
 
 export const WorkerContext = createContext<number|undefined>(undefined)
 
-export const WorkerContextProvider = ({children, worker}: {children: ReactNode, worker: Worker}) => {
+export const WorkerContextProvider = ({children, worker}: {children: ReactNode, worker: FeedRunner}) => {
     const [running, setRunning] = useState<number|undefined>()
     useEffect(() => {
-        worker.onmessage = (e) => {
-            setRunning(e.data)
-        }
+        return clearInterval(setInterval(() => {
+            setRunning(worker.running)
+        }, 1000));
     }, [worker]);
 
     return <WorkerContext.Provider value={running}>
