@@ -57,7 +57,11 @@ const EditFeed: React.FC<EditFeedPageProps> = ({match}) => {
             status: TransitFeedStatus.DOWNLOADING
         })
     }
-
+    const processFeed = async () => {
+        await feedDb.transit.update(feed!, {
+            status: TransitFeedStatus.PROCESSING
+        })
+    }
 
     const validate = () => {
         return name.length && url.length;
@@ -109,6 +113,12 @@ const EditFeed: React.FC<EditFeedPageProps> = ({match}) => {
                                    routerLink="/feeds"
                                    routerDirection="back">
                             Feed importieren
+                        </IonButton>
+                        <IonButton color="primary"
+                                   onClick={processFeed}
+                                   routerLink="/feeds"
+                                   routerDirection="back">
+                            Feed verarbeiten
                         </IonButton>
                     </IonItem>
                 </IonList>
