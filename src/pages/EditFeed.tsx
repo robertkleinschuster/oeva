@@ -103,20 +103,17 @@ const EditFeed: React.FC<EditFeedPageProps> = ({match}) => {
                     <IonItem>
                         <IonButton color="danger"
                                    onClick={deleteFeed}
-                                   routerLink="/feeds"
-                                   routerDirection="back">
+                                   routerLink="/feeds">
                             Feed entfernen
                         </IonButton>
                         <IonButton color="primary"
                                    onClick={importFeed}
-                                   routerLink="/feeds"
-                                   routerDirection="back">
+                                   routerLink="/feeds">
                             Feed importieren
                         </IonButton>
                         <IonButton color="primary"
                                    onClick={processFeed}
-                                   routerLink="/feeds"
-                                   routerDirection="back">
+                                   routerLink="/feeds">
                             Feed verarbeiten
                         </IonButton>
                     </IonItem>
