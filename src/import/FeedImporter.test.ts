@@ -1,92 +1,26 @@
-import {FeedImporter} from './FeedImporter.ts';
-import {GTFSDB} from '../db/GTFSDB.ts';
-import {feedDb} from "../db/FeedDb.ts";
-import {beforeEach, describe, expect, jest, test} from "@jest/globals";
+import {FeedImporter} from './FeedImporter';
+import {GTFSDB} from '../db/GTFSDB';
+import {feedDb} from "../db/FeedDb";
 import axios from "axios";
 import fs from 'fs';
 import path from 'path';
-import {TransitFeed, TransitFeedStatus} from "../db/Feed.ts";
-import {scheduleDB} from "../db/ScheduleDB.ts";
+import {TransitFeed, TransitFeedStatus} from "../db/Feed";
+import {scheduleDB} from "../db/ScheduleDB";
+import {beforeEach, describe, expect, test, vi} from "vitest";
 
-jest.mock('../db/ScheduleDB.ts', () => {
-    const mockTable = () => ({
-        add: jest.fn(),
-        get: jest.fn(),
-        update: jest.fn(),
-        bulkPut: jest.fn(),
-    });
-
-    return {
-        transitDB: {
-            station: mockTable(),
-            stopover: mockTable(),
-            table: jest.fn()
-        },
-    };
-});
-
-const mockedScheduleDb = scheduleDB as jest.Mocked<typeof scheduleDB>;
-
-jest.mock('../db/GTFSDB.ts', () => {
-    const mockTable = () => ({
-        add: jest.fn(),
-        get: jest.fn(),
-        update: jest.fn(),
-        bulkPut: jest.fn(),
-    });
-
-    return {
-        GTFSDB: jest.fn(() => ({
-            agencies: mockTable(),
-            stops: mockTable(),
-            routes: mockTable(),
-            trips: mockTable(),
-            stopTimes: mockTable(),
-            calendar: mockTable(),
-            calendarDates: mockTable(),
-            shapes: mockTable(),
-            frequencies: mockTable(),
-            transfers: mockTable(),
-            levels: mockTable(),
-            pathways: mockTable(),
-            import: mockTable(),
-            table: jest.fn()
-        })),
-    };
-});
-
+vi.mock('../db/ScheduleDB');
+const mockedScheduleDb = vi.mocked(scheduleDB, true)
+vi.mock('../db/GTFSDB');
 const transitDB = new GTFSDB(1)
-const mockedTransitDb = transitDB as jest.Mocked<GTFSDB>;
-
-jest.mock('../db/FeedDb.ts', () => {
-    const mockTable = () => ({
-        add: jest.fn<() => Promise<TransitFeed>>(),
-        get: jest.fn(),
-        update: jest.fn(),
-        bulkPut: jest.fn(),
-        put: jest.fn(),
-    });
-
-    return {
-        feedDb: {
-            transit: mockTable(),
-            file: mockTable(),
-            table: jest.fn()
-        },
-    };
-});
-
-const mockedFeedDb = feedDb as jest.Mocked<typeof feedDb>;
-
-jest.mock('axios', () => ({
-    get: jest.fn<() => Promise<{ data: any }>>(),
-}));
-
-const mockedAxios = axios as jest.Mocked<typeof axios>
+const mockedTransitDb = vi.mocked(transitDB, true);
+vi.mock('../db/FeedDb');
+const mockedFeedDb = vi.mocked(feedDb, true);
+vi.mock('axios');
+const mockedAxios = vi.mocked(axios, true)
 
 describe('FeedImporter', () => {
     beforeEach(() => {
-        jest.resetAllMocks()
+        vi.resetAllMocks()
     })
     test('create should add a draft import', async () => {
         const url = 'http://example.com/data.zip';
@@ -122,7 +56,7 @@ describe('FeedImporter', () => {
         // Mock the db.import.get to return the mock import data
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
 
-        const zipFilePath = path.resolve('__mocks__/gtfs_example.zip');
+        const zipFilePath = path.resolve('testdata/gtfs_example.zip');
         const zipFileBuffer = fs.readFileSync(zipFilePath);
 
         mockedAxios.get.mockResolvedValue(Promise.resolve({
@@ -149,8 +83,8 @@ describe('FeedImporter', () => {
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
-        // @ts-ignore
-        mockedTransitDb.stops.bulkPut.mockResolvedValue([])
+
+        mockedTransitDb.stops.bulkPut.mockResolvedValue('')
         mockedTransitDb.stops.update.mockResolvedValue(0)
 
         mockedTransitDb.table.mockReturnValue(mockedTransitDb.stops)

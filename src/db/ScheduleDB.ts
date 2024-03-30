@@ -1,5 +1,5 @@
 import Dexie from 'dexie';
-import {Station, Stopover, Trip} from "./Schedule.ts";
+import {Station, Stopover, Trip} from "./Schedule";
 
 export class ScheduleDB extends Dexie {
     public stopover: Dexie.Table<Stopover, { station_id: string, trip_id: string }>;

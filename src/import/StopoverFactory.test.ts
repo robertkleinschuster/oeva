@@ -1,7 +1,7 @@
-import {describe, expect, it} from "@jest/globals";
-import {GTFSCalendar, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
-import {createStopover} from "./StopoverFactory.ts";
-import {Station} from "../db/Schedule.ts";
+import {GTFSCalendar, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {createStopover} from "./StopoverFactory";
+import {Station} from "../db/Schedule";
+import {describe, expect, it} from "vitest";
 
 describe('StopoverFactory', () => {
     const stopTime: GTFSStopTime = {

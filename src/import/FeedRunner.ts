@@ -1,9 +1,9 @@
-import {feedDb} from "../db/FeedDb.ts";
-import {TransitFeedStatus} from "../db/Feed.ts";
-import {FeedImporter} from "./FeedImporter.ts";
-import {GTFSDB} from "../db/GTFSDB.ts";
+import {feedDb} from "../db/FeedDb";
+import {TransitFeedStatus} from "../db/Feed";
+import {FeedImporter} from "./FeedImporter";
+import {GTFSDB} from "../db/GTFSDB";
 import axios from "axios";
-import {scheduleDB} from "../db/ScheduleDB.ts";
+import {scheduleDB} from "../db/ScheduleDB";
 
 export class FeedRunner {
     running: number | undefined

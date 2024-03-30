@@ -1,5 +1,5 @@
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
-import {Station, Stopover} from "../db/Schedule.ts";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {Station, Stopover} from "../db/Schedule";
 
 export function createStopover(
     stopTime: GTFSStopTime,

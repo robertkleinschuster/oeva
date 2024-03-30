@@ -1,12 +1,12 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {Axios} from "axios";
-import {GTFSDB} from '../db/GTFSDB.ts';
-import {getFiles, getTableName} from "../db/TransitMapping.ts";
-import {FeedDB} from "../db/FeedDb.ts";
-import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed.ts";
-import {ScheduleDB} from "../db/ScheduleDB.ts";
-import {FeedProcessor} from "./FeedProcessor.ts";
+import {GTFSDB} from '../db/GTFSDB';
+import {getFiles, getTableName} from "../db/TransitMapping";
+import {FeedDB} from "../db/FeedDb";
+import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed";
+import {ScheduleDB} from "../db/ScheduleDB";
+import {FeedProcessor} from "./FeedProcessor";
 import pako from "pako"
 
 const dynamicallyTypedColumns = new Set([

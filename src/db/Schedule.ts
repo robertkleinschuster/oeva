@@ -1,4 +1,4 @@
-import {GTFSCalendar, GTFSCalendarDate} from "./GTFS.ts";
+import {GTFSCalendar, GTFSCalendarDate} from "./GTFS";
 
 export enum RouteType {
     TRAM = 0,

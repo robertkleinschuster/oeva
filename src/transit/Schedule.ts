@@ -1,5 +1,5 @@
-import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS.ts";
-import {formatServiceDate, parseServiceDate} from "./DateTime.ts";
+import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS";
+import {formatServiceDate, parseServiceDate} from "./DateTime";
 
 export enum ExceptionType {
     RUNNING = 1,

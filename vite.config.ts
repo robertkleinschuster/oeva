@@ -1,11 +1,14 @@
-import { defineConfig } from 'vite'
+import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa';
+import "vitest/config"
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-      react(),
+    react(),
+    legacy(),
     VitePWA({
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png', '/public/**/*'],
       injectRegister: "script",
@@ -21,4 +24,9 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+  }
 })

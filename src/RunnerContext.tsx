@@ -1,5 +1,5 @@
 import {createContext, ReactNode, useEffect, useState} from "react";
-import {FeedRunner} from "./import/FeedRunner.ts";
+import {FeedRunner} from "./import/FeedRunner";
 
 export const RunnerContext = createContext<number | undefined>(undefined)
 

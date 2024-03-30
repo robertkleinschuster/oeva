@@ -1,0 +1,7 @@
+{
+  "name": "oeva",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

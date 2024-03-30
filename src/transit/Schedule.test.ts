@@ -1,6 +1,6 @@
-import {describe, expect, it} from "@jest/globals";
-import {ExceptionType, isServiceRunningOn} from "./Schedule.ts";
-import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS.ts";
+import {ExceptionType, isServiceRunningOn} from "./Schedule";
+import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS";
+import {describe, expect, it} from "vitest";
 
 describe('Schedule', () => {
     it('should not be running when date is not in service period', () => {

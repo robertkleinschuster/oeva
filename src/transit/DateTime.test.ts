@@ -1,6 +1,6 @@
-import {describe, expect, it} from "@jest/globals";
-import {parseServiceDate, parseStopTime} from "./DateTime.ts";
+import {parseServiceDate, parseStopTime} from "./DateTime";
 import {formatISO, parseISO} from "date-fns";
+import {describe, expect, it} from "vitest";
 
 describe("DateTime", () => {
     it('adds days for hours greater then 24', () => {

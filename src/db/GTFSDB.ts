@@ -11,7 +11,7 @@ import {
     GTFSStopTime,
     GTFSTransfer,
     GTFSTrip
-} from "./GTFS.ts";
+} from "./GTFS";
 
 
 export class GTFSDB extends Dexie {

@@ -1,10 +1,10 @@
-import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT.ts";
-import {Station, Stopover} from "../db/Schedule.ts";
-import {ScheduleDB} from "../db/ScheduleDB.ts";
+import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT";
+import {Station, Stopover} from "../db/Schedule";
+import {ScheduleDB} from "../db/ScheduleDB";
 import lunr from "lunr";
-import {FeedDB} from "../db/FeedDb.ts";
-import {GTFSDB} from "../db/GTFSDB.ts";
-import {createStopover} from "./StopoverFactory.ts";
+import {FeedDB} from "../db/FeedDb";
+import {GTFSDB} from "../db/GTFSDB";
+import {createStopover} from "./StopoverFactory";
 
 export class FeedProcessor {
     private offset: number = 0

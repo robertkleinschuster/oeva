@@ -1,8 +1,8 @@
-import {formatServiceDate, parseStopTime} from "./DateTime.ts";
-import {isServiceRunningOn} from "./Schedule.ts";
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS.ts";
-import {scheduleDB} from "../db/ScheduleDB.ts";
-import {RouteType, Stopover} from "../db/Schedule.ts";
+import {formatServiceDate, parseStopTime} from "./DateTime";
+import {isServiceRunningOn} from "./Schedule";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {scheduleDB} from "../db/ScheduleDB";
+import {RouteType, Stopover} from "../db/Schedule";
 
 export interface TripDetail {
     trip: GTFSTrip;

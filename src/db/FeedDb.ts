@@ -1,5 +1,5 @@
 import Dexie from 'dexie';
-import {FeedFile, TransitFeed} from "./Feed.ts";
+import {FeedFile, TransitFeed} from "./Feed";
 
 export class FeedDB extends Dexie {
     public transit: Dexie.Table<TransitFeed, number>

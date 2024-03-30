@@ -1,5 +1,5 @@
-import { getTableName } from './TransitMapping.ts';
-import {describe, expect, it} from "@jest/globals";
+import { getTableName } from './TransitMapping';
+import {describe, expect, it} from "vitest";
 describe('TransitMapping', () => {
     it('should return the correct table name for a known GTFS file', () => {
         expect(getTableName('agency.txt')).toEqual('agencies');

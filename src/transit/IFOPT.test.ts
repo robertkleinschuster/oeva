@@ -1,5 +1,5 @@
-import {describe, expect, it} from "@jest/globals";
-import {decodeIFOPT} from "./IFOPT.ts";
+import {decodeIFOPT} from "./IFOPT";
+import {describe, expect, it} from "vitest";
 
 describe('IFOPT', () => {
     it('should parse IFOPT code', () => {
