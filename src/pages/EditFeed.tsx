@@ -91,7 +91,6 @@ const EditFeed: React.FC<EditFeedPageProps> = ({match}) => {
                                 }
                             }}
                             routerLink="/feeds"
-                            routerDirection="back"
                         >
                             Speichern
                         </IonButton>

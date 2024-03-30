@@ -53,7 +53,6 @@ const AddFeed: React.FC = () => {
                                 }
                             }}
                             routerLink="/feeds"
-                            routerDirection="back"
                         >Hinzufügen</IonButton>
                     </IonButtons>
                 </IonToolbar>
