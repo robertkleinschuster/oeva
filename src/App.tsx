@@ -29,7 +29,9 @@ import EditFeed from "./pages/EditFeed";
 import Station from "./pages/Station";
 import Trip from "./pages/Trip";
 
-setupIonicReact();
+setupIonicReact({
+    swipeBackEnabled: true,
+});
 
 const App: React.FC = () => {
     return <IonApp>
