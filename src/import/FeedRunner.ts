@@ -9,9 +9,6 @@ export class FeedRunner {
     running: number | undefined
 
     async run() {
-        if (!feedDb.isOpen()) {
-            await feedDb.open()
-        }
         if (this.running === undefined) {
             try {
                 const feed = await feedDb.transit
@@ -20,7 +17,6 @@ export class FeedRunner {
                     .first()
                 if (feed) {
                     this.running = feed.id
-                    self.postMessage(feed.id)
                     try {
                         const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
                         await dataImporter.run(feed.id!)
@@ -35,7 +31,6 @@ export class FeedRunner {
             } catch (e) {
                 console.log(e)
             }
-            self.postMessage(undefined)
             this.running = undefined
         }
 

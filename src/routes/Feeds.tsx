@@ -10,14 +10,14 @@ import {AddFeedSheet} from "../components/AddFeedSheet.tsx";
 import {feedDb} from "../db/FeedDb.ts";
 import {TransitFeedStatus} from "../db/Feed.ts";
 import {StorageQuota} from "../components/StorageQuota.tsx";
-import {WorkerContext} from "../WorkerContext.tsx";
+import {RunnerContext} from "../RunnerContext.tsx";
 import {scheduleDB} from "../db/ScheduleDB.ts";
 
 export const Feeds = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray());
     const [addDialog, showAddDialog] = useState(false)
     const [selectedFeedId, setSelectedFeedId] = useState<number | null>(null)
-    const running = useContext(WorkerContext)
+    const running = useContext(RunnerContext)
 
     return <Page name="feeds">
         <Navbar title="Feeds" backLink>

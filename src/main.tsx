@@ -10,21 +10,20 @@ import 'framework7-icons';
 // Import F7-React Plugin
 import Framework7React from 'framework7-react';
 
-// Import feed runner as web worker with vite ?worker feature
 import {FeedRunner} from "./import/FeedRunner.ts";
-import {WorkerContextProvider} from "./WorkerContext.tsx";
+import {RunnerContextProvider} from "./RunnerContext.tsx";
 
 // Init F7-React Plugin
 Framework7.use(Framework7React);
 
-const worker = new FeedRunner()
+const runner = new FeedRunner()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <WorkerContextProvider worker={worker}>
+        <RunnerContextProvider runner={runner}>
             <App/>
-        </WorkerContextProvider>
+        </RunnerContextProvider>
     </React.StrictMode>,
 )
 
-void worker.run()
+void runner.run()
