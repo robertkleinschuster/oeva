@@ -1,7 +1,6 @@
 import {Redirect, Route} from 'react-router-dom';
-import {IonApp, IonButton, IonContent, IonRouterOutlet, setupIonicReact} from '@ionic/react';
+import {IonApp, IonRouterOutlet, setupIonicReact} from '@ionic/react';
 import {IonReactRouter} from '@ionic/react-router';
-import {useRegisterSW} from "virtual:pwa-register/react";
 import Home from './pages/Home';
 
 /* Core CSS required for Ionic components to work properly */
@@ -33,27 +32,7 @@ import Trip from "./pages/Trip";
 setupIonicReact();
 
 const App: React.FC = () => {
-    const {
-        needRefresh: [needRefresh],
-        updateServiceWorker,
-    } = useRegisterSW({
-        async onRegisteredSW(r: string) {
-            console.log('SW Registered: ', r);
-        },
-        onRegisterError(error: any) {
-            console.error('SW Registration Error: ', error);
-        },
-    });
-
     return <IonApp>
-        {needRefresh ?
-            <IonContent>
-                <p>Es ist eine neue Version von OeVA Beta verfügbar!</p>
-                <IonButton onClick={() => {
-                    void updateServiceWorker(true)
-                }}>Jetzt aktualisieren
-                </IonButton>
-            </IonContent> : null}
         <IonReactRouter>
             <IonRouterOutlet>
                 <Route exact path="/home" component={Home}/>
