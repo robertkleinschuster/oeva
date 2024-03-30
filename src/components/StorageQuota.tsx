@@ -14,7 +14,7 @@ export const StorageQuota: React.FC = () => {
     }, []);
 
     if (quota?.quota !== undefined && quota?.usage !== undefined) {
-        const usageInMB = Math.fround(100 / 1000000);
+        const usageInMB = Math.fround(quota.usage / 1000000);
         const quotaInMB = Math.fround(quota.quota / 1000000);
         const usageInPercent = Math.ceil((usageInMB / quotaInMB) * 100);
         const formatter = new Intl.NumberFormat(['de'], {style: 'unit', unit: 'megabyte', maximumFractionDigits: 2})
