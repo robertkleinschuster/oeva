@@ -5,13 +5,15 @@ import {
     IonHeader, IonItem, IonLabel, IonList, IonNote,
     IonPage, IonText,
     IonTitle,
-    IonToolbar, isPlatform
+    IonToolbar, isPlatform, useIonModal
 } from '@ionic/react';
 import React from "react";
 import {StorageQuota} from "../components/StorageQuota";
 import {useLiveQuery} from "dexie-react-hooks";
 import {feedDb} from "../db/FeedDb";
 import FeedStatus from "../components/FeedStatus";
+import AddFeed from "../modals/AddFeed";
+import EditFeed from "../modals/EditFeed";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
@@ -30,8 +32,10 @@ const Feeds: React.FC = () => {
                 <StorageQuota/>
                 <IonList>
                     {feeds?.map(feed => <IonItem
-                        routerLink={`/feeds/edit/${feed.id}`}
+                        button
+                        id={'edit-feed-' + feed.id}
                         key={feed.id}>
+                        <EditFeed feedId={feed.id!} trigger={'edit-feed-' + feed.id}/>
                         <IonLabel>
                             <IonText style={{display: 'block'}}>
                                 {feed.name}
@@ -39,7 +43,10 @@ const Feeds: React.FC = () => {
                             <IonNote color="medium"><FeedStatus feed={feed}/></IonNote>
                         </IonLabel>
                     </IonItem>)}
-                    <IonItem routerLink="/feeds/add"><IonLabel>Feed hinzufügen</IonLabel></IonItem>
+                    <IonItem id="add-feed" button>
+                        <AddFeed trigger="add-feed"/>
+                        <IonLabel>Feed hinzufügen</IonLabel>
+                    </IonItem>
                 </IonList>
             </IonContent>
         </IonPage>

@@ -24,8 +24,6 @@ import './theme/variables.css';
 import React from "react";
 import Feeds from "./pages/Feeds";
 import StationSearch from "./pages/StationSearch";
-import AddFeed from "./pages/AddFeed";
-import EditFeed from "./pages/EditFeed";
 import Station from "./pages/Station";
 import Trip from "./pages/Trip";
 import {createMemoryHistory} from "history";
@@ -42,8 +40,6 @@ const App: React.FC = () => {
             <IonRouterOutlet>
                 <Route exact path="/home" component={Home}/>
                 <Route exact path="/feeds" component={Feeds}/>
-                <Route exact path="/feeds/add" component={AddFeed}/>
-                <Route exact path="/feeds/edit/:id" component={EditFeed}/>
                 <Route exact path="/stations" component={StationSearch}/>
                 <Route exact path="/stations/:id" component={Station}/>
                 <Route exact path="/trips/:id" component={Trip}/>

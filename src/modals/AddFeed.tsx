@@ -1,28 +1,32 @@
 import {
-    IonBackButton, IonButton,
+    IonButton,
     IonButtons,
     IonContent,
     IonHeader,
-    IonPage,
+    IonModal,
     IonTitle,
     IonToolbar,
-    isPlatform,
 } from '@ionic/react';
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
+import {TransitFeedStatus} from "../db/Feed";
 
-const AddFeed: React.FC = () => {
+const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [ifopt, setIFOPT] = useState(false)
+
+    const modal = useRef<HTMLIonModalElement>(null)
 
     const save = async () => {
         await feedDb.transit.add({
             name,
             url,
-            is_ifopt: ifopt
+            is_ifopt: ifopt,
+            status: TransitFeedStatus.DRAFT
         })
+        modal.current?.dismiss()
     }
 
     const validate = () => {
@@ -36,11 +40,11 @@ const AddFeed: React.FC = () => {
     }
 
     return (
-        <IonPage>
+        <IonModal ref={modal} trigger={trigger}>
             <IonHeader>
                 <IonToolbar>
                     <IonButtons slot="start">
-                        <IonBackButton text={isPlatform('ios') ? "Feeds" : undefined}/>
+                        <IonButton onClick={() => modal.current?.dismiss()}>Abbrechen</IonButton>
                     </IonButtons>
                     <IonTitle>Feed hinzufügen</IonTitle>
                     <IonButtons slot="end">
@@ -48,11 +52,8 @@ const AddFeed: React.FC = () => {
                             onClick={(e) => {
                                 if (validate()) {
                                     void save()
-                                } else {
-                                    e.preventDefault()
                                 }
                             }}
-                            routerLink="/feeds"
                         >Hinzufügen</IonButton>
                     </IonButtons>
                 </IonToolbar>
@@ -60,7 +61,7 @@ const AddFeed: React.FC = () => {
             <IonContent>
                 <FeedForm onChange={onChange}/>
             </IonContent>
-        </IonPage>
+        </IonModal>
     );
 };
 

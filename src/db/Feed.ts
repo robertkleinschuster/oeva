@@ -23,7 +23,7 @@ export interface TransitFeed {
     is_ifopt: boolean;
     downloaded_megabytes?: number;
     download_progress?: number;
-    status?: TransitFeedStatus;
+    status: TransitFeedStatus;
     timestamp?: number;
     last_start?: number;
 }
