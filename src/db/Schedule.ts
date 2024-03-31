@@ -13,12 +13,15 @@ export enum RouteType {
     MONORAIL = 12
 }
 
+export const H3_RESOLUTION = 14;
+
 export interface Stopover {
     station_id: string;
     stop_id: string;
     trip_id: string;
     route_id: string;
     service_id: string;
+    h3_cell: string;
     route_type: RouteType;
     sequence_in_trip: number;
     minutes: number | undefined;
@@ -39,18 +42,13 @@ export interface Station {
     id: string;
     name: string;
     keywords: string[];
-    stopIds: string[];
-    latitude: number;
-    longitude: number;
-    locations: {
-        latitude: number;
-        longitude: number;
-    }[],
+    stop_ids: string[];
+    h3_cells: string[];
 }
 
 export interface Trip {
     id: string;
     name: string;
     keywords: string[];
-    stopIds: string[];
+    stop_ids: string[];
 }

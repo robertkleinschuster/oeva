@@ -1,5 +1,6 @@
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {Station, Stopover} from "../db/Schedule";
+import {H3_RESOLUTION, Station, Stopover} from "../db/Schedule";
+import {latLngToCell} from "h3-js";
 
 export function createStopover(
     stopTime: GTFSStopTime,
@@ -11,10 +12,6 @@ export function createStopover(
     service: GTFSCalendar,
     exceptions: GTFSCalendarDate[]
 ): Stopover {
-    if (!stop.parent_station) {
-        throw new Error('Stop has no parent station')
-    }
-
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
     }
@@ -23,6 +20,7 @@ export function createStopover(
         stopTime.stop_id !== stop.stop_id
         || stopTime.trip_id !== trip.trip_id
         || trip.route_id !== route.route_id
+        || !station.stop_ids.includes(stop.stop_id)
     ) {
         throw new Error('Data mismatch')
     }
@@ -48,7 +46,7 @@ export function createStopover(
     }
 
     return {
-        station_id: stop.parent_station,
+        station_id: station.id,
         stop_id: stopTime.stop_id,
         service_id: trip.service_id,
         trip_id: trip.trip_id,
@@ -56,6 +54,7 @@ export function createStopover(
         route_type: route.route_type,
         sequence_in_trip: stopTime.stop_sequence,
         minutes: minutesSum,
+        h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
         time: stopTime.departure_time ?? stopTime.departure_time,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,

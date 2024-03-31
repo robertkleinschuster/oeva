@@ -12,7 +12,6 @@ describe('StopoverFactory', () => {
     }
     const stop: GTFSStop = {
         stop_id: '1',
-        parent_station: '90',
         stop_name: 'Ort',
         stop_lat: 1,
         stop_lon: 1,
@@ -49,10 +48,10 @@ describe('StopoverFactory', () => {
         id: '90',
         name: 'Graz Hbf',
         keywords: [],
-        locations: [],
-        stopIds: [],
-        latitude: 0,
-        longitude: 0,
+        h3_cells: [],
+        stop_ids: [
+            '1'
+        ]
     }
     it('should throw error for mismatched data', () => {
         expect(() => createStopover(stopTime, {
@@ -71,12 +70,10 @@ describe('StopoverFactory', () => {
             ...stopTime,
             trip_id: '99'
         }], service, [])).toThrowError('Data mismatch')
-    })
-    it('should throw error for stop without parent station', () => {
-        expect(() => createStopover(stopTime, {
-            ...stop,
-            parent_station: undefined
-        }, trip, route, station, [], service, [])).toThrowError('Stop has no parent station')
+        expect(() => createStopover(stopTime, stop, trip, route, {
+            ...station,
+            stop_ids: ['99']
+        }, [], service, [])).toThrowError('Data mismatch')
     })
     it('should throw error for stop time without time', () => {
         expect(() => createStopover({
@@ -91,7 +88,7 @@ describe('StopoverFactory', () => {
         expect(stopover.trip_id).toEqual(trip.trip_id)
         expect(stopover.service_id).toEqual(trip.service_id)
         expect(stopover.route_id).toEqual(trip.route_id)
-        expect(stopover.station_id).toEqual(stop.parent_station)
+        expect(stopover.station_id).toEqual(station.id)
         expect(stopover.arrival_time).toBeUndefined()
         expect(stopover.departure_time).toEqual('08:37:00')
         expect(stopover.direction).toEqual('Budapest-Keleti')

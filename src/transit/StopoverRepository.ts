@@ -31,10 +31,20 @@ export class StopoverRepository {
     }
 
     async findByStation(stationId: string, date: Date, routeTypes?: RouteType[]): Promise<Stopover[]> {
+        const station = await scheduleDB.station.get(stationId)
+        if (!station) {
+            throw new Error('Station not found')
+        }
         if (routeTypes) {
+            let filter = [];
+            for (const cell of station.h3_cells) {
+                for (const type of routeTypes) {
+                    filter.push([cell, type])
+                }
+            }
             return scheduleDB.stopover
-                .where('[station_id+route_type]')
-                .anyOf(routeTypes.map(routeType => [stationId, routeType]))
+                .where('[h3_cell+route_type]')
+                .anyOf(filter)
                 .filter(stopover =>
                     isServiceRunningOn(stopover.service, stopover.exceptions.get(formatServiceDate(date)), date)
                     && stopover.departure_time ? parseStopTime(stopover.departure_time, date).getTime() >= date.getTime() : true
@@ -42,8 +52,8 @@ export class StopoverRepository {
                 .sortBy('minutes')
         } else {
             return scheduleDB.stopover
-                .where('station_id')
-                .equals(stationId)
+                .where('h3_cell')
+                .anyOf(station.h3_cells)
                 .filter(stopover =>
                     isServiceRunningOn(stopover.service, stopover.exceptions.get(formatServiceDate(date)), date)
                     && (stopover.time ? parseStopTime(stopover.time, date) >= date : true)
