@@ -43,7 +43,7 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
                 <IonList>
                     {stopovers?.map(stopover => <IonItem
                         routerLink={`/stations/${stopover.station_id}`}
-                        key={stopover.trip_id}>
+                        key={stopover.sequence_in_trip}>
                         <IonLabel>
                             <IonNote>
                                 {stopover.arrival_time ? parseStopTime(stopover.arrival_time, new Date()).toLocaleTimeString() : null}

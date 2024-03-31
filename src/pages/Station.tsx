@@ -38,14 +38,26 @@ const Station: React.FC<StationPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 <IonList>
-                    {stopovers?.filter(stopover => stopover.departure_time)?.map(stopover => <IonItem
+                    {stopovers?.map(stopover => <IonItem
                         routerLink={`/trips/${stopover.trip_id}`}
                         key={stopover.trip_id}>
                         <IonLabel>
+                            {stopover.arrival_time ?
+                                <IonNote
+                                    style={{display: 'block'}}>
+                                    Ankunft: {parseStopTime(stopover.arrival_time, new Date()).toLocaleTimeString()}
+                                </IonNote> : null}
+                            {stopover.departure_time ?
+                                <IonNote
+                                    style={{display: 'block'}}>
+                                    Abfahrt: {parseStopTime(stopover.departure_time, new Date()).toLocaleTimeString()}
+                                </IonNote> : null}
                             <IonText style={{display: 'block'}}>
-                                {parseStopTime(stopover.departure_time!, new Date()).toLocaleTimeString()} {stopover.line} {stopover.direction}
+                                {stopover.line} {stopover.direction}
                             </IonText>
-                            {stopover.stop !== station?.name ? <IonNote color="medium">{stopover.stop}</IonNote> : null}
+                            <IonNote color="medium" style={{display: 'block'}}>
+                                {stopover.stop}
+                            </IonNote>
                         </IonLabel>
                     </IonItem>)}
                 </IonList>
