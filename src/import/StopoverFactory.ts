@@ -21,7 +21,7 @@ export function createStopover(
         stopTime.stop_id !== stop.stop_id
         || stopTime.trip_id !== trip.trip_id
         || trip.route_id !== route.route_id
-        || !station.stop_ids.includes(stop.stop_id)
+        || (!station.stop_ids.includes(stop.stop_id) && !h3_cell)
     ) {
         throw new Error('Data mismatch')
     }
