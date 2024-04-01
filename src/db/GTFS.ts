@@ -7,7 +7,6 @@ export interface GTFSAgency {
     agency_phone?: string;
     agency_fare_url?: string;
     agency_email?: string;
-    tokens: string[];
 }
 
 export interface GTFSStop {
@@ -25,7 +24,6 @@ export interface GTFSStop {
     wheelchair_boarding?: number;
     level_id?: string;
     platform_code?: string;
-    tokens: string[];
 }
 
 export interface GTFSRoute {
@@ -41,7 +39,6 @@ export interface GTFSRoute {
     route_sort_order?: number;
     continuous_pickup?: number;
     continuous_drop_off?: number;
-    tokens: string[];
 }
 
 export interface GTFSTrip {
@@ -55,7 +52,6 @@ export interface GTFSTrip {
     shape_id?: string;
     wheelchair_accessible?: number;
     bikes_allowed?: number;
-    tokens: string[];
 }
 
 export interface GTFSStopTime {

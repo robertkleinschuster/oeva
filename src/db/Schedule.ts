@@ -25,11 +25,9 @@ export enum Boarding {
 export const H3_RESOLUTION = 14;
 
 export interface Stopover {
+    id: string;
     station_id: string;
-    stop_id: string;
     trip_id: string;
-    route_id: string;
-    service_id: string;
     h3_cell: string;
     route_type: RouteType;
     boarding: Boarding;
@@ -44,21 +42,27 @@ export interface Stopover {
     station: string;
     is_origin: boolean;
     is_destination: boolean;
-    service: GTFSCalendar,
-    exceptions: Map<string, GTFSCalendarDate>
 }
 
 export interface Station {
     id: string;
+    feed_id: number;
+    feed_station_id: string;
     name: string;
+    stop_names: Map<string, string>;
     keywords: string[];
-    stop_ids: string[];
     h3_cells: string[];
 }
 
 export interface Trip {
     id: string;
+    feed_id: number;
+    feed_trip_id: string;
+    h3_cells: string[];
     name: string;
+    direction: string;
+    route_type: RouteType
+    service: GTFSCalendar;
+    exceptions: Map<string, GTFSCalendarDate>;
     keywords: string[];
-    stop_ids: string[];
 }

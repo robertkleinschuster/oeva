@@ -1,33 +1,31 @@
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {Boarding, H3_RESOLUTION, Station, Stopover} from "../db/Schedule";
+import {GTFSStop, GTFSStopTime} from "../db/GTFS";
+import {Boarding, H3_RESOLUTION, Station, Stopover, Trip} from "../db/Schedule";
 import {latLngToCell} from "h3-js";
 
 export function createStopover(
+    station: Station,
+    trip: Trip,
     stopTime: GTFSStopTime,
     stop: GTFSStop,
-    trip: GTFSTrip,
-    route: GTFSRoute,
-    station: Station,
-    tripStopTimes: GTFSStopTime[],
-    service: GTFSCalendar,
-    exceptions: GTFSCalendarDate[],
+    tripStopTimes: GTFSStopTime[] = [],
     h3_cell?: string
 ): Stopover {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
     }
 
+    const cell = h3_cell ?? latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
+
     if (
         stopTime.stop_id !== stop.stop_id
-        || stopTime.trip_id !== trip.trip_id
-        || trip.route_id !== route.route_id
-        || (!station.stop_ids.includes(stop.stop_id) && !h3_cell)
+        || stopTime.trip_id !== trip.feed_trip_id
+        || !station.h3_cells.includes(cell)
     ) {
         throw new Error('Data mismatch')
     }
 
     for (const tripStopTime of tripStopTimes) {
-        if (tripStopTime.trip_id !== trip.trip_id) {
+        if (tripStopTime.trip_id !== trip.feed_trip_id) {
             throw new Error('Data mismatch')
         }
     }
@@ -61,26 +59,22 @@ export function createStopover(
     }
 
     return {
+        id: `${station.id}-${trip.id}`,
         station_id: station.id,
-        stop_id: stopTime.stop_id,
-        service_id: trip.service_id,
-        trip_id: trip.trip_id,
-        route_id: trip.route_id,
-        route_type: route.route_type,
+        trip_id: trip.id,
+        route_type: trip.route_type,
         sequence_in_trip: stopTime.stop_sequence,
         minutes: minutesSum,
-        h3_cell: h3_cell ?? latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
+        h3_cell: cell,
         time: stopTime.departure_time ?? stopTime.departure_time,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,
-        line: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
-        direction: trip.trip_headsign,
+        line: trip.name,
+        direction: trip.direction,
         is_origin,
         is_destination,
-        service,
         boarding,
         stop: stop.stop_name,
         station: station.name,
-        exceptions: new Map(exceptions.map(exception => [exception.date, exception]))
     };
 }
