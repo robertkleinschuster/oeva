@@ -3,21 +3,22 @@ import {
     IonButtons,
     IonContent,
     IonHeader, IonItem, IonLabel, IonList, IonNote,
-    IonPage, IonText,
+    IonPage, IonSpinner, IonText,
     IonTitle,
     IonToolbar, isPlatform, useIonModal
 } from '@ionic/react';
-import React from "react";
+import React, {useContext} from "react";
 import {StorageQuota} from "../components/StorageQuota";
 import {useLiveQuery} from "dexie-react-hooks";
 import {feedDb} from "../db/FeedDb";
 import FeedStatus from "../components/FeedStatus";
 import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
+import {RunnerContext} from "../RunnerContext";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
-
+    const runningFeed = useContext(RunnerContext)
     return (
         <IonPage>
             <IonHeader>
@@ -42,6 +43,7 @@ const Feeds: React.FC = () => {
                             </IonText>
                             <IonNote color="medium"><FeedStatus feed={feed}/></IonNote>
                         </IonLabel>
+                        {runningFeed === feed.id ? <IonSpinner/> : null}
                     </IonItem>)}
                     <IonItem id="add-feed" button>
                         <AddFeed trigger="add-feed"/>
