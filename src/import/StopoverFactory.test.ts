@@ -11,6 +11,7 @@ describe('StopoverFactory', () => {
         feed_trip_id: '2',
         direction: 'Budapest-Keleti',
         name: 'IC 311',
+        h3_cells: [],
         service: {
             service_id: '4',
             start_date: '20230101',
@@ -40,9 +41,12 @@ describe('StopoverFactory', () => {
         stop_lon: 1,
     }
     const station: Station = {
-        id: '90',
+        id: '1-90',
         name: 'Graz Hbf',
         keywords: [],
+        stop_names: new Map,
+        feed_station_id: '90',
+        feed_id: 1,
         h3_cells: [
             latLngToCell(1, 1, 14)
         ]
@@ -70,6 +74,7 @@ describe('StopoverFactory', () => {
     })
     it('should create stopover from gtfs data', () => {
         const stopover = createStopover(station, trip, stopTime, stop);
+        expect(stopover.id).toEqual("1-90-1-2")
         expect(stopover.trip_id).toEqual(trip.id)
         expect(stopover.station_id).toEqual(station.id)
         expect(stopover.arrival_time).toBeUndefined()

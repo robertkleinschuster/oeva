@@ -15,6 +15,8 @@ export const RunnerContextProvider = ({children, runner}: { children: ReactNode,
             setRunning(runner.running)
             if (runner.running) {
                 feedDb.transit.get(runner.running).then(setRunningFeed)
+            } else {
+                setRunningFeed(undefined)
             }
         }, 1000);
         return () => clearInterval(interval);
