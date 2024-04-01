@@ -44,11 +44,14 @@ export class FeedProcessor {
 
             for (const stopTime of stopTimes) {
                 const stop = await this.transitDb.stops.get(stopTime.stop_id)
-                const stations = await this.scheduleDb.station
-                    .where('stop_ids')
-                    .equals(stopTime.stop_id)
-                    .toArray()
+
                 if (stop) {
+                    const h3_cell = latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
+                    const stations = await this.scheduleDb.station
+                        .where('h3_cells')
+                        .equals(h3_cell)
+                        .toArray()
+
                     const route = await this.transitDb.routes.get(trip.route_id)
                     const service = await this.transitDb.calendar.get(trip.service_id)
                     const exceptions = await this.transitDb.calendarDates
@@ -65,7 +68,8 @@ export class FeedProcessor {
                                 station,
                                 stopTimes,
                                 service,
-                                exceptions
+                                exceptions,
+                                h3_cell
                             ))
                         }
                     }
@@ -103,40 +107,43 @@ export class FeedProcessor {
             });
         }, 1500);
 
-        for (const stop of stops) {
-            const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
+        try {
+            for (const stop of stops) {
+                const stationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
 
-            const station: Station = await this.scheduleDb.station.get(stationId) ?? {
-                id: stationId,
-                name: stop.stop_name,
-                keywords: [],
-                stop_ids: [],
-                h3_cells: [],
-            }
+                const station: Station = await this.scheduleDb.station.get(stationId) ?? {
+                    id: stationId,
+                    name: stop.stop_name,
+                    keywords: [],
+                    stop_ids: [],
+                    h3_cells: [],
+                }
 
-            if (!station.h3_cells) {
-                station.h3_cells = [];
-            }
-            if (!station.stop_ids) {
-                station.stop_ids = []
-            }
-            if (!station.keywords) {
-                station.keywords = [];
-            }
+                if (!station.h3_cells) {
+                    station.h3_cells = [];
+                }
+                if (!station.stop_ids) {
+                    station.stop_ids = []
+                }
+                if (!station.keywords) {
+                    station.keywords = [];
+                }
 
-            station.stop_ids.push(stop.stop_id)
-            station.h3_cells.push(latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION))
+                station.stop_ids.push(stop.stop_id)
+                station.h3_cells.push(latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION))
 
-            const keywords = new Set(station.keywords)
-            for (const keyword of lunr.tokenizer(stop.stop_name).map(String)) {
-                keywords.add(keyword)
+                const keywords = new Set(station.keywords)
+                for (const keyword of lunr.tokenizer(stop.stop_name).map(String)) {
+                    keywords.add(keyword)
+                }
+                station.keywords = Array.from(keywords)
+
+                await this.scheduleDb.station.put(station)
+                this.offset++;
             }
-            station.keywords = Array.from(keywords)
-
-            await this.scheduleDb.station.put(station)
-            this.offset++;
+        } finally {
+            clearInterval(interval)
         }
-        clearInterval(interval)
     }
 
     async processTrips(feedId: number) {
@@ -162,19 +169,21 @@ export class FeedProcessor {
                 offset: this.offset
             });
         }, 1500);
-
-        for (const trip of trips) {
-            const route = await this.transitDb.routes.get(trip.route_id)
-            if (route) {
-                await this.scheduleDb.trip.put({
-                    id: trip.trip_id,
-                    name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
-                    keywords: [],
-                    stop_ids: []
-                })
+        try {
+            for (const trip of trips) {
+                const route = await this.transitDb.routes.get(trip.route_id)
+                if (route) {
+                    await this.scheduleDb.trip.put({
+                        id: trip.trip_id,
+                        name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
+                        keywords: [],
+                        stop_ids: []
+                    })
+                }
+                this.offset++;
             }
-            this.offset++;
+        } finally {
+            clearInterval(interval)
         }
-        clearInterval(interval)
     }
 }

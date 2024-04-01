@@ -1,5 +1,5 @@
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {H3_RESOLUTION, Station, Stopover} from "../db/Schedule";
+import {Boarding, H3_RESOLUTION, Station, Stopover} from "../db/Schedule";
 import {latLngToCell} from "h3-js";
 
 export function createStopover(
@@ -10,7 +10,8 @@ export function createStopover(
     station: Station,
     tripStopTimes: GTFSStopTime[],
     service: GTFSCalendar,
-    exceptions: GTFSCalendarDate[]
+    exceptions: GTFSCalendarDate[],
+    h3_cell?: string
 ): Stopover {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
@@ -45,6 +46,20 @@ export function createStopover(
         minutesSum = hours * 60 + minutes
     }
 
+    let boarding = Boarding.STANDARD;
+
+    if (stopTime.pickup_type === 1 && stopTime.drop_off_type === 1) {
+        boarding = Boarding.NONE
+    } else if (stopTime.pickup_type === 1 && stopTime.drop_off_type === 0) {
+        boarding = Boarding.ONLY_DISEMBARKING
+    } else if (stopTime.pickup_type === 0 && stopTime.drop_off_type === 1) {
+        boarding = Boarding.ONLY_BOARDING
+    } else if (stopTime.pickup_type === 2 || stopTime.drop_off_type === 2) {
+        boarding = Boarding.ON_REQUEST
+    } else if (stopTime.pickup_type === 3 || stopTime.drop_off_type === 3) {
+        boarding = Boarding.ON_CALL
+    }
+
     return {
         station_id: station.id,
         stop_id: stopTime.stop_id,
@@ -54,7 +69,7 @@ export function createStopover(
         route_type: route.route_type,
         sequence_in_trip: stopTime.stop_sequence,
         minutes: minutesSum,
-        h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
+        h3_cell: h3_cell ?? latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
         time: stopTime.departure_time ?? stopTime.departure_time,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,
@@ -63,6 +78,7 @@ export function createStopover(
         is_origin,
         is_destination,
         service,
+        boarding,
         stop: stop.stop_name,
         station: station.name,
         exceptions: new Map(exceptions.map(exception => [exception.date, exception]))

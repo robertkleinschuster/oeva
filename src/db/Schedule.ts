@@ -13,6 +13,15 @@ export enum RouteType {
     MONORAIL = 12
 }
 
+export enum Boarding {
+    NONE,
+    STANDARD,
+    ONLY_DISEMBARKING,
+    ONLY_BOARDING,
+    ON_REQUEST,
+    ON_CALL,
+}
+
 export const H3_RESOLUTION = 14;
 
 export interface Stopover {
@@ -23,6 +32,7 @@ export interface Stopover {
     service_id: string;
     h3_cell: string;
     route_type: RouteType;
+    boarding: Boarding;
     sequence_in_trip: number;
     minutes: number | undefined;
     time: string | undefined;

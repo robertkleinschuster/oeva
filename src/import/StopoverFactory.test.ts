@@ -1,6 +1,6 @@
 import {GTFSCalendar, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
 import {createStopover} from "./StopoverFactory";
-import {Station} from "../db/Schedule";
+import {Boarding, Station} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
 
 describe('StopoverFactory', () => {
@@ -93,6 +93,7 @@ describe('StopoverFactory', () => {
         expect(stopover.departure_time).toEqual('08:37:00')
         expect(stopover.direction).toEqual('Budapest-Keleti')
         expect(stopover.line).toEqual('IC 311')
+        expect(stopover.boarding).toEqual(Boarding.STANDARD)
 
         const stopover2 = createStopover(stopTime, stop, {
             ...trip,
@@ -101,5 +102,25 @@ describe('StopoverFactory', () => {
         }, {...route, route_short_name: '3/5'}, station, [], service, []);
         expect(stopover2.direction).toEqual('Zentralfriedhof')
         expect(stopover2.line).toEqual('3/5')
+    })
+    it('should set boarding none for service stop', () => {
+        const stopover = createStopover({...stopTime, pickup_type: 1, drop_off_type: 1}, stop, trip, route, station, [], service, []);
+        expect(stopover.boarding).toEqual(Boarding.NONE)
+    })
+    it('should set boarding on request for request stop', () => {
+        const stopover = createStopover({...stopTime, pickup_type: 2, drop_off_type: 2}, stop, trip, route, station, [], service, []);
+        expect(stopover.boarding).toEqual(Boarding.ON_REQUEST)
+    })
+    it('should set boarding on request for request stop', () => {
+        const stopover = createStopover({...stopTime, pickup_type: 3, drop_off_type: 3}, stop, trip, route, station, [], service, []);
+        expect(stopover.boarding).toEqual(Boarding.ON_CALL)
+    })
+    it('should set boarding disembark only', () => {
+        const stopover = createStopover({...stopTime, pickup_type: 1, drop_off_type: 0}, stop, trip, route, station, [], service, []);
+        expect(stopover.boarding).toEqual(Boarding.ONLY_DISEMBARKING)
+    })
+    it('should set boarding only', () => {
+        const stopover = createStopover({...stopTime, pickup_type: 0, drop_off_type: 1}, stop, trip, route, station, [], service, []);
+        expect(stopover.boarding).toEqual(Boarding.ONLY_BOARDING)
     })
 })

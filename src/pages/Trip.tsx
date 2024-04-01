@@ -17,6 +17,8 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {parseStopTime} from "../transit/DateTime";
 import {StopoverRepository} from "../transit/StopoverRepository";
+import {Boarding} from "../db/Schedule";
+import StopoverBoarding from "../components/StopoverBoarding";
 
 interface StationPageProps extends RouteComponentProps<{
     id: string
@@ -53,6 +55,10 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
                             <IonText style={{display: 'block'}}>
                                 {stopover.stop}
                             </IonText>
+                            {stopover.boarding !== Boarding.STANDARD ?
+                                <IonNote>
+                                    <StopoverBoarding boarding={stopover.boarding}/>
+                                </IonNote> : null}
                         </IonLabel>
                     </IonItem>)}
                 </IonList>

@@ -138,18 +138,21 @@ class FeedImporter {
             });
         }, 1500)
 
-        const response = await this.axios.get(feed.url, {
-            responseType: 'blob',
-            onDownloadProgress: (event) => {
-                downloaded_megabytes = Math.ceil(event.loaded / 1000000);
-                if (event.progress) {
-                    progress = event.progress
+        try {
+            const response = await this.axios.get(feed.url, {
+                responseType: 'blob',
+                onDownloadProgress: (event) => {
+                    downloaded_megabytes = Math.ceil(event.loaded / 1000000);
+                    if (event.progress) {
+                        progress = event.progress
+                    }
                 }
-            }
-        });
+            });
 
-        clearInterval(interval)
-        await this.saveData(feedId, response.data);
+            await this.saveData(feedId, response.data);
+        } finally {
+            clearInterval(interval)
+        }
     }
 
     async saveData(feedId: number, file: File | Blob) {
