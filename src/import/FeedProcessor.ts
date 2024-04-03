@@ -114,11 +114,6 @@ export class FeedProcessor {
                 const prefixedStationId = this.prefixId(feedId, feedStationId);
                 const h3_cell = latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
 
-                const similarStations = await this.scheduleDb.station
-                    .where('h3_cells')
-                    .anyOf(h3_cell)
-                    .toArray()
-
                 const station: Station = await this.scheduleDb.station.get(prefixedStationId) ?? {
                     id: prefixedStationId,
                     feed_id: feedId,
@@ -144,12 +139,6 @@ export class FeedProcessor {
                 const keywords = new Set(station.keywords)
                 for (const keyword of lunr.tokenizer(stop.stop_name).map(String)) {
                     keywords.add(keyword)
-                }
-
-                for (const similarStation of similarStations) {
-                    similarStation.h3_cells.forEach(cell => h3_cells.add(cell))
-                    similarStation.keywords.forEach(keyword => keywords.add(keyword))
-                    similarStation.stop_names.forEach((value, key) => station.stop_names.set(key, value))
                 }
 
                 station.h3_cells = Array.from(h3_cells)
