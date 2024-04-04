@@ -38,7 +38,7 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{trip?.name}</IonTitle>
+                    <IonTitle>{trip?.name} {trip?.direction}</IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
