@@ -8,10 +8,10 @@ export class ScheduleDB extends Dexie {
 
     public constructor() {
         super('Schedule');
-        this.version(11).stores({
-            stopover: 'id,trip_id,h3_cell,minutes,sequence_in_trip',
-            station: 'id,*h3_cells,*keywords',
-            trip: 'id,*h3_cells,*keywords',
+        this.version(13).stores({
+            stopover: 'id,trip_id,station_id,h3_cell,minutes,sequence_in_trip',
+            station: 'id,h3_cell,*keywords',
+            trip: 'id,*keywords',
         }).upgrade(trans => {
             trans.table('stopover').clear()
             trans.table('station').clear()

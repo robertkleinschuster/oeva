@@ -1,5 +1,5 @@
-import {ExceptionType, isServiceRunningOn} from "./Schedule";
-import {GTFSCalendar, GTFSCalendarDate} from "../db/GTFS";
+import {isServiceRunningOn} from "./Schedule";
+import {GTFSCalendar, GTFSCalendarDate, ExceptionType} from "../db/GTFS";
 import {describe, expect, it} from "vitest";
 
 describe('Schedule', () => {

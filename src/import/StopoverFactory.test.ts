@@ -11,7 +11,6 @@ describe('StopoverFactory', () => {
         feed_trip_id: '2',
         direction: 'Budapest-Keleti',
         name: 'IC 311',
-        h3_cells: [],
         service: {
             service_id: '4',
             start_date: '20230101',
@@ -44,12 +43,10 @@ describe('StopoverFactory', () => {
         id: '1-90',
         name: 'Graz Hbf',
         keywords: [],
-        stop_names: new Map,
         feed_station_id: '90',
         feed_id: 1,
-        h3_cells: [
-            latLngToCell(1, 1, 14)
-        ]
+        h3_cell: latLngToCell(1, 1, 14)
+
     }
     it('should throw error for mismatched data', () => {
         expect(() => createStopover(station, trip, stopTime, {...stop, stop_id: '99'})).toThrowError('Data mismatch')
@@ -60,7 +57,7 @@ describe('StopoverFactory', () => {
         expect(() => createStopover(station, trip, {...stopTime, trip_id: '99'}, stop)).toThrowError('Data mismatch')
         expect(() => createStopover({
             ...station,
-            h3_cells: ['99']
+            h3_cell: '99'
         }, trip, {...stopTime, trip_id: '99'}, stop)).toThrowError('Data mismatch')
 
     })

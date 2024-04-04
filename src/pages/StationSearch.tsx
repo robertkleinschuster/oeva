@@ -23,18 +23,23 @@ const StationSearch: React.FC = () => {
             scheduleDB.station
                 .where('keywords')
                 .startsWithAnyOf(keywords)
-                .toArray(stations => stations.sort((a, b) => {
-                    if (a.name.toLowerCase() === keyword.toLowerCase()) {
-                        return -1;
+                .toArray(stations => {
+                    const map = new Map<string, Station>
+                    for (const station of stations) {
+                        map.set(station.id, station)
                     }
-                    if (b.name.toLowerCase() === keyword.toLowerCase()) {
-                        return 1;
-                    }
-                    const aMatches = a.keywords.filter(k => keywords.filter(k2 => k.startsWith(k2)).length).length
-                    const bMatches = b.keywords.filter(k => keywords.filter(k2 => k.startsWith(k2)).length).length
-                    return bMatches - aMatches
-                }))
-                .then(setStations)
+                    setStations(Array.from(map.values()).sort((a, b) => {
+                        if (a.name.toLowerCase() === keyword.toLowerCase()) {
+                            return -1;
+                        }
+                        if (b.name.toLowerCase() === keyword.toLowerCase()) {
+                            return 1;
+                        }
+                        const aMatches = a.keywords.filter(k => keywords.filter(k2 => k.startsWith(k2)).length).length
+                        const bMatches = b.keywords.filter(k => keywords.filter(k2 => k.startsWith(k2)).length).length
+                        return bMatches - aMatches
+                    }))
+                })
         }
     }, [keyword]);
 
@@ -60,8 +65,8 @@ const StationSearch: React.FC = () => {
                 </form>
                 <IonList>
                     {stations.map(station => <IonItem
-                        routerLink={`/stations/${station.id}`}
-                        key={station.id}>
+                            routerLink={`/stations/${station.id}`}
+                            key={station.id}>
                             <IonLabel>{station.name}</IonLabel>
                         </IonItem>
                     )}

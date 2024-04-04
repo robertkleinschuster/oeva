@@ -2,24 +2,27 @@ import {GTFSStop, GTFSStopTime} from "../db/GTFS";
 import {Boarding, H3_RESOLUTION, Station, Stopover, Trip} from "../db/Schedule";
 import {latLngToCell} from "h3-js";
 
+export function buildStopoverId(stationId: string, tripId: string) {
+    return `${stationId}-${tripId}`;
+}
+
 export function createStopover(
     station: Station,
     trip: Trip,
     stopTime: GTFSStopTime,
     stop: GTFSStop,
-    tripStopTimes: GTFSStopTime[] = [],
-    h3_cell?: string
+    tripStopTimes: GTFSStopTime[] = []
 ): Stopover {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
     }
 
-    const cell = h3_cell ?? latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
+    const cell = latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
 
     if (
         stopTime.stop_id !== stop.stop_id
         || stopTime.trip_id !== trip.feed_trip_id
-        || !station.h3_cells.includes(cell)
+        || station.h3_cell !== cell
     ) {
         throw new Error('Data mismatch')
     }
@@ -59,7 +62,7 @@ export function createStopover(
     }
 
     return {
-        id: `${station.id}-${trip.id}`,
+        id: buildStopoverId(station.id, trip.id),
         station_id: station.id,
         trip_id: trip.id,
         route_type: trip.route_type,

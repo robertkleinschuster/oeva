@@ -1,5 +1,4 @@
-import {decodeIFOPT, encodeIFOPT} from "../transit/IFOPT";
-import {H3_RESOLUTION, Station, Stopover} from "../db/Schedule";
+import {H3_RESOLUTION, Stopover} from "../db/Schedule";
 import {ScheduleDB} from "../db/ScheduleDB";
 import lunr from "lunr";
 import {FeedDB} from "../db/FeedDb";
@@ -51,25 +50,15 @@ export class FeedProcessor {
 
             for (const stopTime of stopTimes) {
                 const stop = await this.transitDb.stops.get(stopTime.stop_id)
-
-                if (stop) {
-                    const h3_cell = latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
-                    const stations = await this.scheduleDb.station
-                        .where('h3_cells')
-                        .equals(h3_cell)
-                        .toArray()
-
-                    for (const station of stations) {
-                        stopovers.push(createStopover(
-                            station,
-                            trip,
-                            stopTime,
-                            stop,
-                            stopTimes,
-                            h3_cell
-                        ))
-                    }
-
+                const station = await this.scheduleDb.station.get(this.prefixId(feedId, stopTime.stop_id))
+                if (stop && station) {
+                    stopovers.push(createStopover(
+                        station,
+                        trip,
+                        stopTime,
+                        stop,
+                        stopTimes
+                    ))
                 }
             }
 
@@ -110,42 +99,14 @@ export class FeedProcessor {
 
         try {
             for (const stop of stops) {
-                const feedStationId = feed.is_ifopt ? encodeIFOPT(decodeIFOPT(stop.stop_id), true) : stop.stop_id;
-                const prefixedStationId = this.prefixId(feedId, feedStationId);
-                const h3_cell = latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION);
-
-                const station: Station = await this.scheduleDb.station.get(prefixedStationId) ?? {
-                    id: prefixedStationId,
+                await this.scheduleDb.station.put({
+                    id: this.prefixId(feedId, stop.stop_id),
                     feed_id: feedId,
-                    feed_station_id: feedStationId,
+                    feed_station_id: stop.stop_id,
                     name: stop.stop_name,
-                    keywords: [],
-                    h3_cells: [],
-                    stop_names: new Map()
-                }
-
-                if (!station.h3_cells) {
-                    station.h3_cells = [];
-                }
-                if (!station.keywords) {
-                    station.keywords = [];
-                }
-                if (!station.stop_names) {
-                    station.stop_names = new Map();
-                }
-
-                const h3_cells = new Set(station.h3_cells)
-                h3_cells.add(h3_cell)
-                const keywords = new Set(station.keywords)
-                for (const keyword of lunr.tokenizer(stop.stop_name).map(String)) {
-                    keywords.add(keyword)
-                }
-
-                station.h3_cells = Array.from(h3_cells)
-                station.keywords = Array.from(keywords)
-                station.stop_names.set(stop.stop_id, stop.stop_name)
-
-                await this.scheduleDb.station.put(station)
+                    keywords: lunr.tokenizer(stop.stop_name).map(String),
+                    h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
+                })
                 this.offset++;
             }
         } finally {
@@ -190,28 +151,16 @@ export class FeedProcessor {
                     .toArray()
 
                 if (route && service) {
-                    const stopIds = await this.transitDb.stopTimes
-                        .where({trip_id: trip.trip_id})
-                        .toArray(stopTimes => stopTimes.map(stopTime => stopTime.stop_id));
-
-                    const stops = await this.transitDb.stops
-                        .where('stop_id')
-                        .anyOf(stopIds)
-                        .toArray()
-
-                    const h3Cells = stops.map(stop => latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION))
-
                     await this.scheduleDb.trip.put({
                         id: this.prefixId(feedId, trip.trip_id),
                         feed_id: feedId,
                         feed_trip_id: trip.trip_id,
-                        h3_cells: h3Cells,
                         route_type: route.route_type,
                         name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
                         direction: trip.trip_headsign ?? '',
                         keywords: lunr.tokenizer(`${trip.trip_short_name} ${route.route_short_name}`).map(String),
                         service,
-                        exceptions: new Map(exceptions.map(exception => [exception.date, exception])),
+                        exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
                     })
                 }
                 this.offset++;

@@ -82,10 +82,15 @@ export interface GTFSCalendar {
     end_date: string;
 }
 
+export enum ExceptionType {
+    RUNNING = 1,
+    NOT_RUNNING = 2
+}
+
 export interface GTFSCalendarDate {
     service_id: string;
     date: string;
-    exception_type: number;
+    exception_type: ExceptionType;
 }
 
 export interface GTFSShape {
