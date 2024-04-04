@@ -71,7 +71,7 @@ describe('StopoverFactory', () => {
     })
     it('should create stopover from gtfs data', () => {
         const stopover = createStopover(station, trip, stopTime, stop);
-        expect(stopover.id).toEqual("1-90-1-2")
+        expect(stopover.id).toEqual("1-90-1-2-1")
         expect(stopover.trip_id).toEqual(trip.id)
         expect(stopover.station_id).toEqual(station.id)
         expect(stopover.arrival_time).toBeUndefined()

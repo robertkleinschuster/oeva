@@ -67,7 +67,7 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                 <IonList>
                     {stopovers?.map(stopover => <IonItem
                         routerLink={`/trips/${stopover.trip_id}`}
-                        key={stopover.trip_id}>
+                        key={stopover.id}>
                         <IonLabel>
                             {stopover.arrival_time ?
                                 <IonNote

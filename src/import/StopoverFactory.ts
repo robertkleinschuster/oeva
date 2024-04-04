@@ -62,7 +62,7 @@ export function createStopover(
     }
 
     return {
-        id: buildStopoverId(station.id, trip.id),
+        id: `${station.id}-${trip.id}-${stopTime.stop_sequence}`,
         station_id: station.id,
         trip_id: trip.id,
         route_type: trip.route_type,
