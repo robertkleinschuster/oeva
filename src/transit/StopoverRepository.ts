@@ -13,7 +13,7 @@ export class StopoverRepository {
             .sortBy('sequence_in_trip')
     }
 
-    async findByStation(stationId: string, date: Date, ringSize: number = 1): Promise<Stopover[]> {
+    async findByStation(stationId: string, date: Date, ringSize: number = 1, limit = 10): Promise<Stopover[]> {
         const station = await scheduleDB.station.get(stationId)
         if (!station) {
             throw new Error('Station not found')
@@ -38,6 +38,9 @@ export class StopoverRepository {
 
             if (trip && isServiceRunningOn(trip.service, exception, date)) {
                 runningStopovers.push(stopover)
+            }
+            if (runningStopovers.length >= limit) {
+                break;
             }
         }
 

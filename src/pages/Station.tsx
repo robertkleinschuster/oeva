@@ -2,29 +2,31 @@ import {
     IonBackButton,
     IonButtons,
     IonContent,
-    IonHeader, IonItem, IonLabel,
+    IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel,
     IonList, IonNote,
     IonPage, IonRange, IonText,
     IonTitle,
     IonToolbar, isPlatform
 } from '@ionic/react';
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {parseStopTime} from "../transit/DateTime";
 import {StopoverRepository} from "../transit/StopoverRepository";
-import {cellToLatLng, greatCircleDistance, UNITS} from "h3-js";
+import {cellToLatLng, greatCircleDistance, gridRingUnsafe, UNITS} from "h3-js";
 
 interface StationPageProps extends RouteComponentProps<{
     id: string
 }> {
 }
 
-const EDGE_LENGTH_METERS = 0.001546100 * 1000
-
-const calcRingRadius = (ringSize: number) => {
-    return Math.round(ringSize * EDGE_LENGTH_METERS)
+const calcRingRadius = (center: string, ringSize: number) => {
+    const ring = gridRingUnsafe(center, ringSize)
+    if (ring.length) {
+        return calcDistance(ring[0], center)
+    }
+    return 0;
 }
 
 const calcDistance = (a: string, b: string) => {
@@ -32,18 +34,28 @@ const calcDistance = (a: string, b: string) => {
 }
 
 const Station: React.FC<StationPageProps> = ({match}) => {
-    const [ringSize, setRingSize] = useState(100)
+    const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
+    const [ringSize, setRingSize] = useState(50)
+    const [limit, setLimit] = useState(15)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
-    const [ringRadius, setRingRadius] = useState(calcRingRadius(ringSize))
     const station = useLiveQuery(() => scheduleDB.station.get(match.params.id))
+    const [ringRadius, setRingRadius] = useState(0)
     const stopovers = useLiveQuery(() => (new StopoverRepository()
-        .findByStation(match.params.id, new Date(), ringSizeToLoad)),
-        [ringSizeToLoad]
+            .findByStation(match.params.id, new Date(), ringSizeToLoad, limit)),
+        [ringSizeToLoad, limit]
     )
 
     useEffect(() => {
-        setRingRadius(calcRingRadius(ringSize))
-    }, [ringSize]);
+        if (station?.h3_cell) {
+            setRingRadius(calcRingRadius(station?.h3_cell, ringSize))
+        }
+    }, [ringSize, station]);
+
+    useEffect(() => {
+        if (scrollLoader.current) {
+            scrollLoader.current.complete()
+        }
+    }, [stopovers]);
 
     return (
         <IonPage>
@@ -88,6 +100,14 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                         </IonLabel>
                     </IonItem>)}
                 </IonList>
+                <IonInfiniteScroll
+                    ref={scrollLoader}
+                    onIonInfinite={(ev) => {
+                        setLimit(limit + 10)
+                    }}
+                >
+                    <IonInfiniteScrollContent></IonInfiniteScrollContent>
+                </IonInfiniteScroll>
             </IonContent>
         </IonPage>
     );
