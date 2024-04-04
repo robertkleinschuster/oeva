@@ -51,15 +51,6 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
                     setURL(String(e.currentTarget.value))
                 }}/>
         </IonItem>
-        <IonItem>
-            <IonCheckbox
-                checked={ifopt}
-                onIonChange={() => {
-                    setIFOPT(!ifopt)
-                }}>
-                IFOPT dekodieren
-            </IonCheckbox>
-        </IonItem>
     </IonList>
 }
 
