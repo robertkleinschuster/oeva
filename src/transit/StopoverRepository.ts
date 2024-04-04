@@ -14,7 +14,7 @@ export class StopoverRepository {
             .sortBy('sequence_in_trip')
     }
 
-    async findByStation(stationId: string, date: Date, ringSize: number = 1, minutes = 60): Promise<Stopover[]> {
+    async findByStation(stationId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number = 1): Promise<Stopover[]> {
         const station = await scheduleDB.station.get(stationId)
         if (!station) {
             throw new Error('Station not found')
@@ -22,10 +22,8 @@ export class StopoverRepository {
 
         const cells = gridDisk(station.h3_cell, ringSize);
 
-        const minutesStart = getHours(date) * 60 + getMinutes(date)
-
         const filter = [];
-        for (let minute = minutesStart; minute <= minutesStart + minutes; minute++) {
+        for (let minute = minutesFrom; minute <= minutesTo; minute++) {
             if (minute > 24 * 60) {
                 break;
             }
@@ -37,7 +35,6 @@ export class StopoverRepository {
         const stopovers = await scheduleDB.stopover
             .where('[h3_cell+minutes]')
             .anyOf(filter)
-            .filter(stopover => stopover.time ? parseStopTime(stopover.time, date) >= date : true)
             .sortBy('minutes')
 
         const runningStopovers = [];

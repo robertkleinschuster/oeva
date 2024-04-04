@@ -15,6 +15,7 @@ import {scheduleDB} from "../db/ScheduleDB";
 import {parseStopTime} from "../transit/DateTime";
 import {StopoverRepository} from "../transit/StopoverRepository";
 import {cellToLatLng, greatCircleDistance, gridRingUnsafe, UNITS} from "h3-js";
+import {getHours, getMinutes} from "date-fns";
 
 interface StationPageProps extends RouteComponentProps<{
     id: string
@@ -34,15 +35,17 @@ const calcDistance = (a: string, b: string) => {
 }
 
 const Station: React.FC<StationPageProps> = ({match}) => {
+    const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
     const [ringSize, setRingSize] = useState(50)
-    const [minutes, setMinutes] = useState(60)
+    const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
+    const [minutesTo, setMinutesTo] = useState(minutesFrom + 60)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const station = useLiveQuery(() => scheduleDB.station.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
     const stopovers = useLiveQuery(() => (new StopoverRepository()
-            .findByStation(match.params.id, new Date(), ringSizeToLoad, minutes)),
-        [ringSizeToLoad, minutes]
+            .findByStation(match.params.id, date, minutesFrom, minutesTo, ringSizeToLoad)),
+        [ringSizeToLoad, minutesFrom, minutesTo]
     )
 
     useEffect(() => {
@@ -77,6 +80,13 @@ const Station: React.FC<StationPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 <IonList>
+                    <IonItem button detail={false} onClick={() => {
+                        const newMinutesFrom = minutesFrom > 60 ? minutesFrom - 60 : 0;
+                        setMinutesFrom(newMinutesFrom)
+                        setMinutesTo(newMinutesFrom + 60)
+                    }}>
+                        <IonLabel>Früher</IonLabel>
+                    </IonItem>
                     {stopovers?.map(stopover => <IonItem
                         routerLink={`/trips/${stopover.trip_id}`}
                         key={stopover.id}>
@@ -99,18 +109,19 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}
-                    <IonItem button detail={false} onClick={() => setMinutes(minutes + 60)}>
-                        <IonLabel>Mehr laden</IonLabel>
+                    <IonItem button detail={false} onClick={() => setMinutesTo(minutesTo + 60)}>
+                        <IonLabel>Später</IonLabel>
                     </IonItem>
                 </IonList>
+                {minutesTo < 24 * 60 ?
                 <IonInfiniteScroll
                     ref={scrollLoader}
                     onIonInfinite={(ev) => {
-                        setMinutes(minutes + 60)
+                        setMinutesTo(minutesTo + 60)
                     }}
                 >
                     <IonInfiniteScrollContent></IonInfiniteScrollContent>
-                </IonInfiniteScroll>
+                </IonInfiniteScroll> : null}
             </IonContent>
         </IonPage>
     );
