@@ -8,14 +8,14 @@ export class ScheduleDB extends Dexie {
 
     public constructor() {
         super('Schedule');
-        this.version(13).stores({
-            stopover: 'id,trip_id,station_id,h3_cell,minutes,sequence_in_trip',
+        this.version(14).stores({
+            stopover: 'id,trip_id,station_id,[h3_cell+minutes]',
             station: 'id,h3_cell,*keywords',
             trip: 'id,*keywords',
-        }).upgrade(trans => {
-            trans.table('stopover').clear()
-            trans.table('station').clear()
-            trans.table('trip').clear()
+        }).upgrade(async trans => {
+            await trans.table('stopover').clear()
+            await trans.table('station').clear()
+            await trans.table('trip').clear()
         });
 
         this.stopover = this.table('stopover');

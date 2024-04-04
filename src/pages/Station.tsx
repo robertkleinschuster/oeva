@@ -36,13 +36,13 @@ const calcDistance = (a: string, b: string) => {
 const Station: React.FC<StationPageProps> = ({match}) => {
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
     const [ringSize, setRingSize] = useState(50)
-    const [limit, setLimit] = useState(15)
+    const [minutes, setMinutes] = useState(60)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const station = useLiveQuery(() => scheduleDB.station.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
     const stopovers = useLiveQuery(() => (new StopoverRepository()
-            .findByStation(match.params.id, new Date(), ringSizeToLoad, limit)),
-        [ringSizeToLoad, limit]
+            .findByStation(match.params.id, new Date(), ringSizeToLoad, minutes)),
+        [ringSizeToLoad, minutes]
     )
 
     useEffect(() => {
@@ -99,11 +99,14 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}
+                    <IonItem button detail={false} onClick={() => setMinutes(minutes + 60)}>
+                        <IonLabel>Mehr laden</IonLabel>
+                    </IonItem>
                 </IonList>
                 <IonInfiniteScroll
                     ref={scrollLoader}
                     onIonInfinite={(ev) => {
-                        setLimit(limit + 10)
+                        setMinutes(minutes + 60)
                     }}
                 >
                     <IonInfiniteScrollContent></IonInfiniteScrollContent>
