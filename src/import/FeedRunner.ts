@@ -24,6 +24,7 @@ export class FeedRunner {
                         console.error(error)
                         await feedDb.transit.update(feed.id!, {
                             status: TransitFeedStatus.ERROR,
+                            previous_status: feed.status,
                             progress: String(error)
                         });
                     }
