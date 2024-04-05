@@ -3,7 +3,6 @@ import {isServiceRunningOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
 import {Stopover} from "../db/Schedule";
 import {gridDisk} from "h3-js";
-import {getHours, getMinutes} from "date-fns";
 
 
 export class StopoverRepository {

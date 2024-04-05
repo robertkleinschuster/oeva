@@ -37,7 +37,7 @@ const calcDistance = (a: string, b: string) => {
 const Station: React.FC<StationPageProps> = ({match}) => {
     const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
-    const [ringSize, setRingSize] = useState(50)
+    const [ringSize, setRingSize] = useState(10)
     const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
     const [minutesTo, setMinutesTo] = useState(minutesFrom + 60)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
@@ -72,7 +72,7 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                 <IonToolbar>
                     <IonRange style={{margin: '0 1rem'}}
                               value={ringSize}
-                              max={500}
+                              max={50}
                               label={`Umgebung ${ringRadius} m`}
                               onIonInput={e => setRingSize(Number(e.detail.value))}
                               onIonChange={e => setRingSizeToLoad(ringSize)}></IonRange>
