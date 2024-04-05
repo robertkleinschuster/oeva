@@ -1,5 +1,7 @@
-import {GTFSStopTime} from "../db/GTFS";
-import {Boarding, Stop, TripStop, Trip} from "../db/Schedule";
+import {GTFSStop, GTFSStopTime} from "../db/GTFS";
+import {Boarding, Stop, TripStop, Trip, H3_RESOLUTION} from "../db/Schedule";
+import {latLngToCell} from "h3-js";
+import Tokenizer from "wink-tokenizer";
 
 export function createTripStop(
     trip: Trip,
@@ -69,5 +71,26 @@ export function createTripStop(
         is_destination,
         boarding,
         stop_name: stop.name,
+        stop_platform: stop.platform
+    };
+}
+
+const platformInStopNameRegex = /( [0-9]{1,2}| [A-X]| [0-9]{1,2}[a-d])$/
+const platformCodeRegex = /([0-9]{1,2}|[A-X]|[0-9]{1,2}[a-d])$/
+const tokenizer = new Tokenizer()
+
+export function createStop(feedId: number, stop: GTFSStop): Stop {
+    const platform = stop.platform_code?.match(platformCodeRegex)?.pop() || stop.stop_name.match(platformInStopNameRegex)?.pop()
+    const name = platform && stop.stop_name.endsWith(platform) ?
+        stop.stop_name.substring(0, stop.stop_name.length - platform.length) : stop.stop_name
+
+    return {
+        id: `${feedId}-${stop.stop_id}`,
+        feed_id: feedId,
+        feed_stop_id: stop.stop_id,
+        name: name.trim(),
+        platform: platform?.trim(),
+        keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
+        h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
     };
 }

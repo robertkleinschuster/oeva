@@ -1,5 +1,5 @@
 import {GTFSStop, GTFSStopTime} from "../db/GTFS";
-import {createTripStop} from "./TripStopFactory";
+import {createStop, createTripStop} from "./TripStopFactory";
 import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
 import {latLngToCell} from "h3-js";
@@ -112,5 +112,114 @@ describe('TripStopFactory', () => {
             drop_off_type: 1
         });
         expect(tripStop.boarding).toEqual(Boarding.ONLY_BOARDING)
+    })
+    it('should extract platform from stop name', () => {
+        const gtfsStop: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 1b',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop = createStop(1, gtfsStop)
+        expect(stop.platform).toEqual('1b')
+        expect(stop.name).toEqual('Graz Hbf')
+
+        const gtfsStop2: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 1',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop2 = createStop(1, gtfsStop2)
+        expect(stop2.platform).toEqual('1')
+        expect(stop2.name).toEqual('Graz Hbf')
+
+        const gtfsStop3: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf X',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop3 = createStop(1, gtfsStop3)
+        expect(stop3.platform).toEqual('X')
+        expect(stop3.name).toEqual('Graz Hbf')
+
+        const gtfsStop4: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 12',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop4 = createStop(1, gtfsStop4)
+        expect(stop4.platform).toEqual('12')
+        expect(stop4.name).toEqual('Graz Hbf')
+    })
+    it('should extract platform from stop platform code and remove it from name', () => {
+        const gtfsStop: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 1b',
+            platform_code: '1b',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop = createStop(1, gtfsStop)
+        expect(stop.platform).toEqual('1b')
+        expect(stop.name).toEqual('Graz Hbf')
+
+        const gtfsStop2: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 1',
+            platform_code: '1',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop2 = createStop(1, gtfsStop2)
+        expect(stop2.platform).toEqual('1')
+        expect(stop2.name).toEqual('Graz Hbf')
+
+        const gtfsStop3: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf X',
+            platform_code: 'X',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop3 = createStop(1, gtfsStop3)
+        expect(stop3.platform).toEqual('X')
+        expect(stop3.name).toEqual('Graz Hbf')
+
+        const gtfsStop4: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf',
+            platform_code: 'X',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop4 = createStop(1, gtfsStop4)
+        expect(stop4.platform).toEqual('X')
+        expect(stop4.name).toEqual('Graz Hbf')
+    })
+    it('should not remove unmatching platform from name', () => {
+        const gtfsStop: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 1b',
+            platform_code: '1c',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop = createStop(1, gtfsStop)
+        expect(stop.platform).toEqual('1c')
+        expect(stop.name).toEqual('Graz Hbf 1b')
+
+        const gtfsStop2: GTFSStop = {
+            stop_id: '99',
+            stop_name: 'Graz Hbf 99',
+            platform_code: '1',
+            stop_lat: 0,
+            stop_lon: 0,
+        }
+        const stop2 = createStop(1, gtfsStop2)
+        expect(stop2.platform).toEqual('1')
+        expect(stop2.name).toEqual('Graz Hbf 99')
     })
 })

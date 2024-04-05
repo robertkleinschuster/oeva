@@ -5,12 +5,14 @@ export enum TransitFeedStatus {
     PROCESSING,
     DONE,
     ERROR,
+    ABORTED,
 }
 
 export const stoppedStatuses = [
     TransitFeedStatus.DRAFT,
     TransitFeedStatus.ERROR,
     TransitFeedStatus.DONE,
+    TransitFeedStatus.ABORTED,
 ]
 
 export enum TransitFeedStep {
@@ -30,6 +32,7 @@ export interface TransitFeed {
     downloaded_megabytes?: number;
     download_progress?: number;
     status: TransitFeedStatus;
+    previous_status?: TransitFeedStatus;
     timestamp?: number;
     last_start?: number;
 }

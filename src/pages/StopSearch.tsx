@@ -44,7 +44,6 @@ const StopSearch: React.FC = () => {
                             useExtendedSearch: true,
                         }
                     )
-                    console.log(fuse.search(keyword))
                     return fuse.search(keyword).map(result => result.item)
                 })
         }
@@ -78,7 +77,7 @@ const StopSearch: React.FC = () => {
                     {stops?.map(stop => <IonItem
                             routerLink={`/stops/${stop.id}`}
                             key={stop.id}>
-                            <IonLabel>{stop.name} {stop.platform ? <>({stop.platform})</> : null}</IonLabel>
+                            <IonLabel>{stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}</IonLabel>
                         </IonItem>
                     )}
                 </IonList>

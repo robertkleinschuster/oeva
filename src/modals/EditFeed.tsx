@@ -13,7 +13,7 @@ import React, {useEffect, useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
-import {TransitFeedStatus} from "../db/Feed";
+import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -60,6 +60,24 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         modal.current?.dismiss()
     }
 
+    const continueFeed = async () => {
+        if (feed!.previous_status) {
+            await feedDb.transit.update(feed!, {
+                status: feed!.previous_status
+            })
+            modal.current?.dismiss()
+        }
+    }
+
+    const abortFeed = async () => {
+        await feedDb.transit.update(feed!, {
+            status: TransitFeedStatus.ABORTED,
+            previous_status: feed!.status
+        })
+        modal.current?.dismiss()
+        window.location.reload()
+    }
+
     const validateFeed = () => {
         return Boolean(name.length && url.length);
     }
@@ -101,11 +119,22 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                         </IonButton>
                         <IonButton color="primary"
                                    onClick={importFeed}>
-                            Feed importieren
+                            Importieren
                         </IonButton>
                         <IonButton color="primary"
                                    onClick={processFeed}>
-                            Feed verarbeiten
+                            Verarbeiten
+                        </IonButton>
+                        {feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
+                                <IonButton color="primary"
+                                           onClick={continueFeed}>
+                                    Fortsetzen
+                                </IonButton>
+                                : null
+                        }
+                        <IonButton color="warning"
+                                   onClick={abortFeed}>
+                            Abbrechen
                         </IonButton>
                     </IonItem>
                 </IonList>

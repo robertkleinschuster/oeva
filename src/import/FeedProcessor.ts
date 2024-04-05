@@ -1,9 +1,8 @@
-import {H3_RESOLUTION, TripStop} from "../db/Schedule";
+import {TripStop} from "../db/Schedule";
 import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
-import {createTripStop} from "./TripStopFactory";
-import {latLngToCell} from "h3-js";
+import {createStop, createTripStop} from "./TripStopFactory";
 import Tokenizer from "wink-tokenizer";
 
 export class FeedProcessor {
@@ -96,18 +95,8 @@ export class FeedProcessor {
         }, 1500);
 
         try {
-            const tokenizer = new Tokenizer()
-
             for (const stop of stops) {
-                await this.scheduleDb.stop.put({
-                    id: this.prefixId(feedId, stop.stop_id),
-                    feed_id: feedId,
-                    feed_stop_id: stop.stop_id,
-                    name: stop.stop_name,
-                    platform: stop.platform_code?.match(/[A-Z0-9]/) ? stop.platform_code : undefined,
-                    keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
-                    h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
-                })
+                await this.scheduleDb.stop.put(createStop(feedId, stop))
                 this.offset++;
             }
         } finally {
@@ -144,7 +133,12 @@ export class FeedProcessor {
         }, 1500);
         try {
             const tokenizer = new Tokenizer()
-
+            tokenizer.defineConfig({
+                word: true,
+                number: true,
+                punctuation: true,
+                ordinal: true,
+            })
             for (const trip of trips) {
                 const route = await this.transitDb.routes.get(trip.route_id)
                 const service = await this.transitDb.calendar.get(trip.service_id)

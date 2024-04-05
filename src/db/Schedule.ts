@@ -39,6 +39,7 @@ export interface TripStop {
     trip_name: string;
     direction: string | undefined;
     stop_name: string;
+    stop_platform: string | undefined;
     is_origin: boolean;
     is_destination: boolean;
 }
