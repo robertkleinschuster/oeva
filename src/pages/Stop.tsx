@@ -76,7 +76,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}</IonTitle>
+                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}</IonTitle>
                 </IonToolbar>
                 <IonToolbar>
                     <IonRange style={{margin: '0 1rem'}}
