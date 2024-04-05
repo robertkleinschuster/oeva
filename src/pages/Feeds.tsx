@@ -49,7 +49,7 @@ const Feeds: React.FC = () => {
                         </IonLabel>
                         {runningFeed === feed.id ? <IonSpinner/> : null}
                     </IonItem>)}
-                    <IonItem id="add-feed" button>
+                    <IonItem id="add-feed" button detail={false}>
                         <AddFeed trigger="add-feed"/>
                         <IonLabel>Feed hinzufügen</IonLabel>
                     </IonItem>
