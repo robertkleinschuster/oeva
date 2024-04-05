@@ -30,8 +30,8 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import React, {useContext} from "react";
 import Feeds from "./pages/Feeds";
-import StationSearch from "./pages/StationSearch";
-import Station from "./pages/Station";
+import StopSearch from "./pages/StopSearch";
+import Stop from "./pages/Stop";
 import Trip from "./pages/Trip";
 import {createMemoryHistory} from "history";
 import {useRegisterSW} from "virtual:pwa-register/react";
@@ -75,8 +75,8 @@ const App: React.FC = () => {
                 <Route exact path="/home" component={Home}/>
                 <Route exact path="/feeds" component={Feeds}/>
                 <Route exact path="/storage" component={Storage}/>
-                <Route exact path="/stations" component={StationSearch}/>
-                <Route exact path="/stations/:id" component={Station}/>
+                <Route exact path="/stops" component={StopSearch}/>
+                <Route exact path="/stops/:id" component={Stop}/>
                 <Route exact path="/trips/:id" component={Trip}/>
                 <Route exact path="/">
                     <Redirect to="/home"/>

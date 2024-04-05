@@ -43,7 +43,7 @@ const calcDistance = (a: string, b: string) => {
 
 const timeWindow = 60;
 
-const Station: React.FC<StationPageProps> = ({match}) => {
+const Stop: React.FC<StationPageProps> = ({match}) => {
     const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
     const [ringSize, setRingSize] = useState(12)
@@ -132,4 +132,4 @@ const Station: React.FC<StationPageProps> = ({match}) => {
     );
 };
 
-export default Station;
+export default Stop;

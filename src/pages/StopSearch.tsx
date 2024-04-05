@@ -17,7 +17,7 @@ import {Stop} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import Fuse from "fuse.js";
 
-const StationSearch: React.FC = () => {
+const StopSearch: React.FC = () => {
     const [keyword, setKeyword] = useState('')
     const [stops, setStops] = useState<Stop[]>([])
 
@@ -61,7 +61,7 @@ const StationSearch: React.FC = () => {
                 </form>
                 <IonList>
                     {stops.map(stop => <IonItem
-                            routerLink={`/stations/${stop.id}`}
+                            routerLink={`/stops/${stop.id}`}
                             key={stop.id}>
                             <IonLabel>{stop.name}</IonLabel>
                         </IonItem>
@@ -72,4 +72,4 @@ const StationSearch: React.FC = () => {
     );
 };
 
-export default StationSearch;
+export default StopSearch;

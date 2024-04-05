@@ -45,7 +45,7 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
             <IonContent>
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
-                        routerLink={`/stations/${tripStop.stop_id}`}
+                        routerLink={`/stops/${tripStop.stop_id}`}
                         key={tripStop.id}>
                         <IonLabel>
                             <IonNote>

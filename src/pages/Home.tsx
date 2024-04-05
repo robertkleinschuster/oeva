@@ -25,7 +25,7 @@ const Home: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
                 <IonList>
-                    <IonItem routerLink="/stations">
+                    <IonItem routerLink="/stops">
                         <IonLabel>Stationen</IonLabel>
                     </IonItem>
                     <IonItem routerLink="/feeds">
