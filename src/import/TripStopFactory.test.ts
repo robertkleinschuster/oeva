@@ -1,10 +1,10 @@
 import {GTFSStop, GTFSStopTime} from "../db/GTFS";
-import {createStopover} from "./StopoverFactory";
-import {Boarding, RouteType, Station, Trip} from "../db/Schedule";
+import {createTripStop} from "./TripStopFactory";
+import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
 import {latLngToCell} from "h3-js";
 
-describe('StopoverFactory', () => {
+describe('TripStopFactory', () => {
     const trip: Trip = {
         id: '1-2',
         feed_id: 1,
@@ -39,85 +39,85 @@ describe('StopoverFactory', () => {
         stop_lat: 1,
         stop_lon: 1,
     }
-    const station: Station = {
+    const station: Stop = {
         id: '1-90',
         name: 'Graz Hbf',
         keywords: [],
-        feed_station_id: '90',
+        feed_stop_id: '90',
         feed_id: 1,
         h3_cell: latLngToCell(1, 1, 14)
 
     }
     it('should throw error for mismatched data', () => {
-        expect(() => createStopover(station, trip, stopTime, {...stop, stop_id: '99'})).toThrowError('Data mismatch')
-        expect(() => createStopover(station, {
+        expect(() => createTripStop(station, trip, stopTime, {...stop, stop_id: '99'})).toThrowError('Data mismatch')
+        expect(() => createTripStop(station, {
             ...trip,
             feed_trip_id: '99'
         }, stopTime, stop)).toThrowError('Data mismatch')
-        expect(() => createStopover(station, trip, {...stopTime, trip_id: '99'}, stop)).toThrowError('Data mismatch')
-        expect(() => createStopover({
+        expect(() => createTripStop(station, trip, {...stopTime, trip_id: '99'}, stop)).toThrowError('Data mismatch')
+        expect(() => createTripStop({
             ...station,
             h3_cell: '99'
         }, trip, {...stopTime, trip_id: '99'}, stop)).toThrowError('Data mismatch')
 
     })
     it('should throw error for stop time without time', () => {
-        expect(() => createStopover(station, trip, {
+        expect(() => createTripStop(station, trip, {
             ...stopTime,
             departure_time: undefined,
             arrival_time: undefined
         }, stop)).toThrowError('Stop time has no departure or arrival time')
 
     })
-    it('should create stopover from gtfs data', () => {
-        const stopover = createStopover(station, trip, stopTime, stop);
-        expect(stopover.id).toEqual("1-90-1-2-1")
-        expect(stopover.trip_id).toEqual(trip.id)
-        expect(stopover.station_id).toEqual(station.id)
-        expect(stopover.arrival_time).toBeUndefined()
-        expect(stopover.departure_time).toEqual('08:37:00')
-        expect(stopover.direction).toEqual('Budapest-Keleti')
-        expect(stopover.line).toEqual('IC 311')
-        expect(stopover.boarding).toEqual(Boarding.STANDARD)
+    it('should create trip stop from gtfs data', () => {
+        const tripStop = createTripStop(station, trip, stopTime, stop);
+        expect(tripStop.id).toEqual("1-90-1-2-1")
+        expect(tripStop.trip_id).toEqual(trip.id)
+        expect(tripStop.stop_id).toEqual(station.id)
+        expect(tripStop.arrival_time).toBeUndefined()
+        expect(tripStop.departure_time).toEqual('08:37:00')
+        expect(tripStop.direction).toEqual('Budapest-Keleti')
+        expect(tripStop.line).toEqual('IC 311')
+        expect(tripStop.boarding).toEqual(Boarding.STANDARD)
     })
     it('should set boarding none for service stop', () => {
-        const stopover = createStopover(station, trip, {
+        const tripStop = createTripStop(station, trip, {
             ...stopTime,
             pickup_type: 1,
             drop_off_type: 1
         }, stop);
-        expect(stopover.boarding).toEqual(Boarding.NONE)
+        expect(tripStop.boarding).toEqual(Boarding.NONE)
     })
     it('should set boarding on request for request stop', () => {
-        const stopover = createStopover(station, trip, {
+        const tripStop = createTripStop(station, trip, {
             ...stopTime,
             pickup_type: 2,
             drop_off_type: 2
         }, stop);
-        expect(stopover.boarding).toEqual(Boarding.ON_REQUEST)
+        expect(tripStop.boarding).toEqual(Boarding.ON_REQUEST)
     })
     it('should set boarding on request for request stop', () => {
-        const stopover = createStopover(station, trip, {
+        const tripStop = createTripStop(station, trip, {
             ...stopTime,
             pickup_type: 3,
             drop_off_type: 3
         }, stop);
-        expect(stopover.boarding).toEqual(Boarding.ON_CALL)
+        expect(tripStop.boarding).toEqual(Boarding.ON_CALL)
     })
     it('should set boarding disembark only', () => {
-        const stopover = createStopover(station, trip, {
+        const tripStop = createTripStop(station, trip, {
             ...stopTime,
             pickup_type: 1,
             drop_off_type: 0
         }, stop);
-        expect(stopover.boarding).toEqual(Boarding.ONLY_DISEMBARKING)
+        expect(tripStop.boarding).toEqual(Boarding.ONLY_DISEMBARKING)
     })
     it('should set boarding only', () => {
-        const stopover = createStopover(station, trip, {
+        const tripStop = createTripStop(station, trip, {
             ...stopTime,
             pickup_type: 0,
             drop_off_type: 1
         }, stop);
-        expect(stopover.boarding).toEqual(Boarding.ONLY_BOARDING)
+        expect(tripStop.boarding).toEqual(Boarding.ONLY_BOARDING)
     })
 })

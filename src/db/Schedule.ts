@@ -24,9 +24,9 @@ export enum Boarding {
 
 export const H3_RESOLUTION = 12;
 
-export interface Stopover {
+export interface TripStop {
     id: string;
-    station_id: string;
+    stop_id: string;
     trip_id: string;
     h3_cell: string;
     route_type: RouteType;
@@ -44,10 +44,10 @@ export interface Stopover {
     is_destination: boolean;
 }
 
-export interface Station {
+export interface Stop {
     id: string;
     feed_id: number;
-    feed_station_id: string;
+    feed_stop_id: string;
     name: string;
     h3_cell: string;
     keywords: string[];

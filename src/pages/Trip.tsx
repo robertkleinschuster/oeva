@@ -17,9 +17,9 @@ import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {parseStopTime} from "../transit/DateTime";
-import {StopoverRepository} from "../transit/StopoverRepository";
+import {TripStopRepository} from "../transit/TripStopRepository";
 import {Boarding} from "../db/Schedule";
-import StopoverBoarding from "../components/StopoverBoarding";
+import StopBoarding from "../components/StopBoarding";
 
 interface StationPageProps extends RouteComponentProps<{
     id: string
@@ -28,7 +28,7 @@ interface StationPageProps extends RouteComponentProps<{
 
 const Trip: React.FC<StationPageProps> = ({match}) => {
     const trip = useLiveQuery(() => scheduleDB.trip.get(match.params.id))
-    const stopovers = useLiveQuery(() => (new StopoverRepository()
+    const tripStops = useLiveQuery(() => (new TripStopRepository()
         .findByTrip(match.params.id))
     )
 
@@ -44,21 +44,21 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 <IonList>
-                    {stopovers?.map(stopover => <IonItem
-                        routerLink={`/stations/${stopover.station_id}`}
-                        key={stopover.id}>
+                    {tripStops?.map(tripStop => <IonItem
+                        routerLink={`/stations/${tripStop.stop_id}`}
+                        key={tripStop.id}>
                         <IonLabel>
                             <IonNote>
-                                {stopover.arrival_time ? parseStopTime(stopover.arrival_time, new Date()).toLocaleTimeString() : null}
-                                {stopover.arrival_time && stopover.departure_time ? " - " : null}
-                                {stopover.departure_time ? parseStopTime(stopover.departure_time, new Date()).toLocaleTimeString() : null}
+                                {tripStop.arrival_time ? parseStopTime(tripStop.arrival_time, new Date()).toLocaleTimeString() : null}
+                                {tripStop.arrival_time && tripStop.departure_time ? " - " : null}
+                                {tripStop.departure_time ? parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString() : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {stopover.stop}
+                                {tripStop.stop}
                             </IonText>
-                            {stopover.boarding !== Boarding.STANDARD ?
+                            {tripStop.boarding !== Boarding.STANDARD ?
                                 <IonNote>
-                                    <StopoverBoarding boarding={stopover.boarding}/>
+                                    <StopBoarding boarding={tripStop.boarding}/>
                                 </IonNote> : null}
                         </IonLabel>
                     </IonItem>)}

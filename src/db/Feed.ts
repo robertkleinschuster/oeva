@@ -15,7 +15,7 @@ export const stoppedStatuses = [
 
 export enum TransitFeedStep {
     STATIONS,
-    STOPOVERS,
+    TRIPSTOPS,
     TRIPS
 }
 

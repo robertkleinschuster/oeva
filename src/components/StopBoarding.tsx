@@ -1,7 +1,7 @@
 import React from "react";
 import {Boarding} from "../db/Schedule";
 
-const StopoverBoarding: React.FC<{boarding: Boarding}> = ({boarding}) => {
+const StopBoarding: React.FC<{boarding: Boarding}> = ({boarding}) => {
     switch (boarding) {
         case Boarding.NONE:
             return <>Kein Ein- oder Ausstieg</>
@@ -16,4 +16,4 @@ const StopoverBoarding: React.FC<{boarding: Boarding}> = ({boarding}) => {
     }
 }
 
-export default StopoverBoarding
+export default StopBoarding

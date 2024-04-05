@@ -20,7 +20,7 @@ import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {parseStopTime} from "../transit/DateTime";
-import {StopoverRepository} from "../transit/StopoverRepository";
+import {TripStopRepository} from "../transit/TripStopRepository";
 import {cellToLatLng, greatCircleDistance, gridRingUnsafe, UNITS} from "h3-js";
 import {getHours, getMinutes} from "date-fns";
 
@@ -50,10 +50,10 @@ const Station: React.FC<StationPageProps> = ({match}) => {
     const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
     const [minutesTo, setMinutesTo] = useState(minutesFrom + timeWindow)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
-    const station = useLiveQuery(() => scheduleDB.station.get(match.params.id))
+    const station = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
-    const stopovers = useLiveQuery(() => (new StopoverRepository()
-            .findByStation(match.params.id, date, minutesFrom, minutesTo, ringSizeToLoad)),
+    const tripStops = useLiveQuery(() => (new TripStopRepository()
+            .findByStop(match.params.id, date, minutesFrom, minutesTo, ringSizeToLoad)),
         [ringSizeToLoad, minutesFrom, minutesTo]
     )
 
@@ -67,7 +67,7 @@ const Station: React.FC<StationPageProps> = ({match}) => {
         if (scrollLoader.current) {
             scrollLoader.current.complete()
         }
-    }, [stopovers]);
+    }, [tripStops]);
 
     return (
         <IonPage>
@@ -104,25 +104,25 @@ const Station: React.FC<StationPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 <IonList>
-                    {stopovers?.map(stopover => <IonItem
-                        routerLink={`/trips/${stopover.trip_id}`}
-                        key={stopover.id}>
+                    {tripStops?.map(tripStop => <IonItem
+                        routerLink={`/trips/${tripStop.trip_id}`}
+                        key={tripStop.id}>
                         <IonLabel>
-                            {stopover.arrival_time ?
+                            {tripStop.arrival_time ?
                                 <IonNote
                                     style={{display: 'block'}}>
-                                    Ankunft: {parseStopTime(stopover.arrival_time, new Date()).toLocaleTimeString()}
+                                    Ankunft: {parseStopTime(tripStop.arrival_time, new Date()).toLocaleTimeString()}
                                 </IonNote> : null}
-                            {stopover.departure_time ?
+                            {tripStop.departure_time ?
                                 <IonNote
                                     style={{display: 'block'}}>
-                                    Abfahrt: {parseStopTime(stopover.departure_time, new Date()).toLocaleTimeString()}
+                                    Abfahrt: {parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString()}
                                 </IonNote> : null}
                             <IonText style={{display: 'block'}}>
-                                {stopover.line} {stopover.direction}
+                                {tripStop.line} {tripStop.direction}
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
-                                {station?.h3_cell && station?.h3_cell !== stopover.h3_cell ? <>{calcDistance(station.h3_cell, stopover.h3_cell)} m: </> : ''}{stopover.stop}
+                                {station?.h3_cell && station?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(station.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop}
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}

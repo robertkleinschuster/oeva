@@ -1,20 +1,20 @@
 import {formatServiceDate} from "./DateTime";
 import {isServiceRunningOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
-import {Stopover} from "../db/Schedule";
+import {TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
 
 
-export class StopoverRepository {
-    async findByTrip(tripId: string): Promise<Stopover[]> {
-        return scheduleDB.stopover
+export class TripStopRepository {
+    async findByTrip(tripId: string): Promise<TripStop[]> {
+        return scheduleDB.trip_stop
             .where('trip_id')
             .equals(tripId)
             .sortBy('sequence_in_trip')
     }
 
-    async findByStation(stationId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number): Promise<Stopover[]> {
-        const station = await scheduleDB.station.get(stationId)
+    async findByStop(stopId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number): Promise<TripStop[]> {
+        const station = await scheduleDB.stop.get(stopId)
         if (!station) {
             throw new Error('Station not found')
         }
@@ -31,14 +31,14 @@ export class StopoverRepository {
             }
         }
 
-        const stopovers = await scheduleDB.stopover
+        const tripStops = await scheduleDB.trip_stop
             .where('[h3_cell+minutes]')
             .anyOf(filter)
             .sortBy('minutes')
 
-        const runningStopovers = [];
-        for (const stopover of stopovers) {
-            const trip = await scheduleDB.trip.get(stopover.trip_id)
+        const runningTripStops = [];
+        for (const tripStop of tripStops) {
+            const trip = await scheduleDB.trip.get(tripStop.trip_id)
             const exceptionType = trip?.exceptions.get(formatServiceDate(date));
 
             const exception = exceptionType && trip ? {
@@ -48,11 +48,11 @@ export class StopoverRepository {
             } : undefined;
 
             if (trip && isServiceRunningOn(trip.service, exception, date)) {
-                runningStopovers.push(stopover)
+                runningTripStops.push(tripStop)
             }
         }
 
-        return runningStopovers;
+        return runningTripStops;
     }
 }
 

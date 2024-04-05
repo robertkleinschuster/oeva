@@ -1,8 +1,8 @@
-import {H3_RESOLUTION, Stopover} from "../db/Schedule";
+import {H3_RESOLUTION, TripStop} from "../db/Schedule";
 import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
-import {createStopover} from "./StopoverFactory";
+import {createTripStop} from "./TripStopFactory";
 import {latLngToCell} from "h3-js";
 import Tokenizer from "wink-tokenizer";
 
@@ -16,7 +16,7 @@ export class FeedProcessor {
         return `${feedId}-${id}`
     }
 
-    async processStopTimes(feedId: number) {
+    async processTripStops(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
@@ -29,20 +29,20 @@ export class FeedProcessor {
         const trips = await this.scheduleDb.trip.offset(this.offset).toArray()
 
         await this.feedDb.transit.update(feedId, {
-            progress: "stopovers",
+            progress: "trip stops",
         });
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${trip?.name} ${trip?.direction}`,
+                progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.name} ${trip?.direction}`,
                 offset: this.offset
             });
         }, 1500)
 
         for (const trip of trips) {
-            const stopovers: Stopover[] = [];
+            const tripStops: TripStop[] = [];
 
             const stopTimes = await this.transitDb.stopTimes
                 .where({trip_id: trip.feed_trip_id})
@@ -50,9 +50,9 @@ export class FeedProcessor {
 
             for (const stopTime of stopTimes) {
                 const stop = await this.transitDb.stops.get(stopTime.stop_id)
-                const station = await this.scheduleDb.station.get(this.prefixId(feedId, stopTime.stop_id))
+                const station = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
                 if (stop && station) {
-                    stopovers.push(createStopover(
+                    tripStops.push(createTripStop(
                         station,
                         trip,
                         stopTime,
@@ -62,7 +62,7 @@ export class FeedProcessor {
                 }
             }
 
-            await this.scheduleDb.stopover.bulkPut(stopovers);
+            await this.scheduleDb.trip_stop.bulkPut(tripStops);
             this.offset++
         }
 
@@ -85,14 +85,14 @@ export class FeedProcessor {
             .toArray()
 
         await this.feedDb.transit.update(feedId, {
-            progress: "stations",
+            progress: "stops",
         });
 
         const interval = setInterval(async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const stop = stops.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `stations ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
+                progress: `stops ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
                 offset: this.offset
             });
         }, 1500);
@@ -101,10 +101,10 @@ export class FeedProcessor {
             const tokenizer = new Tokenizer()
 
             for (const stop of stops) {
-                await this.scheduleDb.station.put({
+                await this.scheduleDb.stop.put({
                     id: this.prefixId(feedId, stop.stop_id),
                     feed_id: feedId,
-                    feed_station_id: stop.stop_id,
+                    feed_stop_id: stop.stop_id,
                     name: stop.stop_name,
                     keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
                     h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),

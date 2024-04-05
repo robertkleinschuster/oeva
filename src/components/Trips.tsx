@@ -1,15 +1,15 @@
-import {Stopover} from "../db/Schedule";
+import {TripStop} from "../db/Schedule";
 import {parseStopTime} from "../transit/DateTime";
 import {IonItem, IonList} from "@ionic/react";
 import React from "react";
 
-export const Trips: React.FC<{ stopovers: Stopover[], date: Date }> = ({stopovers, date}) => (
+export const Trips: React.FC<{ tripStops: TripStop[], date: Date }> = ({tripStops, date}) => (
     <IonList>
-        {stopovers.map(stopover => <IonItem
-                key={stopover.trip_id}
-                routerLink={`/trip/${stopover.trip_id}`}
+        {tripStops.map(tripStop => <IonItem
+                key={tripStop.trip_id}
+                routerLink={`/trip/${tripStop.trip_id}`}
             >
-                {stopover.departure_time ? parseStopTime(stopover.departure_time, date).toLocaleTimeString() : null} {stopover.line} {stopover.direction}
+                {tripStop.departure_time ? parseStopTime(tripStop.departure_time, date).toLocaleTimeString() : null} {tripStop.line} {tripStop.direction}
             </IonItem>
         )}
     </IonList>
