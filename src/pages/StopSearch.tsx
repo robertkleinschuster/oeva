@@ -46,7 +46,7 @@ const StopSearch: React.FC = () => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>Stationen</IonTitle>
+                    <IonTitle>Haltepunkte</IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
