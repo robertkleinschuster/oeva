@@ -72,7 +72,7 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                 <IonToolbar>
                     <IonRange style={{margin: '0 1rem'}}
                               value={ringSize}
-                              max={50}
+                              max={27}
                               label={`Umgebung ${ringRadius} m`}
                               onIonInput={e => setRingSize(Number(e.detail.value))}
                               onIonChange={e => setRingSizeToLoad(ringSize)}></IonRange>
