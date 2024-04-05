@@ -2,7 +2,7 @@ import {TripStop} from "../db/Schedule";
 import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
-import {createStop, createTripStop} from "./TripStopFactory";
+import {createStop, createTrip, createTripStop} from "./TripStopFactory";
 import Tokenizer from "wink-tokenizer";
 
 export class FeedProcessor {
@@ -25,7 +25,7 @@ export class FeedProcessor {
 
         const count = await this.transitDb.trips.count()
 
-        const trips = await this.scheduleDb.trip.offset(this.offset).toArray()
+        const trips = await this.transitDb.trips.offset(this.offset).toArray()
 
         await this.feedDb.transit.update(feedId, {
             progress: "trip stops",
@@ -35,27 +35,29 @@ export class FeedProcessor {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.name} ${trip?.direction}`,
+                progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.trip_short_name} ${trip?.trip_headsign}`,
                 offset: this.offset
             });
         }, 1500)
 
-        for (const trip of trips) {
+        for (const gtfsTrip of trips) {
             const tripStops: TripStop[] = [];
-
+            const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
             const stopTimes = await this.transitDb.stopTimes
-                .where({trip_id: trip.feed_trip_id})
+                .where({trip_id: gtfsTrip.trip_id})
                 .toArray();
 
-            for (const stopTime of stopTimes) {
-                const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
-                if (stop) {
-                    tripStops.push(createTripStop(
-                        trip,
-                        stop,
-                        stopTime,
-                        stopTimes
-                    ))
+            if (trip) {
+                for (const stopTime of stopTimes) {
+                    const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
+                    if (stop) {
+                        tripStops.push(createTripStop(
+                            trip,
+                            stop,
+                            stopTime,
+                            stopTimes
+                        ))
+                    }
                 }
             }
 
@@ -131,14 +133,8 @@ export class FeedProcessor {
                 offset: this.offset
             });
         }, 1500);
+
         try {
-            const tokenizer = new Tokenizer()
-            tokenizer.defineConfig({
-                word: true,
-                number: true,
-                punctuation: true,
-                ordinal: true,
-            })
             for (const trip of trips) {
                 const route = await this.transitDb.routes.get(trip.route_id)
                 const service = await this.transitDb.calendar.get(trip.service_id)
@@ -148,17 +144,7 @@ export class FeedProcessor {
                     .toArray()
 
                 if (route && service) {
-                    await this.scheduleDb.trip.put({
-                        id: this.prefixId(feedId, trip.trip_id),
-                        feed_id: feedId,
-                        feed_trip_id: trip.trip_id,
-                        route_type: route.route_type,
-                        name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
-                        direction: trip.trip_headsign ?? '',
-                        keywords: tokenizer.tokenize(`${trip.trip_short_name} ${route.route_short_name}`).map(token => token.value),
-                        service,
-                        exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
-                    })
+                    await this.scheduleDb.trip.put(createTrip(feedId, trip, route, service, exceptions))
                 }
                 this.offset++;
             }

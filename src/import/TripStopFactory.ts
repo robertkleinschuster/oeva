@@ -1,4 +1,4 @@
-import {GTFSStop, GTFSStopTime} from "../db/GTFS";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
 import {Boarding, Stop, TripStop, Trip, H3_RESOLUTION} from "../db/Schedule";
 import {latLngToCell} from "h3-js";
 import Tokenizer from "wink-tokenizer";
@@ -78,6 +78,12 @@ export function createTripStop(
 const platformInStopNameRegex = /( [0-9]{1,2}| [A-X]| [0-9]{1,2}[a-d])$/
 const platformCodeRegex = /([0-9]{1,2}|[A-X]|[0-9]{1,2}[a-d])$/
 const tokenizer = new Tokenizer()
+tokenizer.defineConfig({
+    word: true,
+    number: true,
+    punctuation: true,
+    ordinal: true,
+})
 
 export function createStop(feedId: number, stop: GTFSStop): Stop {
     const platform = stop.platform_code?.match(platformCodeRegex)?.pop() || stop.stop_name.match(platformInStopNameRegex)?.pop()
@@ -93,4 +99,19 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
         keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
         h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
     };
+}
+
+
+export function createTrip(feedId: number, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar, exceptions: GTFSCalendarDate[]): Trip {
+    return {
+        id: `${feedId}-${trip.trip_id}`,
+        feed_id: feedId,
+        feed_trip_id: trip.trip_id,
+        route_type: route.route_type,
+        name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
+        direction: trip.trip_headsign ?? '',
+        keywords: tokenizer.tokenize(`${trip.trip_short_name} ${route.route_short_name}`).map(token => token.value),
+        service,
+        exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
+    }
 }
