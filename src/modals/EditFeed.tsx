@@ -125,17 +125,16 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                    onClick={processFeed}>
                             Verarbeiten
                         </IonButton>
-                        {feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
-                                <IonButton color="primary"
-                                           onClick={continueFeed}>
-                                    Fortsetzen
-                                </IonButton>
-                                : null
-                        }
-                        <IonButton color="warning"
-                                   onClick={abortFeed}>
-                            Abbrechen
-                        </IonButton>
+                        {feed?.status && stoppedStatuses.includes(feed?.status) && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
+                            <IonButton color="primary"
+                                       onClick={continueFeed}>
+                                Fortsetzen
+                            </IonButton> : null}
+                        {feed?.status && !stoppedStatuses.includes(feed?.status) ?
+                            <IonButton color="warning"
+                                       onClick={abortFeed}>
+                                Abbrechen
+                            </IonButton> : null}
                     </IonItem>
                 </IonList>
             </IonContent>
