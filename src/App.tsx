@@ -1,5 +1,12 @@
 import {Redirect, Route} from 'react-router-dom';
-import {IonApp, IonRouterOutlet, setupIonicReact} from '@ionic/react';
+import {
+    IonApp,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonRouterOutlet,
+    setupIonicReact
+} from '@ionic/react';
 import {IonReactMemoryRouter} from '@ionic/react-router';
 import Home from './pages/Home';
 
@@ -21,12 +28,15 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
-import React from "react";
+import React, {useContext} from "react";
 import Feeds from "./pages/Feeds";
 import StationSearch from "./pages/StationSearch";
 import Station from "./pages/Station";
 import Trip from "./pages/Trip";
 import {createMemoryHistory} from "history";
+import {useRegisterSW} from "virtual:pwa-register/react";
+import {RunnerContext} from "./RunnerContext";
+import Storage from "./pages/Storage";
 
 setupIonicReact({
     swipeBackEnabled: true,
@@ -35,11 +45,36 @@ setupIonicReact({
 const history = createMemoryHistory()
 
 const App: React.FC = () => {
+    const {
+        needRefresh: [needRefresh],
+        updateServiceWorker,
+    } = useRegisterSW();
+
+    const running = useContext(RunnerContext)
+
     return <IonApp>
+        {needRefresh ?
+            <IonItem color="light" style={{
+                position: 'absolute',
+                bottom: running ? '4rem' : '0',
+                right: '0',
+                zIndex: 1,
+                width: 'calc(100% - 2rem)',
+                margin: '1rem',
+                borderRadius: '.5rem'
+            }}>
+                <IonLabel>Es ist eine neue Version von OeVA Beta verfügbar!</IonLabel>
+                <IonButton onClick={() => {
+                    void updateServiceWorker(true)
+                }}>Jetzt aktualisieren
+                </IonButton>
+            </IonItem> : null}
+
         <IonReactMemoryRouter history={history}>
             <IonRouterOutlet>
                 <Route exact path="/home" component={Home}/>
                 <Route exact path="/feeds" component={Feeds}/>
+                <Route exact path="/storage" component={Storage}/>
                 <Route exact path="/stations" component={StationSearch}/>
                 <Route exact path="/stations/:id" component={Station}/>
                 <Route exact path="/trips/:id" component={Trip}/>

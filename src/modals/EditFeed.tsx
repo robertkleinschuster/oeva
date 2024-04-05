@@ -1,5 +1,4 @@
 import {
-    IonBackButton,
     IonButton,
     IonButtons,
     IonContent,
@@ -9,7 +8,6 @@ import {
     IonModal,
     IonTitle,
     IonToolbar,
-    isPlatform,
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";

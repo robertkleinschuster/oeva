@@ -2,13 +2,18 @@ import {
     IonBackButton,
     IonButtons,
     IonContent,
-    IonHeader, IonItem, IonLabel, IonList, IonNote,
-    IonPage, IonSpinner, IonText,
+    IonHeader,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonNote,
+    IonPage,
+    IonSpinner,
+    IonText,
     IonTitle,
-    IonToolbar, isPlatform, useIonModal
+    IonToolbar, isPlatform
 } from '@ionic/react';
 import React, {useContext} from "react";
-import {StorageQuota} from "../components/StorageQuota";
 import {useLiveQuery} from "dexie-react-hooks";
 import {feedDb} from "../db/FeedDb";
 import FeedStatus from "../components/FeedStatus";
@@ -30,7 +35,6 @@ const Feeds: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <StorageQuota/>
                 <IonList>
                     {feeds?.map(feed => <IonItem
                         button

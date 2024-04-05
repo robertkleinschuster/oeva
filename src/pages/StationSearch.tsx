@@ -2,8 +2,12 @@ import {
     IonBackButton,
     IonButtons,
     IonContent,
-    IonHeader, IonItem, IonLabel, IonList,
-    IonPage, IonSearchbar,
+    IonHeader,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonPage,
+    IonSearchbar,
     IonTitle,
     IonToolbar, isPlatform
 } from '@ionic/react';

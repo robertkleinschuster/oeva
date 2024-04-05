@@ -1,12 +1,19 @@
 import {
     IonBackButton,
+    IonButton,
     IonButtons,
     IonContent,
-    IonHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonItem, IonLabel,
-    IonList, IonNote,
-    IonPage, IonRange, IonText,
+    IonHeader,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonNote,
+    IonPage,
+    IonRange,
+    IonText,
     IonTitle,
-    IonToolbar, isPlatform
+    IonToolbar,
+    isPlatform
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import {RouteComponentProps} from "react-router";
@@ -34,12 +41,14 @@ const calcDistance = (a: string, b: string) => {
     return Math.round(greatCircleDistance(cellToLatLng(a), cellToLatLng(b), UNITS.m))
 }
 
+const timeWindow = 60;
+
 const Station: React.FC<StationPageProps> = ({match}) => {
     const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
     const [ringSize, setRingSize] = useState(12)
     const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
-    const [minutesTo, setMinutesTo] = useState(minutesFrom + 60)
+    const [minutesTo, setMinutesTo] = useState(minutesFrom + timeWindow)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const station = useLiveQuery(() => scheduleDB.station.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
@@ -75,18 +84,26 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                               max={27}
                               label={`Umgebung ${ringRadius} m`}
                               onIonInput={e => setRingSize(Number(e.detail.value))}
-                              onIonChange={e => setRingSizeToLoad(ringSize)}></IonRange>
+                              onIonChange={() => setRingSizeToLoad(ringSize)}></IonRange>
+                    <IonButtons slot="end">
+                        <IonButton onClick={() => {
+                            const newMinutesFrom = minutesFrom > timeWindow ? minutesFrom - timeWindow : 0;
+                            setMinutesFrom(newMinutesFrom)
+                            setMinutesTo(newMinutesFrom + timeWindow)
+                        }}>
+                            <IonLabel>Früher</IonLabel>
+                        </IonButton>
+                        <IonButton onClick={() => {
+                            setMinutesFrom(minutesTo)
+                            setMinutesTo(minutesTo + timeWindow)
+                        }}>
+                            <IonLabel>Später</IonLabel>
+                        </IonButton>
+                    </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
                 <IonList>
-                    <IonItem button detail={false} onClick={() => {
-                        const newMinutesFrom = minutesFrom > 60 ? minutesFrom - 60 : 0;
-                        setMinutesFrom(newMinutesFrom)
-                        setMinutesTo(newMinutesFrom + 60)
-                    }}>
-                        <IonLabel>Früher</IonLabel>
-                    </IonItem>
                     {stopovers?.map(stopover => <IonItem
                         routerLink={`/trips/${stopover.trip_id}`}
                         key={stopover.id}>
@@ -109,19 +126,7 @@ const Station: React.FC<StationPageProps> = ({match}) => {
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}
-                    <IonItem button detail={false} onClick={() => setMinutesTo(minutesTo + 60)}>
-                        <IonLabel>Später</IonLabel>
-                    </IonItem>
                 </IonList>
-                {minutesTo < 24 * 60 ?
-                <IonInfiniteScroll
-                    ref={scrollLoader}
-                    onIonInfinite={(ev) => {
-                        setMinutesTo(minutesTo + 60)
-                    }}
-                >
-                    <IonInfiniteScrollContent></IonInfiniteScrollContent>
-                </IonInfiniteScroll> : null}
             </IonContent>
         </IonPage>
     );

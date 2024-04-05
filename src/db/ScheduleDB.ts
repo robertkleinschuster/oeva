@@ -1,5 +1,7 @@
 import Dexie from 'dexie';
 import {Station, Stopover, Trip} from "./Schedule";
+import {feedDb} from "./FeedDb";
+import {stoppedStatuses, TransitFeedStatus} from "./Feed";
 
 export class ScheduleDB extends Dexie {
     public stopover: Dexie.Table<Stopover, string>;
@@ -12,10 +14,14 @@ export class ScheduleDB extends Dexie {
             stopover: 'id,trip_id,station_id,[h3_cell+minutes]',
             station: 'id,h3_cell,*keywords',
             trip: 'id,*keywords',
-        }).upgrade(async trans => {
-            await trans.table('stopover').clear()
-            await trans.table('station').clear()
-            await trans.table('trip').clear()
+        }).upgrade(async () => {
+            await feedDb.transit.each(async feed => {
+                if (stoppedStatuses.includes(feed.status)) {
+                    await feedDb.transit.update(feed, {
+                        status: TransitFeedStatus.PROCESSING
+                    })
+                }
+            })
         });
 
         this.stopover = this.table('stopover');

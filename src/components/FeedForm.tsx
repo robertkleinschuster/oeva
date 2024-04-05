@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {IonCheckbox, IonInput, IonItem, IonList} from "@ionic/react";
+import {IonInput, IonItem, IonList} from "@ionic/react";
 
 interface FeedFormProps {
     name?: string,

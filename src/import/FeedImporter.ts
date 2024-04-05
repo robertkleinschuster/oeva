@@ -2,7 +2,7 @@ import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
 import {Axios} from "axios";
 import {GTFSDB} from '../db/GTFSDB';
-import {getFiles, getTableName} from "../db/TransitMapping";
+import {getFiles, getTableName} from "../db/GTFSMapping";
 import {FeedDB} from "../db/FeedDb";
 import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed";
 import {ScheduleDB} from "../db/ScheduleDB";
@@ -58,38 +58,6 @@ class FeedImporter {
             downloaded_megabytes: 0,
             download_progress: 0,
             timestamp: (new Date()).getTime()
-        });
-    }
-
-    async startDownload(feedId: number) {
-        await this.feedDb.transit.update(feedId, {
-            downloaded_megabytes: 0,
-            download_progress: 0,
-            status: TransitFeedStatus.DOWNLOADING,
-            progress: undefined,
-            offset: undefined,
-            step: undefined
-        });
-    }
-
-    async startImport(feedId: number) {
-        await this.feedDb.transit.update(feedId, {
-            status: TransitFeedStatus.IMPORTING,
-            progress: undefined,
-            offset: undefined,
-            step: undefined
-        });
-        await this.feedDb.file
-            .where({feed_id: feedId, status: FeedFileStatus.IMPORTED})
-            .modify({status: FeedFileStatus.IMPORT_PENDING})
-    }
-
-    async startProcessing(feedId: number) {
-        await this.feedDb.transit.update(feedId, {
-            status: TransitFeedStatus.PROCESSING,
-            progress: undefined,
-            offset: undefined,
-            step: undefined
         });
     }
 

@@ -2,10 +2,6 @@ import {GTFSStop, GTFSStopTime} from "../db/GTFS";
 import {Boarding, H3_RESOLUTION, Station, Stopover, Trip} from "../db/Schedule";
 import {latLngToCell} from "h3-js";
 
-export function buildStopoverId(stationId: string, tripId: string) {
-    return `${stationId}-${tripId}`;
-}
-
 export function createStopover(
     station: Station,
     trip: Trip,

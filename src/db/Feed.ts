@@ -7,6 +7,12 @@ export enum TransitFeedStatus {
     ERROR,
 }
 
+export const stoppedStatuses = [
+    TransitFeedStatus.DRAFT,
+    TransitFeedStatus.ERROR,
+    TransitFeedStatus.DONE,
+]
+
 export enum TransitFeedStep {
     STATIONS,
     STOPOVERS,

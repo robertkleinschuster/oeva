@@ -1,6 +1,7 @@
-import { getTableName } from './TransitMapping';
+import {getTableName} from './GTFSMapping';
 import {describe, expect, it} from "vitest";
-describe('TransitMapping', () => {
+
+describe('GTFSMapping', () => {
     it('should return the correct table name for a known GTFS file', () => {
         expect(getTableName('agency.txt')).toEqual('agencies');
         expect(getTableName('stops.txt')).toEqual('stops');

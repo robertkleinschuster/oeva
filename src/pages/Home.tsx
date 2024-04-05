@@ -1,5 +1,4 @@
 import {
-    IonButton, IonCard, IonCardContent,
     IonContent,
     IonHeader,
     IonItem,
@@ -10,21 +9,8 @@ import {
     IonToolbar
 } from '@ionic/react';
 import React from "react";
-import {useRegisterSW} from "virtual:pwa-register/react";
 
 const Home: React.FC = () => {
-    const {
-        needRefresh: [needRefresh],
-        updateServiceWorker,
-    } = useRegisterSW({
-        async onRegisteredSW(r: string) {
-            console.log('SW Registered: ', r);
-        },
-        onRegisterError(error: any) {
-            console.error('SW Registration Error: ', error);
-        },
-    });
-
     return (
         <IonPage>
             <IonHeader>
@@ -38,22 +24,15 @@ const Home: React.FC = () => {
                         <IonTitle size="large">OeVA</IonTitle>
                     </IonToolbar>
                 </IonHeader>
-                {needRefresh ?
-                    <IonCard>
-                        <IonCardContent>
-                            <p>Es ist eine neue Version von OeVA Beta verfügbar!</p>
-                            <IonButton onClick={() => {
-                                void updateServiceWorker(true)
-                            }}>Jetzt aktualisieren
-                            </IonButton>
-                        </IonCardContent>
-                    </IonCard> : null}
                 <IonList>
                     <IonItem routerLink="/stations">
                         <IonLabel>Stationen</IonLabel>
                     </IonItem>
                     <IonItem routerLink="/feeds">
                         <IonLabel>Feeds</IonLabel>
+                    </IonItem>
+                    <IonItem routerLink="/storage">
+                        <IonLabel>Speicher</IonLabel>
                     </IonItem>
                 </IonList>
             </IonContent>

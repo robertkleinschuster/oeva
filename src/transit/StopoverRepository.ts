@@ -1,4 +1,4 @@
-import {formatServiceDate, parseStopTime} from "./DateTime";
+import {formatServiceDate} from "./DateTime";
 import {isServiceRunningOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
 import {Stopover} from "../db/Schedule";
@@ -13,17 +13,17 @@ export class StopoverRepository {
             .sortBy('sequence_in_trip')
     }
 
-    async findByStation(stationId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number = 1): Promise<Stopover[]> {
+    async findByStation(stationId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number): Promise<Stopover[]> {
         const station = await scheduleDB.station.get(stationId)
         if (!station) {
             throw new Error('Station not found')
         }
 
-        const cells = gridDisk(station.h3_cell, ringSize);
+        const cells = new Set(gridDisk(station.h3_cell, ringSize));
 
         const filter = [];
         for (let minute = minutesFrom; minute <= minutesTo; minute++) {
-            if (minute > 24 * 60) {
+            if (minute > 99 * 60) {
                 break;
             }
             for (const cell of cells) {

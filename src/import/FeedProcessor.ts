@@ -36,7 +36,7 @@ export class FeedProcessor {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${trip?.name}`,
+                progress: `stopovers ${percent} %, trip ${this.offset} / ${count}: ${trip?.name} ${trip?.direction}`,
                 offset: this.offset
             });
         }, 1500)
@@ -137,7 +137,7 @@ export class FeedProcessor {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name}`,
+                progress: `trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name} ${trip?.trip_headsign}`,
                 offset: this.offset
             });
         }, 1500);

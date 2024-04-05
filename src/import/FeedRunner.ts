@@ -1,5 +1,5 @@
 import {feedDb} from "../db/FeedDb";
-import {TransitFeedStatus} from "../db/Feed";
+import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {FeedImporter} from "./FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
 import axios from "axios";
@@ -13,7 +13,7 @@ export class FeedRunner {
             try {
                 const feed = await feedDb.transit
                     .where('status')
-                    .noneOf([TransitFeedStatus.ERROR, TransitFeedStatus.DONE])
+                    .noneOf(stoppedStatuses)
                     .first()
                 if (feed) {
                     this.running = feed.id
