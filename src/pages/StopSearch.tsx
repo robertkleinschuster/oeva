@@ -41,6 +41,7 @@ const StopSearch: React.FC = () => {
                         stops,
                         {
                             keys: ['name'],
+                            threshold: 0.4,
                             useExtendedSearch: true,
                         }
                     )

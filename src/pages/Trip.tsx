@@ -54,7 +54,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                                 {tripStop.departure_time ? parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString() : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {tripStop.stop_name}
+                                {tripStop.stop_name}{tripStop.stop_platform ? <>: Steig {tripStop.stop_platform}</> : null}
                             </IonText>
                             {tripStop.boarding !== Boarding.STANDARD ?
                                 <IonNote>
