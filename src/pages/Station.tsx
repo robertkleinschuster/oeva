@@ -37,7 +37,7 @@ const calcDistance = (a: string, b: string) => {
 const Station: React.FC<StationPageProps> = ({match}) => {
     const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
-    const [ringSize, setRingSize] = useState(10)
+    const [ringSize, setRingSize] = useState(12)
     const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
     const [minutesTo, setMinutesTo] = useState(minutesFrom + 60)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
