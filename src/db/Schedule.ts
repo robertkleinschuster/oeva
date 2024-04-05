@@ -22,7 +22,7 @@ export enum Boarding {
     ON_CALL,
 }
 
-export const H3_RESOLUTION = 14;
+export const H3_RESOLUTION = 12;
 
 export interface Stopover {
     id: string;
