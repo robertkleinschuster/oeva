@@ -3,7 +3,6 @@ import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
 import {createStop, createTrip, createTripStop} from "./TripStopFactory";
-import Tokenizer from "wink-tokenizer";
 
 export class FeedProcessor {
     private offset: number = 0
