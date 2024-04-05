@@ -15,5 +15,4 @@ root.render(
         </RunnerContextProvider>
     </React.StrictMode>
 );
-
-void runner.run();
+setTimeout(() => void runner.run(), 5000)
