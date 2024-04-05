@@ -21,12 +21,12 @@ import {TripStopRepository} from "../transit/TripStopRepository";
 import {Boarding} from "../db/Schedule";
 import StopBoarding from "../components/StopBoarding";
 
-interface StationPageProps extends RouteComponentProps<{
+interface TripPageProps extends RouteComponentProps<{
     id: string
 }> {
 }
 
-const Trip: React.FC<StationPageProps> = ({match}) => {
+const Trip: React.FC<TripPageProps> = ({match}) => {
     const trip = useLiveQuery(() => scheduleDB.trip.get(match.params.id))
     const tripStops = useLiveQuery(() => (new TripStopRepository()
         .findByTrip(match.params.id))
@@ -54,7 +54,7 @@ const Trip: React.FC<StationPageProps> = ({match}) => {
                                 {tripStop.departure_time ? parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString() : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {tripStop.stop}
+                                {tripStop.stop_name}
                             </IonText>
                             {tripStop.boarding !== Boarding.STANDARD ?
                                 <IonNote>

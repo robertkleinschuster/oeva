@@ -24,7 +24,7 @@ import {TripStopRepository} from "../transit/TripStopRepository";
 import {cellToLatLng, greatCircleDistance, gridRingUnsafe, UNITS} from "h3-js";
 import {getHours, getMinutes} from "date-fns";
 
-interface StationPageProps extends RouteComponentProps<{
+interface StopPageProps extends RouteComponentProps<{
     id: string
 }> {
 }
@@ -43,14 +43,14 @@ const calcDistance = (a: string, b: string) => {
 
 const timeWindow = 60;
 
-const Stop: React.FC<StationPageProps> = ({match}) => {
+const Stop: React.FC<StopPageProps> = ({match}) => {
     const [date, setDate] = useState(new Date)
     const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
     const [ringSize, setRingSize] = useState(12)
     const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
     const [minutesTo, setMinutesTo] = useState(minutesFrom + timeWindow)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
-    const station = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
+    const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
     const tripStops = useLiveQuery(() => (new TripStopRepository()
             .findByStop(match.params.id, date, minutesFrom, minutesTo, ringSizeToLoad)),
@@ -58,10 +58,10 @@ const Stop: React.FC<StationPageProps> = ({match}) => {
     )
 
     useEffect(() => {
-        if (station?.h3_cell) {
-            setRingRadius(calcRingRadius(station?.h3_cell, ringSize))
+        if (stop?.h3_cell) {
+            setRingRadius(calcRingRadius(stop?.h3_cell, ringSize))
         }
-    }, [ringSize, station]);
+    }, [ringSize, stop]);
 
     useEffect(() => {
         if (scrollLoader.current) {
@@ -76,7 +76,7 @@ const Stop: React.FC<StationPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{station?.name}</IonTitle>
+                    <IonTitle>{stop?.name}</IonTitle>
                 </IonToolbar>
                 <IonToolbar>
                     <IonRange style={{margin: '0 1rem'}}
@@ -119,10 +119,10 @@ const Stop: React.FC<StationPageProps> = ({match}) => {
                                     Abfahrt: {parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString()}
                                 </IonNote> : null}
                             <IonText style={{display: 'block'}}>
-                                {tripStop.line} {tripStop.direction}
+                                {tripStop.trip_name} {tripStop.direction}
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
-                                {station?.h3_cell && station?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(station.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop}
+                                {stop?.h3_cell && stop?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(stop.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop_name}
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}

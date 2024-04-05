@@ -9,7 +9,7 @@ export const Trips: React.FC<{ tripStops: TripStop[], date: Date }> = ({tripStop
                 key={tripStop.trip_id}
                 routerLink={`/trip/${tripStop.trip_id}`}
             >
-                {tripStop.departure_time ? parseStopTime(tripStop.departure_time, date).toLocaleTimeString() : null} {tripStop.line} {tripStop.direction}
+                {tripStop.departure_time ? parseStopTime(tripStop.departure_time, date).toLocaleTimeString() : null} {tripStop.trip_name} {tripStop.direction}
             </IonItem>
         )}
     </IonList>

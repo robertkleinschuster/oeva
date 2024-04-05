@@ -14,12 +14,12 @@ export class TripStopRepository {
     }
 
     async findByStop(stopId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number): Promise<TripStop[]> {
-        const station = await scheduleDB.stop.get(stopId)
-        if (!station) {
-            throw new Error('Station not found')
+        const stop = await scheduleDB.stop.get(stopId)
+        if (!stop) {
+            throw new Error('Stop not found')
         }
 
-        const cells = new Set(gridDisk(station.h3_cell, ringSize));
+        const cells = new Set(gridDisk(stop.h3_cell, ringSize));
 
         const filter = [];
         for (let minute = minutesFrom; minute <= minutesTo; minute++) {

@@ -13,30 +13,46 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {scheduleDB} from "../db/ScheduleDB";
-import {Stop} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import Fuse from "fuse.js";
+import {useLiveQuery} from "dexie-react-hooks";
 
 const StopSearch: React.FC = () => {
     const [keyword, setKeyword] = useState('')
-    const [stops, setStops] = useState<Stop[]>([])
 
-    useEffect(() => {
-        setStops([])
+    const stops = useLiveQuery(async () => {
         if (keyword.length > 1) {
             const tokenizer = new Tokenizer
             const keywords = tokenizer.tokenize(keyword).map(token => token.value)
-            scheduleDB.stop
+            if (keywords.length === 1) {
+                const count = await scheduleDB.stop
+                    .where('keywords')
+                    .anyOfIgnoreCase(keywords).count()
+                if (count > 500) {
+                    return Promise.resolve([])
+                }
+            }
+            return scheduleDB.stop
                 .where('keywords')
-                .anyOfIgnoreCase(keywords)
-                .toArray(stations => {
-                    const fuse = new Fuse(stations, {
-                        keys: ['name'],
-                        threshold: 0.3
-                    })
-                    setStops(fuse.search(keyword).map(result => result.item))
+                .startsWithAnyOfIgnoreCase(keywords)
+                .distinct()
+                .toArray(stops => {
+                    const fuse = new Fuse(
+                        stops,
+                        {
+                            keys: ['name'],
+                            useExtendedSearch: true,
+                        }
+                    )
+                    console.log(fuse.search(keyword))
+                    return fuse.search(keyword).map(result => result.item)
                 })
         }
+        return Promise.resolve([])
+    }, [keyword])
+
+    useEffect(() => {
+
     }, [keyword]);
 
     return (
@@ -52,18 +68,17 @@ const StopSearch: React.FC = () => {
             <IonContent>
                 <form action="#" onSubmit={e => e.preventDefault()}>
                     <IonSearchbar
-                        value={keyword}
                         debounce={500}
-                        placeholder="Station Suchen"
+                        placeholder="Haltepunkt Suchen"
                         inputmode="search"
                         onIonInput={e => setKeyword(String(e.detail.value))}
                     />
                 </form>
                 <IonList>
-                    {stops.map(stop => <IonItem
+                    {stops?.map(stop => <IonItem
                             routerLink={`/stops/${stop.id}`}
                             key={stop.id}>
-                            <IonLabel>{stop.name}</IonLabel>
+                            <IonLabel>{stop.name} {stop.platform ? <>({stop.platform})</> : null}</IonLabel>
                         </IonItem>
                     )}
                 </IonList>

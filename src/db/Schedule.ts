@@ -36,10 +36,9 @@ export interface TripStop {
     time: string | undefined;
     departure_time: string | undefined;
     arrival_time: string | undefined;
-    line: string;
+    trip_name: string;
     direction: string | undefined;
-    stop: string;
-    station: string;
+    stop_name: string;
     is_origin: boolean;
     is_destination: boolean;
 }
@@ -49,6 +48,7 @@ export interface Stop {
     feed_id: number;
     feed_stop_id: string;
     name: string;
+    platform?: string;
     h3_cell: string;
     keywords: string[];
 }

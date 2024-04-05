@@ -1,11 +1,10 @@
-import {GTFSStop, GTFSStopTime} from "../db/GTFS";
+import {GTFSStopTime} from "../db/GTFS";
 import {Boarding, Stop, TripStop, Trip} from "../db/Schedule";
 
 export function createTripStop(
-    station: Stop,
     trip: Trip,
+    stop: Stop,
     stopTime: GTFSStopTime,
-    stop: GTFSStop,
     tripStopTimes: GTFSStopTime[] = []
 ): TripStop {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
@@ -13,9 +12,8 @@ export function createTripStop(
     }
 
     if (
-        stopTime.stop_id !== stop.stop_id
-        || stopTime.trip_id !== trip.feed_trip_id
-        || station.feed_stop_id !== stop.stop_id
+        trip.feed_trip_id !== stopTime.trip_id
+        || stop.feed_stop_id !== stopTime.stop_id
     ) {
         throw new Error('Data mismatch')
     }
@@ -55,22 +53,21 @@ export function createTripStop(
     }
 
     return {
-        id: `${station.id}-${trip.id}-${stopTime.stop_sequence}`,
-        stop_id: station.id,
+        id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
+        stop_id: stop.id,
         trip_id: trip.id,
         route_type: trip.route_type,
         sequence_in_trip: stopTime.stop_sequence,
         minutes: minutesSum,
-        h3_cell: station.h3_cell,
+        h3_cell: stop.h3_cell,
         time: stopTime.departure_time ?? stopTime.departure_time,
         departure_time: is_destination ? undefined : stopTime.departure_time,
         arrival_time: is_origin ? undefined : stopTime.arrival_time,
-        line: trip.name,
+        trip_name: trip.name,
         direction: trip.direction,
         is_origin,
         is_destination,
         boarding,
-        stop: stop.stop_name,
-        station: station.name,
+        stop_name: stop.name,
     };
 }

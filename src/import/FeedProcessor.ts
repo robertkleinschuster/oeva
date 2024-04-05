@@ -49,14 +49,12 @@ export class FeedProcessor {
                 .toArray();
 
             for (const stopTime of stopTimes) {
-                const stop = await this.transitDb.stops.get(stopTime.stop_id)
-                const station = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
-                if (stop && station) {
+                const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
+                if (stop) {
                     tripStops.push(createTripStop(
-                        station,
                         trip,
-                        stopTime,
                         stop,
+                        stopTime,
                         stopTimes
                     ))
                 }
@@ -106,6 +104,7 @@ export class FeedProcessor {
                     feed_id: feedId,
                     feed_stop_id: stop.stop_id,
                     name: stop.stop_name,
+                    platform: stop.platform_code?.match(/[A-Z0-9]/) ? stop.platform_code : undefined,
                     keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
                     h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
                 })

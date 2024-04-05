@@ -10,7 +10,7 @@ import {
 import React from "react";
 import {StorageQuota} from "../components/StorageQuota";
 
-const Station: React.FC = () => {
+const Storage: React.FC = () => {
     return (
         <IonPage>
             <IonHeader>
@@ -28,4 +28,4 @@ const Station: React.FC = () => {
     );
 };
 
-export default Station;
+export default Storage;
