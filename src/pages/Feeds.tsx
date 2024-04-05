@@ -38,6 +38,7 @@ const Feeds: React.FC = () => {
                 <IonList>
                     {feeds?.map(feed => <IonItem
                         button
+                        detail={false}
                         id={'edit-feed-' + feed.id}
                         key={feed.id}>
                         <EditFeed feedId={feed.id!} trigger={'edit-feed-' + feed.id}/>
