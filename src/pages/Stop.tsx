@@ -62,6 +62,8 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                               label={`Umgebung ${ringRadius} m`}
                               onIonInput={e => setRingSize(Number(e.detail.value))}
                               onIonChange={() => setRingSizeToLoad(ringSize)}></IonRange>
+                </IonToolbar>
+                <IonToolbar>
                     <IonButtons slot="end">
                         <IonLabel>ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr</IonLabel>
                         <IonButton onClick={() => {
