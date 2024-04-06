@@ -2,8 +2,6 @@ import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
 import {RouteType, TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
-import {arrayBuffer2IndexInput, index2ArrayBuffer} from "./Geo";
-
 
 export class TripStopRepository {
     async findByTrip(tripId: string): Promise<TripStop[]> {
@@ -28,8 +26,8 @@ export class TripStopRepository {
         ];
 
         const hours = date.getHours();
-        const cells = gridDisk(arrayBuffer2IndexInput(stop.h3_cell), ringSize);
-        const filter = cells.map(cell => [index2ArrayBuffer(cell), hours]);
+        const cells = gridDisk(stop.h3_cell, ringSize);
+        const filter = cells.map(cell => [cell, hours]);
 
         const tripStops = await scheduleDB.trip_stop
             .where('[h3_cell+hour]')

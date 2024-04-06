@@ -14,6 +14,7 @@ import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
+import {GTFSDB} from "../db/GTFSDB";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -44,6 +45,8 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const deleteFeed = async () => {
         await modal.current?.dismiss()
         await feedDb.transit.delete(feed!.id!)
+        const gtfsDB = new GTFSDB(feed!.id!)
+        await gtfsDB.delete()
     }
 
     const importFeed = async () => {
@@ -128,10 +131,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                 <FeedForm onChange={onChange} name={name} url={url} ifopt={ifopt}/>
                 <IonList>
                     <IonItem>
-                        <IonButton color="danger"
-                                   onClick={deleteFeed}>
-                            Feed entfernen
-                        </IonButton>
                         <IonButton color="primary"
                                    onClick={importFeed}>
                             Importieren
@@ -140,10 +139,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                    onClick={processFeed}>
                             Verarbeiten
                         </IonButton>
-                        <IonButton color="warning"
-                                   onClick={resetFeed}>
-                            Zurücksetzen
-                        </IonButton>
                         {feed?.status && stoppedStatuses.includes(feed?.status)
                         && feed.status !== TransitFeedStatus.DONE
                         && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
@@ -151,11 +146,21 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                        onClick={continueFeed}>
                                 Fortsetzen
                             </IonButton> : null}
+                    </IonItem>
+                    <IonItem>
+                        <IonButton color="danger"
+                                   onClick={deleteFeed}>
+                             Entfernen
+                        </IonButton>
                         {feed?.status && !stoppedStatuses.includes(feed?.status) ?
                             <IonButton color="warning"
                                        onClick={abortFeed}>
                                 Abbrechen
                             </IonButton> : null}
+                        <IonButton color="warning"
+                                   onClick={resetFeed}>
+                            Zurücksetzen
+                        </IonButton>
                     </IonItem>
                 </IonList>
             </IonContent>

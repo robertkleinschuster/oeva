@@ -1,8 +1,8 @@
 import {GTFSStop, GTFSStopTime} from "../db/GTFS";
 import {createStop, createTripStop} from "./TripStopFactory";
-import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
+import {Boarding, H3_RESOLUTION, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
-import {latLngToCellArrayBuffer} from "../transit/Geo";
+import {latLngToCell} from "h3-js";
 
 describe('TripStopFactory', () => {
     const trip: Trip = {
@@ -39,7 +39,7 @@ describe('TripStopFactory', () => {
         keywords: [],
         feed_stop_id: '1',
         feed_id: 9,
-        h3_cell: latLngToCellArrayBuffer(1, 1)
+        h3_cell: latLngToCell(1, 1, H3_RESOLUTION)
 
     }
     it('should throw error for mismatched data', () => {
@@ -50,7 +50,7 @@ describe('TripStopFactory', () => {
         expect(() => createTripStop(trip, stop, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
         expect(() => createTripStop(trip, {
             ...stop,
-            h3_cell: new ArrayBuffer(8)
+            h3_cell: ''
         }, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
 
     })

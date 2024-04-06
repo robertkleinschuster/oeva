@@ -1,5 +1,5 @@
 import {
-    IonBackButton,
+    IonBackButton, IonButton,
     IonButtons,
     IonContent,
     IonHeader,
@@ -20,6 +20,7 @@ import FeedStatus from "../components/FeedStatus";
 import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
+import {scheduleDB} from "../db/ScheduleDB";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
@@ -32,6 +33,13 @@ const Feeds: React.FC = () => {
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
                     <IonTitle>Feeds</IonTitle>
+                    <IonButtons slot="end">
+                        <IonButton onClick={() => {
+                            scheduleDB.delete()
+                        }}>
+                            Daten löschen
+                        </IonButton>
+                    </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent>

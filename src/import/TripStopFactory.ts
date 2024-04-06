@@ -1,8 +1,8 @@
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {Boarding, Stop, TripStop, Trip, Weekday} from "../db/Schedule";
+import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import {convertStopTimeToInt, parseServiceDate} from "../transit/DateTime";
-import {latLngToCellArrayBuffer} from "../transit/Geo";
+import {latLngToCell} from "h3-js";
 
 export function createTripStop(
     trip: Trip,
@@ -105,7 +105,7 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
         name: name.trim(),
         platform: platform?.trim(),
         keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
-        h3_cell: latLngToCellArrayBuffer(stop.stop_lat, stop.stop_lon),
+        h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
     };
 }
 

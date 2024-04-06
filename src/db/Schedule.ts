@@ -1,5 +1,4 @@
-import {ExceptionType, GTFSCalendar, GTFSCalendarDate} from "./GTFS";
-import {H3Cell} from "../transit/H3Cell";
+import {ExceptionType, GTFSCalendar} from "./GTFS";
 
 export enum RouteType {
     TRAM = 0,
@@ -39,7 +38,7 @@ export interface TripStop {
     id: string;
     stop_id: string;
     trip_id: string;
-    h3_cell: ArrayBuffer;
+    h3_cell: string;
     route_type: RouteType;
     boarding: Boarding;
     sequence_in_trip: number;
@@ -65,7 +64,7 @@ export interface Stop {
     feed_stop_id: string;
     name: string;
     platform?: string;
-    h3_cell: ArrayBuffer;
+    h3_cell: string;
     keywords: string[];
 }
 

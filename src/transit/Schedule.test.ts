@@ -17,7 +17,7 @@ describe('Schedule', () => {
         stop_name: '',
         arrival_time: undefined,
         boarding: Boarding.STANDARD,
-        h3_cell: new ArrayBuffer(8),
+        h3_cell: '',
         departure_time: undefined,
         direction: undefined,
         is_destination: false,
