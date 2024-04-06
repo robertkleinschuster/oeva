@@ -24,29 +24,32 @@ const StopSearch: React.FC = () => {
         if (keyword.length > 1) {
             const tokenizer = new Tokenizer
             const keywords = tokenizer.tokenize(keyword).map(token => token.value)
-            if (keywords.length === 1) {
-                const count = await scheduleDB.stop
+
+            const stops = [];
+            for (const keyword of keywords) {
+                stops.push(...await scheduleDB.stop
                     .where('keywords')
-                    .anyOfIgnoreCase(keywords).count()
-                if (count > 500) {
-                    return Promise.resolve([])
-                }
+                    .startsWithIgnoreCase(keyword)
+                    .distinct()
+                    .toArray()
+                )
             }
-            return scheduleDB.stop
-                .where('keywords')
-                .startsWithAnyOfIgnoreCase(keywords)
-                .distinct()
-                .toArray(stops => {
-                    const fuse = new Fuse(
-                        stops,
-                        {
-                            keys: ['name'],
-                            threshold: 0.4,
-                            useExtendedSearch: true,
-                        }
-                    )
-                    return fuse.search(keyword).map(result => result.item)
-                })
+
+            const stopMap = new Map(stops.map(stop => [stop.id, stop]))
+
+            if (keywords.length === 1 && stopMap.size > 500) {
+                return Promise.resolve([])
+            }
+
+            const fuse = new Fuse(
+                Array.from(stopMap.values()),
+                {
+                    keys: ['name'],
+                    threshold: 0.4,
+                    useExtendedSearch: true,
+                }
+            )
+            return fuse.search(keyword).map(result => result.item)
         }
         return Promise.resolve([])
     }, [keyword])
