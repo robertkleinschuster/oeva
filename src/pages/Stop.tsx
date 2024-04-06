@@ -31,13 +31,14 @@ interface StopPageProps extends RouteComponentProps<{
 
 const Stop: React.FC<StopPageProps> = ({match}) => {
     const [date, setDate] = useState(setSeconds(setMinutes(new Date(), 0), 0))
+    const [debouncedDate, setDebouncedDate] = useState(date)
     const [ringSize, setRingSize] = useState(12)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
     const tripStops = useLiveQuery(() => (new TripStopRepository()
-            .findByStop(match.params.id, date, ringSize)),
-        [ringSizeToLoad, date]
+            .findByStop(match.params.id, debouncedDate, ringSize)),
+        [ringSizeToLoad, debouncedDate]
     )
 
     useEffect(() => {
@@ -45,6 +46,13 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
             setRingRadius(calcRingRadius(stop.h3_cell, ringSize))
         }
     }, [ringSize, stop]);
+
+    useEffect(() => {
+        const delayInputTimeoutId = setTimeout(() => {
+            setDebouncedDate(date);
+        }, 500);
+        return () => clearTimeout(delayInputTimeoutId);
+    }, [date]);
 
     return (
         <IonPage>
