@@ -19,14 +19,19 @@ export class TripStopRepository {
 
         const hours = date.getHours();
         const cells = gridDisk(stop.h3_cell, ringSize);
-        const filter = cells.map(cell => `${cell}-${hours}`);
+        const filters = cells.map(cell => `${cell}-${hours}`);
 
-        const tripStops = await scheduleDB.trip_stop
-            .where('h3_cell_hour')
-            .anyOf(filter)
-            .sortBy('sequence_at_stop')
+        const tripStops = []
+        for (const filter of filters) {
+            tripStops.push(...await scheduleDB.trip_stop
+                .where('h3_cell_hour')
+                .equals(filter)
+                .toArray())
+        }
 
-        return tripStops.filter(tripStop =>
+        return tripStops
+            .sort((a, b) => a.sequence_at_stop - b.sequence_at_stop)
+            .filter(tripStop =>
             isTripStopActiveOn(tripStop, date)
         );
     }
