@@ -50,7 +50,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     useEffect(() => {
         const delayInputTimeoutId = setTimeout(() => {
             setDebouncedDate(date);
-        }, 500);
+        }, 1000);
         return () => clearTimeout(delayInputTimeoutId);
     }, [date]);
 
