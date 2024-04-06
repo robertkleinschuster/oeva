@@ -13,7 +13,8 @@ import {
     IonText,
     IonTitle,
     IonToolbar,
-    isPlatform
+    isPlatform,
+    useIonLoading
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import {RouteComponentProps, useLocation} from "react-router";
@@ -30,14 +31,17 @@ interface StopPageProps extends RouteComponentProps<{
 }
 
 const Stop: React.FC<StopPageProps> = ({match}) => {
+    const [presentLoading, dismissLoading] = useIonLoading();
     const [date, setDate] = useState(setSeconds(setMinutes(new Date(), 0), 0))
     const [debouncedDate, setDebouncedDate] = useState(date)
     const [ringSize, setRingSize] = useState(12)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
-    const tripStops = useLiveQuery(() => (new TripStopRepository()
-            .findByStop(match.params.id, debouncedDate, ringSize)),
+    const tripStops = useLiveQuery(async () => {
+            await presentLoading('Lädt...')
+            return (new TripStopRepository().findByStop(match.params.id, debouncedDate, ringSize))
+        },
         [ringSizeToLoad, debouncedDate]
     )
 
@@ -50,9 +54,13 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     useEffect(() => {
         const delayInputTimeoutId = setTimeout(() => {
             setDebouncedDate(date);
-        }, 1000);
+        }, 500);
         return () => clearTimeout(delayInputTimeoutId);
     }, [date]);
+
+    if (tripStops !== undefined) {
+        void dismissLoading()
+    }
 
     return (
         <IonPage>
