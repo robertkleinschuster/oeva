@@ -58,7 +58,6 @@ const Feeds: React.FC = () => {
                                     },
                                 },
                             ]}
-                            onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
                         ></IonAlert>
                     </IonButtons>
                 </IonToolbar>
