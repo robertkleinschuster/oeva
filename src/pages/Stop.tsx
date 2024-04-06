@@ -16,58 +16,35 @@ import {
     isPlatform
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
-import {RouteComponentProps} from "react-router";
+import {RouteComponentProps, useLocation} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {parseStopTime} from "../transit/DateTime";
+import {parseStopTimeInt} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
-import {cellToLatLng, greatCircleDistance, gridRingUnsafe, UNITS} from "h3-js";
-import {getHours, getMinutes} from "date-fns";
+import {addHours, setMinutes, setSeconds, subHours} from "date-fns";
+import {calcDistance, calcRingRadius} from "../transit/Geo";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
 }> {
 }
 
-const calcRingRadius = (center: string, ringSize: number) => {
-    const ring = gridRingUnsafe(center, ringSize)
-    if (ring.length) {
-        return calcDistance(ring[0], center)
-    }
-    return 0;
-}
-
-const calcDistance = (a: string, b: string) => {
-    return Math.round(greatCircleDistance(cellToLatLng(a), cellToLatLng(b), UNITS.m))
-}
-
-const timeWindow = 60;
-
 const Stop: React.FC<StopPageProps> = ({match}) => {
-    const [date, setDate] = useState(new Date)
-    const scrollLoader = useRef<HTMLIonInfiniteScrollElement | null>(null)
+    const [date, setDate] = useState(setSeconds(setMinutes(new Date(), 0), 0))
     const [ringSize, setRingSize] = useState(12)
-    const [minutesFrom, setMinutesFrom] = useState(getHours(date) * 60 + getMinutes(date))
-    const [minutesTo, setMinutesTo] = useState(minutesFrom + timeWindow)
     const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const [ringRadius, setRingRadius] = useState(0)
     const tripStops = useLiveQuery(() => (new TripStopRepository()
-            .findByStop(match.params.id, date, minutesFrom, minutesTo, ringSizeToLoad)),
-        [ringSizeToLoad, minutesFrom, minutesTo]
+            .findByStop(match.params.id, date, ringSize)),
+        [ringSizeToLoad, date]
     )
 
     useEffect(() => {
         if (stop?.h3_cell) {
-            setRingRadius(calcRingRadius(stop?.h3_cell, ringSize))
+            setRingRadius(calcRingRadius(stop.h3_cell, ringSize))
         }
     }, [ringSize, stop]);
-
-    useEffect(() => {
-        if (scrollLoader.current) {
-            scrollLoader.current.complete()
-        }
-    }, [tripStops]);
 
     return (
         <IonPage>
@@ -86,16 +63,14 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                               onIonInput={e => setRingSize(Number(e.detail.value))}
                               onIonChange={() => setRingSizeToLoad(ringSize)}></IonRange>
                     <IonButtons slot="end">
+                        <IonLabel>ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr</IonLabel>
                         <IonButton onClick={() => {
-                            const newMinutesFrom = minutesFrom > timeWindow ? minutesFrom - timeWindow : 0;
-                            setMinutesFrom(newMinutesFrom)
-                            setMinutesTo(newMinutesFrom + timeWindow)
+                            setDate(subHours(date, 1))
                         }}>
                             <IonLabel>Früher</IonLabel>
                         </IonButton>
                         <IonButton onClick={() => {
-                            setMinutesFrom(minutesTo)
-                            setMinutesTo(minutesTo + timeWindow)
+                            setDate(addHours(date, 1))
                         }}>
                             <IonLabel>Später</IonLabel>
                         </IonButton>
@@ -111,18 +86,19 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                             {tripStop.arrival_time ?
                                 <IonNote
                                     style={{display: 'block'}}>
-                                    Ankunft: {parseStopTime(tripStop.arrival_time, new Date()).toLocaleTimeString()}
+                                    Ankunft: {parseStopTimeInt(tripStop.arrival_time, date).toLocaleTimeString()}
                                 </IonNote> : null}
                             {tripStop.departure_time ?
                                 <IonNote
                                     style={{display: 'block'}}>
-                                    Abfahrt: {parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString()}
+                                    Abfahrt: {parseStopTimeInt(tripStop.departure_time, date).toLocaleTimeString()}
                                 </IonNote> : null}
                             <IonText style={{display: 'block'}}>
                                 {tripStop.trip_name} {tripStop.direction}
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
-                                {stop?.h3_cell && stop?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(stop.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop_name}{tripStop.stop_platform ? <>: Steig {tripStop.stop_platform}</> : null}
+                                {stop?.h3_cell && stop?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(stop.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop_name}{tripStop.stop_platform ? <>:
+                                Steig {tripStop.stop_platform}</> : null}
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}

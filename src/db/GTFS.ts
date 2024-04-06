@@ -78,8 +78,8 @@ export interface GTFSCalendar {
     friday: number;
     saturday: number;
     sunday: number;
-    start_date: string;
-    end_date: string;
+    start_date: number;
+    end_date: number;
 }
 
 export enum ExceptionType {
@@ -89,7 +89,7 @@ export enum ExceptionType {
 
 export interface GTFSCalendarDate {
     service_id: string;
-    date: string;
+    date: number;
     exception_type: ExceptionType;
 }
 

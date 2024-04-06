@@ -6,9 +6,9 @@ const StopBoarding: React.FC<{boarding: Boarding}> = ({boarding}) => {
         case Boarding.NONE:
             return <>Kein Ein- oder Ausstieg</>
         case Boarding.ONLY_BOARDING:
-            return <>Nur Ausstieg</>
-        case Boarding.ONLY_DISEMBARKING:
             return <>Nur Einstieg</>
+        case Boarding.ONLY_DISEMBARKING:
+            return <>Nur Ausstieg</>
         case Boarding.ON_REQUEST:
             return <>Bedarfshalt</>
         case Boarding.ON_CALL:

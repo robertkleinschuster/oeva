@@ -1,8 +1,8 @@
-import {formatServiceDate} from "./DateTime";
-import {isServiceRunningOn} from "./Schedule";
+import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
-import {TripStop} from "../db/Schedule";
+import {RouteType, TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
+import {arrayBuffer2IndexInput, index2ArrayBuffer} from "./Geo";
 
 
 export class TripStopRepository {
@@ -13,46 +13,33 @@ export class TripStopRepository {
             .sortBy('sequence_in_trip')
     }
 
-    async findByStop(stopId: string, date: Date, minutesFrom: number, minutesTo: number, ringSize: number): Promise<TripStop[]> {
+    async findByStop(stopId: string, date: Date, ringSize: number): Promise<TripStop[]> {
         const stop = await scheduleDB.stop.get(stopId)
         if (!stop) {
             throw new Error('Stop not found')
         }
 
-        const cells = new Set(gridDisk(stop.h3_cell, ringSize));
+        const routeTypes = [
+            RouteType.RAIL,
+            RouteType.SUBWAY,
+            RouteType.TRAM,
+            RouteType.TROLLEYBUS,
+            RouteType.BUS,
+        ];
 
-        const filter = [];
-        for (let minute = minutesFrom; minute <= minutesTo; minute++) {
-            if (minute > 99 * 60) {
-                break;
-            }
-            for (const cell of cells) {
-                filter.push([cell, minute])
-            }
-        }
+        const hours = date.getHours();
+        const cells = gridDisk(arrayBuffer2IndexInput(stop.h3_cell), ringSize);
+        const filter = cells.map(cell => [index2ArrayBuffer(cell), hours]);
 
         const tripStops = await scheduleDB.trip_stop
-            .where('[h3_cell+minutes]')
+            .where('[h3_cell+hour]')
             .anyOf(filter)
-            .sortBy('minutes')
+            .sortBy('sequence_at_stop')
 
-        const runningTripStops = [];
-        for (const tripStop of tripStops) {
-            const trip = await scheduleDB.trip.get(tripStop.trip_id)
-            const exceptionType = trip?.exceptions.get(formatServiceDate(date));
+        return tripStops.filter(tripStop =>
+            routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, date)
+        );
 
-            const exception = exceptionType && trip ? {
-                date: formatServiceDate(date),
-                exception_type: exceptionType,
-                service_id: trip.service.service_id
-            } : undefined;
-
-            if (trip && isServiceRunningOn(trip.service, exception, date)) {
-                runningTripStops.push(tripStop)
-            }
-        }
-
-        return runningTripStops;
     }
 }
 

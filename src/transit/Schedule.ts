@@ -1,26 +1,41 @@
-import {ExceptionType, GTFSCalendar, GTFSCalendarDate} from "../db/GTFS";
-import {formatServiceDate, parseServiceDate} from "./DateTime";
+import {ExceptionType} from "../db/GTFS";
+import {formatServiceDate} from "./DateTime";
+import {TripStop, Weekday} from "../db/Schedule";
 
-export function isServiceRunningOn(service: GTFSCalendar, exception: GTFSCalendarDate | undefined, date: Date): boolean {
-    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayOfWeek = weekdays[date.getDay()] as keyof GTFSCalendar;
+function extractWeekday(date: Date): Weekday {
+    switch (date.getDay()) {
+        case 0: // Sunday
+            return Weekday.Sunday;
+        case 1: // Monday
+            return Weekday.Monday;
+        case 2: // Tuesday
+            return Weekday.Tuesday;
+        case 3: // Wednesday
+            return Weekday.Wednesday;
+        case 4: // Thursday
+            return Weekday.Thursday;
+        case 5: // Friday
+            return Weekday.Friday;
+        case 6: // Saturday
+            return Weekday.Saturday;
+        default:
+            throw new Error("Invalid day");
+    }
+}
 
-    if (exception) {
-        if (exception.service_id !== service.service_id) {
-            throw new Error('Schedule exception does not match service id')
+export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
+    const serviceDate = formatServiceDate(date);
+    const exceptionType = tripStop.service_exceptions?.get(serviceDate)
+    if (exceptionType !== undefined) {
+        if (exceptionType === ExceptionType.RUNNING) {
+            return true
         }
-        if (exception.date !== formatServiceDate(date)) {
-            throw new Error('Schedule exception does not match requested date')
-        }
-        if (exception.exception_type === ExceptionType.RUNNING) {
-            return true;
-        }
-        if (exception.exception_type === ExceptionType.NOT_RUNNING) {
-            return false;
+        if (exceptionType === ExceptionType.NOT_RUNNING) {
+            return false
         }
     }
-
-    return service[dayOfWeek] === 1
-        && date >= parseServiceDate(service.start_date, date)
-        && date <= parseServiceDate(service.end_date, date);
+    return (tripStop.service_weekdays & extractWeekday(date)) !== 0
+        && date >= tripStop.service_start_date
+        && date <= tripStop.service_end_date
 }
+

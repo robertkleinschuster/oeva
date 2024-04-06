@@ -2,7 +2,7 @@ import {GTFSStop, GTFSStopTime} from "../db/GTFS";
 import {createStop, createTripStop} from "./TripStopFactory";
 import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
-import {latLngToCell} from "h3-js";
+import {latLngToCellArrayBuffer} from "../transit/Geo";
 
 describe('TripStopFactory', () => {
     const trip: Trip = {
@@ -13,8 +13,8 @@ describe('TripStopFactory', () => {
         name: 'IC 311',
         service: {
             service_id: '4',
-            start_date: '20230101',
-            end_date: '20221231',
+            start_date: 20230101,
+            end_date: 20221231,
             friday: 1,
             monday: 1,
             saturday: 1,
@@ -24,7 +24,7 @@ describe('TripStopFactory', () => {
             wednesday: 1
         },
         route_type: RouteType.RAIL,
-        exceptions: new Map,
+        service_exceptions: new Map,
         keywords: []
     }
     const stopTime: GTFSStopTime = {
@@ -39,7 +39,7 @@ describe('TripStopFactory', () => {
         keywords: [],
         feed_stop_id: '1',
         feed_id: 9,
-        h3_cell: latLngToCell(1, 1, 14)
+        h3_cell: latLngToCellArrayBuffer(1, 1)
 
     }
     it('should throw error for mismatched data', () => {
@@ -50,7 +50,7 @@ describe('TripStopFactory', () => {
         expect(() => createTripStop(trip, stop, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
         expect(() => createTripStop(trip, {
             ...stop,
-            h3_cell: '99'
+            h3_cell: new ArrayBuffer(8)
         }, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
 
     })
@@ -68,7 +68,7 @@ describe('TripStopFactory', () => {
         expect(tripStop.trip_id).toEqual(trip.id)
         expect(tripStop.stop_id).toEqual(stop.id)
         expect(tripStop.arrival_time).toBeUndefined()
-        expect(tripStop.departure_time).toEqual('08:37:00')
+        expect(tripStop.departure_time).toEqual(837)
         expect(tripStop.direction).toEqual('Budapest-Keleti')
         expect(tripStop.trip_name).toEqual('IC 311')
         expect(tripStop.boarding).toEqual(Boarding.STANDARD)

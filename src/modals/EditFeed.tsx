@@ -39,7 +39,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             url,
             is_ifopt: ifopt
         })
-        modal.current?.dismiss()
     }
 
     const deleteFeed = async () => {
@@ -48,12 +47,14 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     }
 
     const importFeed = async () => {
+        await saveFeed()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.DOWNLOADING
         })
         modal.current?.dismiss()
     }
     const processFeed = async () => {
+        await saveFeed()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.PROCESSING
         })
@@ -62,6 +63,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const continueFeed = async () => {
         if (feed!.previous_status) {
+            await saveFeed()
             await feedDb.transit.update(feed!, {
                 status: feed!.previous_status
             })
@@ -69,7 +71,19 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         }
     }
 
+    const resetFeed = async () => {
+        await saveFeed()
+        await feedDb.transit.update(feed!, {
+            progress: undefined,
+            step: undefined,
+            offset: undefined
+        })
+        modal.current?.dismiss()
+        window.location.reload()
+    }
+
     const abortFeed = async () => {
+        await saveFeed()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.ABORTED,
             previous_status: feed!.status
@@ -101,6 +115,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                             onClick={() => {
                                 if (validateFeed()) {
                                     void saveFeed()
+                                    modal.current?.dismiss()
                                 }
                             }}
                         >
@@ -125,7 +140,13 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                    onClick={processFeed}>
                             Verarbeiten
                         </IonButton>
-                        {feed?.status && stoppedStatuses.includes(feed?.status) && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
+                        <IonButton color="warning"
+                                   onClick={resetFeed}>
+                            Zurücksetzen
+                        </IonButton>
+                        {feed?.status && stoppedStatuses.includes(feed?.status)
+                        && feed.status !== TransitFeedStatus.DONE
+                        && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
                             <IonButton color="primary"
                                        onClick={continueFeed}>
                                 Fortsetzen

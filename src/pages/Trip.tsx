@@ -16,10 +16,11 @@ import React from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {parseStopTime} from "../transit/DateTime";
+import {parseStopTimeInt} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {Boarding} from "../db/Schedule";
 import StopBoarding from "../components/StopBoarding";
+import {setSeconds} from "date-fns";
 
 interface TripPageProps extends RouteComponentProps<{
     id: string
@@ -31,7 +32,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
     const tripStops = useLiveQuery(() => (new TripStopRepository()
         .findByTrip(match.params.id))
     )
-
+    const date = setSeconds(new Date(), 0);
     return (
         <IonPage>
             <IonHeader>
@@ -49,9 +50,9 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                         key={tripStop.id}>
                         <IonLabel>
                             <IonNote>
-                                {tripStop.arrival_time ? parseStopTime(tripStop.arrival_time, new Date()).toLocaleTimeString() : null}
-                                {tripStop.arrival_time && tripStop.departure_time ? " - " : null}
-                                {tripStop.departure_time ? parseStopTime(tripStop.departure_time, new Date()).toLocaleTimeString() : null}
+                                {tripStop.arrival_time !== undefined ? parseStopTimeInt(tripStop.arrival_time, date).toLocaleTimeString() : null}
+                                {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
+                                {tripStop.departure_time !== undefined ? parseStopTimeInt(tripStop.departure_time, date).toLocaleTimeString() : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
                                 {tripStop.stop_name}{tripStop.stop_platform ? <>: Steig {tripStop.stop_platform}</> : null}

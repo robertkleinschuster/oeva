@@ -1,4 +1,5 @@
 import {ExceptionType, GTFSCalendar, GTFSCalendarDate} from "./GTFS";
+import {H3Cell} from "../transit/H3Cell";
 
 export enum RouteType {
     TRAM = 0,
@@ -24,24 +25,38 @@ export enum Boarding {
 
 export const H3_RESOLUTION = 12;
 
+export enum Weekday {
+    Sunday = 1,
+    Saturday = 2,
+    Friday = 4,
+    Thursday = 8,
+    Wednesday = 16,
+    Tuesday = 32,
+    Monday = 64,
+}
+
 export interface TripStop {
     id: string;
     stop_id: string;
     trip_id: string;
-    h3_cell: string;
+    h3_cell: ArrayBuffer;
     route_type: RouteType;
     boarding: Boarding;
     sequence_in_trip: number;
-    minutes: number | undefined;
-    time: string | undefined;
-    departure_time: string | undefined;
-    arrival_time: string | undefined;
+    sequence_at_stop: number;
+    hour: number | undefined;
+    departure_time: number | undefined;
+    arrival_time: number | undefined;
     trip_name: string;
     direction: string | undefined;
     stop_name: string;
     stop_platform: string | undefined;
     is_origin: boolean;
     is_destination: boolean;
+    service_start_date: Date;
+    service_end_date: Date;
+    service_weekdays: number;
+    service_exceptions: Map<number, ExceptionType>;
 }
 
 export interface Stop {
@@ -50,7 +65,7 @@ export interface Stop {
     feed_stop_id: string;
     name: string;
     platform?: string;
-    h3_cell: string;
+    h3_cell: ArrayBuffer;
     keywords: string[];
 }
 
@@ -62,6 +77,6 @@ export interface Trip {
     direction: string;
     route_type: RouteType
     service: GTFSCalendar;
-    exceptions: Map<string, ExceptionType>;
+    service_exceptions: Map<number, ExceptionType>;
     keywords: string[];
 }
