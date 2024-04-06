@@ -39,32 +39,35 @@ export class FeedProcessor {
             });
         }, 1500)
 
-        for (const gtfsTrip of trips) {
-            const tripStops: TripStop[] = [];
-            const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
-            const stopTimes = await this.transitDb.stopTimes
-                .where({trip_id: gtfsTrip.trip_id})
-                .toArray();
 
-            if (trip) {
-                for (const stopTime of stopTimes) {
-                    const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
-                    if (stop) {
-                        tripStops.push(createTripStop(
-                            trip,
-                            stop,
-                            stopTime,
-                            stopTimes
-                        ))
+        try {
+            for (const gtfsTrip of trips) {
+                const tripStops: TripStop[] = [];
+                const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
+                const stopTimes = await this.transitDb.stopTimes
+                    .where({trip_id: gtfsTrip.trip_id})
+                    .toArray();
+
+                if (trip) {
+                    for (const stopTime of stopTimes) {
+                        const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
+                        if (stop) {
+                            tripStops.push(createTripStop(
+                                trip,
+                                stop,
+                                stopTime,
+                                stopTimes
+                            ))
+                        }
                     }
                 }
+
+                await this.scheduleDb.trip_stop.bulkPut(tripStops);
+                this.offset++
             }
-
-            await this.scheduleDb.trip_stop.bulkPut(tripStops);
-            this.offset++
+        } finally {
+            clearInterval(interval)
         }
-
-        clearInterval(interval)
     }
 
     async processStops(feedId: number) {
