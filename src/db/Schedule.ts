@@ -39,7 +39,6 @@ export interface TripStop {
     stop_id: string;
     trip_id: string;
     h3_cell: string;
-    h3_cell_hour: string;
     route_type: RouteType;
     boarding: Boarding;
     sequence_in_trip: number;

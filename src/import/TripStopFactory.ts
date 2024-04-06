@@ -67,7 +67,6 @@ export function createTripStop(
         sequence_at_stop: hour * 60 + minute,
         hour: hour,
         h3_cell: stop.h3_cell,
-        h3_cell_hour: `${stop.h3_cell}-${hour}`,
         departure_time: is_destination || stopTime.departure_time == undefined ? undefined : convertStopTimeToInt(stopTime.departure_time),
         arrival_time: is_origin || stopTime.arrival_time === undefined ? undefined : convertStopTimeToInt(stopTime.arrival_time),
         trip_name: trip.name,

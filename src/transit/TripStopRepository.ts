@@ -19,12 +19,12 @@ export class TripStopRepository {
 
         const hours = date.getHours();
         const cells = gridDisk(stop.h3_cell, ringSize);
-        const filters = cells.map(cell => `${cell}-${hours}`);
+        const filters = cells.map(cell => [cell, hours]);
 
         const tripStops = []
         for (const filter of filters) {
             tripStops.push(...await scheduleDB.trip_stop
-                .where('h3_cell_hour')
+                .where('[h3_cell+hour]')
                 .equals(filter)
                 .toArray())
         }

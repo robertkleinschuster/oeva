@@ -18,7 +18,6 @@ describe('Schedule', () => {
         arrival_time: undefined,
         boarding: Boarding.STANDARD,
         h3_cell: '',
-        h3_cell_hour: '',
         departure_time: undefined,
         direction: undefined,
         is_destination: false,
