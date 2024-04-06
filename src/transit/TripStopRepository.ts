@@ -1,6 +1,6 @@
 import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
-import {RouteType, TripStop} from "../db/Schedule";
+import {TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
 
 export class TripStopRepository {
@@ -17,27 +17,18 @@ export class TripStopRepository {
             throw new Error('Stop not found')
         }
 
-        const routeTypes = [
-            RouteType.RAIL,
-            RouteType.SUBWAY,
-            RouteType.TRAM,
-            RouteType.TROLLEYBUS,
-            RouteType.BUS,
-        ];
-
         const hours = date.getHours();
         const cells = gridDisk(stop.h3_cell, ringSize);
-        const filter = cells.map(cell => [cell, hours]);
+        const filter = cells.map(cell => `${cell}-${hours}`);
 
         const tripStops = await scheduleDB.trip_stop
-            .where('[h3_cell+hour]')
+            .where('h3_cell_hour')
             .anyOf(filter)
             .sortBy('sequence_at_stop')
 
         return tripStops.filter(tripStop =>
-            routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, date)
+            isTripStopActiveOn(tripStop, date)
         );
-
     }
 }
 

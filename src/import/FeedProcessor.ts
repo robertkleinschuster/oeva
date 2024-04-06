@@ -3,6 +3,7 @@ import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
 import {createStop, createTrip, createTripStop} from "./TripStopFactory";
+import {as} from "vitest/dist/reporters-5f784f42";
 
 export class FeedProcessor {
     private offset: number = 0
@@ -43,27 +44,31 @@ export class FeedProcessor {
         try {
             for (const gtfsTrip of trips) {
                 const tripStops: TripStop[] = [];
-                const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
                 const stopTimes = await this.transitDb.stopTimes
                     .where({trip_id: gtfsTrip.trip_id})
                     .toArray();
 
-                if (trip) {
-                    for (const stopTime of stopTimes) {
-                        const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
-                        if (stop) {
-                            tripStops.push(createTripStop(
-                                trip,
-                                stop,
-                                stopTime,
-                                stopTimes
-                            ))
+                await this.scheduleDb.transaction(
+                    'rw',
+                    [this.scheduleDb.trip, this.scheduleDb.stop, this.scheduleDb.trip_stop],
+                    async () => {
+                        const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
+                        if (trip) {
+                            for (const stopTime of stopTimes) {
+                                const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
+                                if (stop) {
+                                    tripStops.push(createTripStop(
+                                        trip,
+                                        stop,
+                                        stopTime,
+                                        stopTimes
+                                    ))
+                                }
+                            }
                         }
-                    }
-                }
-
-                await this.scheduleDb.trip_stop.bulkPut(tripStops);
-                this.offset++
+                        await this.scheduleDb.trip_stop.bulkPut(tripStops);
+                        this.offset++
+                    })
             }
         } finally {
             clearInterval(interval)
@@ -138,16 +143,24 @@ export class FeedProcessor {
 
         try {
             for (const trip of trips) {
-                const route = await this.transitDb.routes.get(trip.route_id)
-                const service = await this.transitDb.calendar.get(trip.service_id)
-                const exceptions = await this.transitDb.calendarDates
-                    .where('service_id')
-                    .equals(trip.service_id)
-                    .toArray()
+                const [route, service, exceptions] = await this.transitDb.transaction(
+                    'r',
+                    [this.transitDb.routes, this.transitDb.calendar, this.transitDb.calendarDates],
+                    async () => {
+                        const route = await this.transitDb.routes.get(trip.route_id)
+                        const service = await this.transitDb.calendar.get(trip.service_id)
+                        const exceptions = await this.transitDb.calendarDates
+                            .where('service_id')
+                            .equals(trip.service_id)
+                            .toArray()
+                        return [route, service, exceptions]
+                    }
+                )
 
                 if (route && service) {
                     await this.scheduleDb.trip.put(createTrip(feedId, trip, route, service, exceptions))
                 }
+
                 this.offset++;
             }
         } finally {
