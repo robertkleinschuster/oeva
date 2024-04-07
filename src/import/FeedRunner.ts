@@ -11,6 +11,12 @@ export class FeedRunner {
 
     async run() {
         if (this.running === undefined) {
+            const interval = setInterval(() => {
+                if (this.running && this.audio && this.audio.paused) {
+                    this.audio.play()
+                }
+            }, 500)
+
             try {
                 const feed = await feedDb.transit
                     .where('status')
@@ -35,6 +41,7 @@ export class FeedRunner {
                 console.log(e)
             }
             this.audio?.pause()
+            clearInterval(interval)
             this.running = undefined
         }
 
@@ -48,7 +55,7 @@ export class FeedRunner {
 
 
     backgroundExec() {
-        if (this.audio) {
+        if (this.audio && this.audio.paused) {
             void this.audio.play()
             return;
         }
