@@ -4,10 +4,8 @@ import {TransitFeed} from "./db/Feed";
 import {feedDb} from "./db/FeedDb";
 import FeedStatus from "./components/FeedStatus";
 import {IonItem, IonLabel, IonSpinner, IonToggle} from "@ionic/react";
-import NoSleep from 'nosleep.js';
 
 export const RunnerContext = createContext<number | undefined>(undefined)
-const nosleep = new NoSleep();
 
 export const RunnerContextProvider = ({children, runner}: { children: ReactNode, runner: FeedRunner }) => {
     const [running, setRunning] = useState<number | undefined>()
@@ -35,13 +33,6 @@ export const RunnerContextProvider = ({children, runner}: { children: ReactNode,
             borderRadius: '.5rem'
         }}>
             <IonSpinner slot="end"/>
-            <IonToggle slot="start" onIonChange={(e) => {
-                if (e.detail.checked) {
-                    nosleep.enable()
-                } else {
-                    nosleep.disable()
-                }
-            }} labelPlacement="stacked" checked={nosleep.isEnabled}>Bildschirm ein</IonToggle>
             <IonLabel>
                 <FeedStatus feed={runningFeed}/>
             </IonLabel>
