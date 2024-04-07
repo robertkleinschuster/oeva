@@ -79,7 +79,7 @@ describe('FeedImporter', () => {
             timestamp: 0,
             downloaded_megabytes: 0,
             download_progress: 0,
-            status: TransitFeedStatus.IMPORTING
+            status: TransitFeedStatus.SAVING
         };
 
         mockedFeedDb.transit.get.mockResolvedValue(mockImportData);
@@ -97,7 +97,7 @@ describe('FeedImporter', () => {
             feedId,
             {
                 progress: 'agency.txt',
-                status: TransitFeedStatus.IMPORTING
+                status: TransitFeedStatus.SAVING
             }
         )
 
@@ -113,7 +113,7 @@ describe('FeedImporter', () => {
             feedId,
             {
                 progress: 'stops.txt',
-                status: TransitFeedStatus.IMPORTING
+                status: TransitFeedStatus.SAVING
             }
         )
         expect(mockedFeedDb.transit.update).toHaveBeenNthCalledWith(

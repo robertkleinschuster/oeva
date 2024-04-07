@@ -38,6 +38,7 @@ export interface TripStop {
     id: string;
     stop_id: string;
     trip_id: string;
+    feed_id: number;
     h3_cell: string;
     route_type: RouteType;
     boarding: Boarding;

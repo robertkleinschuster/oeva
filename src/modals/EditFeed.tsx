@@ -7,7 +7,7 @@ import {
     IonList,
     IonModal,
     IonTitle,
-    IonToolbar,
+    IonToolbar, useIonLoading,
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
@@ -15,9 +15,12 @@ import {feedDb} from "../db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
+import {scheduleDB} from "../db/ScheduleDB";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
+    const [presentLoading, dismissLoading] = useIonLoading();
+
     const feed = useLiveQuery(() => feedDb.transit.get(feedId), [feedId])
 
     const [name, setName] = useState('')
@@ -43,10 +46,25 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     }
 
     const deleteFeed = async () => {
+        await deleteFeedData()
+        await deleteFeedDownload()
         await modal.current?.dismiss()
         await feedDb.transit.delete(feed!.id!)
+    }
+
+    const deleteFeedData = async () => {
+        await presentLoading('Löschen...')
+        await scheduleDB.trip.where({feed_id: feedId}).delete()
+        await scheduleDB.stop.where({feed_id: feedId}).delete()
+        await scheduleDB.trip_stop.where({feed_id: feedId}).delete()
+        await dismissLoading()
+    }
+
+    const deleteFeedDownload = async () => {
+        await presentLoading('Löschen...')
         const gtfsDB = new GTFSDB(feed!.id!)
         await gtfsDB.delete()
+        await dismissLoading()
     }
 
     const importFeed = async () => {
@@ -131,36 +149,47 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                 <FeedForm onChange={onChange} name={name} url={url} ifopt={ifopt}/>
                 <IonList>
                     <IonItem>
-                        <IonButton color="primary"
-                                   onClick={importFeed}>
-                            Importieren
-                        </IonButton>
-                        <IonButton color="primary"
-                                   onClick={processFeed}>
-                            Verarbeiten
-                        </IonButton>
                         {feed?.status && stoppedStatuses.includes(feed?.status)
                         && feed.status !== TransitFeedStatus.DONE
                         && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
                             <IonButton color="primary"
                                        onClick={continueFeed}>
-                                Fortsetzen
-                            </IonButton> : null}
+                                Fortsetzen ({feed.previous_status})
+                            </IonButton> : <>
+                                <IonButton color="primary"
+                                           onClick={importFeed}>
+                                    Herunterladen
+                                </IonButton>
+                                <IonButton color="primary"
+                                           onClick={processFeed}>
+                                    Importieren
+                                </IonButton>
+                            </>}
                     </IonItem>
                     <IonItem>
                         <IonButton color="danger"
                                    onClick={deleteFeed}>
-                             Entfernen
+                            Entfernen
                         </IonButton>
+                        <IonButton color="danger"
+                                   onClick={deleteFeedDownload}>
+                            Download löschen
+                        </IonButton>
+                        <IonButton color="danger"
+                                   onClick={deleteFeedData}>
+                            Daten löschen
+                        </IonButton>
+                    </IonItem>
+                    <IonItem>
                         {feed?.status && !stoppedStatuses.includes(feed?.status) ?
                             <IonButton color="warning"
                                        onClick={abortFeed}>
                                 Abbrechen
-                            </IonButton> : null}
-                        <IonButton color="warning"
-                                   onClick={resetFeed}>
-                            Zurücksetzen
-                        </IonButton>
+                            </IonButton> :
+                            <IonButton color="warning"
+                                       onClick={resetFeed}>
+                                Fortschritt zurücksetzen
+                            </IonButton>}
                     </IonItem>
                 </IonList>
             </IonContent>

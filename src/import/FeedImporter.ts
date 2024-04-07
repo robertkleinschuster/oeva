@@ -73,9 +73,9 @@ class FeedImporter {
 
         if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
-            await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
+            await this.updateStatus(feedId, TransitFeedStatus.SAVING)
         }
-        if (feed?.status === TransitFeedStatus.IMPORTING) {
+        if (feed?.status === TransitFeedStatus.SAVING) {
             await this.importData(feedId)
             await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
         }
@@ -164,7 +164,7 @@ class FeedImporter {
         for (const file of files) {
             await this.feedDb.transit.update(feedId, {
                 progress: `${file.name}, ${done} / ${originalDone + files.length}`,
-                status: TransitFeedStatus.IMPORTING
+                status: TransitFeedStatus.SAVING
             });
 
             const tableName = getTableName(file.name);
