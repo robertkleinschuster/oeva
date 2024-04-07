@@ -4,11 +4,9 @@ import {FeedImporter} from "./FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
 import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB";
-import NoSleep from 'nosleep.js';
 
 export class FeedRunner {
     running: number | undefined
-    private nosleep = new NoSleep()
     private audio: HTMLAudioElement | undefined
 
     async run() {
@@ -20,7 +18,6 @@ export class FeedRunner {
                     .first()
                 if (feed) {
                     this.running = feed.id
-                    await this.nosleep.enable()
                     this.backgroundExec();
                     try {
                         const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
@@ -37,7 +34,6 @@ export class FeedRunner {
             } catch (e) {
                 console.log(e)
             }
-            this.nosleep.disable()
             this.audio?.pause()
             this.running = undefined
         }
