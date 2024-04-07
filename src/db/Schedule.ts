@@ -52,8 +52,8 @@ export interface TripStop {
     stop_platform: string | undefined;
     is_origin: boolean;
     is_destination: boolean;
-    service_start_date: Date;
-    service_end_date: Date;
+    service_start_date: Date | undefined;
+    service_end_date: Date | undefined;
     service_weekdays: number;
     service_exceptions: Map<number, ExceptionType>;
 }
@@ -75,7 +75,7 @@ export interface Trip {
     name: string;
     direction: string;
     route_type: RouteType
-    service: GTFSCalendar;
+    service: GTFSCalendar | undefined;
     service_exceptions: Map<number, ExceptionType>;
     keywords: string[];
 }

@@ -3,7 +3,6 @@ import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedDB} from "../db/FeedDb";
 import {GTFSDB} from "../db/GTFSDB";
 import {createStop, createTrip, createTripStop} from "./TripStopFactory";
-import {as} from "vitest/dist/reporters-5f784f42";
 
 export class FeedProcessor {
     private offset: number = 0
@@ -35,7 +34,7 @@ export class FeedProcessor {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
-                progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.trip_short_name} ${trip?.trip_headsign}`,
+                progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.trip_short_name ?? ''} ${trip?.trip_headsign ?? ''}`,
                 offset: this.offset
             });
         }, 1500)
@@ -157,7 +156,7 @@ export class FeedProcessor {
                     }
                 )
 
-                if (route && service) {
+                if (route) {
                     await this.scheduleDb.trip.put(createTrip(feedId, trip, route, service, exceptions))
                 }
 

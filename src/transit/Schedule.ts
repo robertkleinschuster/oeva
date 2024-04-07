@@ -34,8 +34,10 @@ export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
             return false
         }
     }
-    return (tripStop.service_weekdays & extractWeekday(date)) !== 0
+    return tripStop.service_start_date !== undefined
+        && tripStop.service_end_date !== undefined
         && date >= tripStop.service_start_date
         && date <= tripStop.service_end_date
+        && (tripStop.service_weekdays & extractWeekday(date)) !== 0
 }
 

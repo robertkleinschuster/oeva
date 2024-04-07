@@ -21,19 +21,20 @@ export class TripStopRepository {
         const cells = gridDisk(stop.h3_cell, ringSize);
         const filters = cells.map(cell => [cell, hours]);
 
-        const tripStops = []
+        const tripStops = new Map<string, TripStop>
         for (const filter of filters) {
-            tripStops.push(...await scheduleDB.trip_stop
+            await scheduleDB.trip_stop
                 .where('[h3_cell+hour]')
                 .equals(filter)
-                .toArray())
+                .each(tripStop => {
+                    if (isTripStopActiveOn(tripStop, date)) {
+                        tripStops.set(tripStop.id, tripStop)
+                    }
+                })
         }
 
-        return tripStops
-            .sort((a, b) => a.sequence_at_stop - b.sequence_at_stop)
-            .filter(tripStop =>
-            isTripStopActiveOn(tripStop, date)
-        );
+        return Array.from(tripStops.values())
+            .sort((a, b) => a.sequence_at_stop - b.sequence_at_stop);
     }
 }
 

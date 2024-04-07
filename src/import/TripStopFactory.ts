@@ -50,13 +50,16 @@ export function createTripStop(
     }
 
     let weekdays = 0;
-    weekdays += trip.service.monday ? Weekday.Monday : 0;
-    weekdays += trip.service.tuesday ? Weekday.Tuesday : 0;
-    weekdays += trip.service.wednesday ? Weekday.Wednesday : 0;
-    weekdays += trip.service.thursday ? Weekday.Thursday : 0;
-    weekdays += trip.service.friday ? Weekday.Friday : 0;
-    weekdays += trip.service.saturday ? Weekday.Saturday : 0;
-    weekdays += trip.service.sunday ? Weekday.Sunday : 0;
+    if (trip.service) {
+        weekdays += trip.service.monday ? Weekday.Monday : 0;
+        weekdays += trip.service.tuesday ? Weekday.Tuesday : 0;
+        weekdays += trip.service.wednesday ? Weekday.Wednesday : 0;
+        weekdays += trip.service.thursday ? Weekday.Thursday : 0;
+        weekdays += trip.service.friday ? Weekday.Friday : 0;
+        weekdays += trip.service.saturday ? Weekday.Saturday : 0;
+        weekdays += trip.service.sunday ? Weekday.Sunday : 0;
+    }
+
 
     return {
         id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
@@ -76,8 +79,8 @@ export function createTripStop(
         boarding,
         stop_name: stop.name,
         stop_platform: stop.platform,
-        service_start_date: parseServiceDate(trip.service.start_date),
-        service_end_date: parseServiceDate(trip.service.end_date),
+        service_start_date: trip.service ? parseServiceDate(trip.service.start_date) : undefined,
+        service_end_date: trip.service ? parseServiceDate(trip.service.end_date) : undefined,
         service_exceptions: trip.service_exceptions,
         service_weekdays: weekdays,
     };
@@ -110,13 +113,23 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
 }
 
 
-export function createTrip(feedId: number, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar, exceptions: GTFSCalendarDate[]): Trip {
+export function createTrip(feedId: number, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
+    let name = trip.trip_short_name;
+
+    if (!name) {
+        name = route.route_short_name
+    }
+
+    if (!name) {
+        name = route.route_long_name;
+    }
+
     return {
         id: `${feedId}-${trip.trip_id}`,
         feed_id: feedId,
         feed_trip_id: trip.trip_id,
         route_type: route.route_type,
-        name: trip.trip_short_name ? trip.trip_short_name : route.route_short_name,
+        name: name?.trim(),
         direction: trip.trip_headsign ?? '',
         keywords: tokenizer.tokenize(`${trip.trip_short_name} ${route.route_short_name}`).map(token => token.value),
         service,

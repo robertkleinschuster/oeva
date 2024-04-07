@@ -1,8 +1,11 @@
 import {
     IonButton,
     IonButtons,
+    IonCheckbox,
     IonContent,
     IonHeader,
+    IonItem,
+    IonList,
     IonModal,
     IonTitle,
     IonToolbar,
@@ -16,6 +19,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [ifopt, setIFOPT] = useState(false)
+    const [startImport, setStartImport] = useState(true)
 
     const modal = useRef<HTMLIonModalElement>(null)
 
@@ -24,7 +28,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             name,
             url,
             is_ifopt: ifopt,
-            status: TransitFeedStatus.DRAFT
+            status: startImport ? TransitFeedStatus.DOWNLOADING : TransitFeedStatus.DRAFT
         })
         modal.current?.dismiss()
     }
@@ -60,6 +64,16 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             </IonHeader>
             <IonContent>
                 <FeedForm onChange={onChange}/>
+                <IonList>
+                    <IonItem>
+                        <IonCheckbox
+                            checked={startImport}
+                            onIonChange={e => setStartImport(!startImport)}
+                        >
+                            Import direkt starten
+                        </IonCheckbox>
+                    </IonItem>
+                </IonList>
             </IonContent>
         </IonModal>
     );
