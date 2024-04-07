@@ -4,9 +4,11 @@ import {FeedImporter} from "./FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
 import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB";
+import NoSleep from 'nosleep.js';
 
 export class FeedRunner {
     running: number | undefined
+    private nosleep = new NoSleep()
 
     async run() {
         if (this.running === undefined) {
@@ -17,6 +19,7 @@ export class FeedRunner {
                     .first()
                 if (feed) {
                     this.running = feed.id
+                    await this.nosleep.enable()
                     try {
                         const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
                         await dataImporter.run(feed.id!)
@@ -32,6 +35,7 @@ export class FeedRunner {
             } catch (e) {
                 console.log(e)
             }
+            this.nosleep.disable()
             this.running = undefined
         }
 
