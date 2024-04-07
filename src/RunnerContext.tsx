@@ -41,7 +41,7 @@ export const RunnerContextProvider = ({children, runner}: { children: ReactNode,
                 } else {
                     nosleep.disable()
                 }
-            }} labelPlacement="stacked">Bildschirm ein</IonToggle>
+            }} labelPlacement="stacked" checked={nosleep.isEnabled}>Bildschirm ein</IonToggle>
             <IonLabel>
                 <FeedStatus feed={runningFeed}/>
             </IonLabel>
