@@ -3,6 +3,7 @@ import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION} from "../db/Sche
 import Tokenizer from "wink-tokenizer";
 import {convertStopTimeToInt, parseServiceDate} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
+import {transliterate} from "transliteration";
 
 export function createTripStop(
     trip: Trip,
@@ -89,11 +90,22 @@ export function createTripStop(
 const platformInStopNameRegex = /( [0-9]{1,2}| [A-X]| [0-9]{1,2}[a-d])$/
 const platformCodeRegex = /([0-9]{1,2}|[A-X]|[0-9]{1,2}[a-d])$/
 const tokenizer = new Tokenizer()
+
 tokenizer.defineConfig({
     word: true,
     number: true,
     punctuation: true,
-    ordinal: true,
+    ordinal: false,
+    url: false,
+    symbol: false,
+    mention: false,
+    time: false,
+    emoji: false,
+    email: false,
+    emoticon: false,
+    hashtag: false,
+    currency: false,
+    quoted_phrase: false
 })
 
 export function createStop(feedId: number, stop: GTFSStop): Stop {
@@ -101,13 +113,16 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
     const name = platform && stop.stop_name.endsWith(platform) ?
         stop.stop_name.substring(0, stop.stop_name.length - platform.length) : stop.stop_name
 
+    const tokens = tokenizer.tokenize(stop.stop_name).map(token => token.value);
+    const transliterations = tokens.map(token => transliterate(token))
+
     return {
         id: `${feedId}-${stop.stop_id}`,
         feed_id: feedId,
         feed_stop_id: stop.stop_id,
         name: name.trim(),
         platform: platform?.trim(),
-        keywords: tokenizer.tokenize(stop.stop_name).map(token => token.value),
+        keywords: [...tokens, ...transliterations, name.trim(), transliterate(name.trim())],
         h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
     };
 }

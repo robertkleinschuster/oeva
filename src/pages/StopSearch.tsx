@@ -16,6 +16,7 @@ import {scheduleDB} from "../db/ScheduleDB";
 import Tokenizer from "wink-tokenizer";
 import Fuse from "fuse.js";
 import {useLiveQuery} from "dexie-react-hooks";
+import {transliterate} from "transliteration";
 
 const StopSearch: React.FC = () => {
     const [keyword, setKeyword] = useState('')
@@ -24,6 +25,10 @@ const StopSearch: React.FC = () => {
         if (keyword.length > 1) {
             const tokenizer = new Tokenizer
             const keywords = tokenizer.tokenize(keyword).map(token => token.value)
+            const transliterations = keywords.map(token => transliterate(token))
+            keywords.push(...transliterations)
+            keywords.push(keyword)
+            keywords.push(transliterate(keyword))
 
             const stops = [];
             for (const keyword of keywords) {
@@ -35,7 +40,7 @@ const StopSearch: React.FC = () => {
                 )
             }
 
-            const stopMap = new Map(stops.map(stop => [stop.id, stop]))
+            const stopMap = new Map(stops.map(stop => [stop.id, {...stop, name_transliterated: transliterate(stop.name)}]))
 
             if (keywords.length === 1 && stopMap.size > 500) {
                 return Promise.resolve([])
@@ -44,12 +49,12 @@ const StopSearch: React.FC = () => {
             const fuse = new Fuse(
                 Array.from(stopMap.values()),
                 {
-                    keys: ['name'],
-                    threshold: 0.4,
+                    keys: ['name', 'name_transliterated'],
+                    threshold: 0.5,
                     useExtendedSearch: true,
                 }
             )
-            return fuse.search(keyword).map(result => result.item)
+            return fuse.search(transliterate(keyword)).map(result => result.item)
         }
         return Promise.resolve([])
     }, [keyword])
