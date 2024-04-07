@@ -46,8 +46,8 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     )
 
     useEffect(() => {
-        if (stop?.h3_cell) {
-            setRingRadius(calcRingRadius(stop.h3_cell, ringSize))
+        if (stop) {
+            setRingRadius(calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSize))
         }
     }, [ringSize, stop]);
 
@@ -115,7 +115,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                                 {tripStop.trip_name} {tripStop.direction}
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
-                                {stop?.h3_cell && stop?.h3_cell !== tripStop.h3_cell ? <>{calcDistance(stop.h3_cell, tripStop.h3_cell)} m: </> : ''}{tripStop.stop_name}{tripStop.stop_platform ? <>:
+                                {stop ? <>{calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m: </> : ''}{tripStop.stop_name}{tripStop.stop_platform ? <>:
                                 Steig {tripStop.stop_platform}</> : null}
                             </IonNote>
                         </IonLabel>

@@ -39,7 +39,8 @@ export interface TripStop {
     stop_id: string;
     trip_id: string;
     feed_id: number;
-    h3_cell: string;
+    h3_cell_le1: number; // little endian first part
+    h3_cell_le2: number; // little endian second part
     route_type: RouteType;
     boarding: Boarding;
     sequence_in_trip: number;
@@ -65,7 +66,8 @@ export interface Stop {
     feed_stop_id: string;
     name: string;
     platform?: string;
-    h3_cell: string;
+    h3_cell_le1: number; // little endian first part
+    h3_cell_le2: number; // little endian second part
     keywords: string[];
 }
 

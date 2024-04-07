@@ -7,7 +7,8 @@ import {
     IonList,
     IonModal,
     IonTitle,
-    IonToolbar, useIonLoading,
+    IonToolbar,
+    useIonLoading,
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
@@ -57,6 +58,13 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await scheduleDB.trip.where({feed_id: feedId}).delete()
         await scheduleDB.stop.where({feed_id: feedId}).delete()
         await scheduleDB.trip_stop.where({feed_id: feedId}).delete()
+        await feedDb.transit.update(feed!, {
+            previous_status: TransitFeedStatus.PROCESSING,
+            status: TransitFeedStatus.ABORTED,
+            progress: undefined,
+            step: undefined,
+            offset: undefined
+        })
         await dismissLoading()
     }
 
@@ -64,6 +72,13 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await presentLoading('Löschen...')
         const gtfsDB = new GTFSDB(feed!.id!)
         await gtfsDB.delete()
+        await feedDb.transit.update(feed!, {
+            previous_status: TransitFeedStatus.DOWNLOADING,
+            status: TransitFeedStatus.ABORTED,
+            progress: undefined,
+            step: undefined,
+            offset: undefined
+        })
         await dismissLoading()
     }
 

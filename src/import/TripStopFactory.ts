@@ -4,6 +4,7 @@ import Tokenizer from "wink-tokenizer";
 import {convertStopTimeToInt, parseServiceDate} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
 import {transliterate} from "transliteration";
+import {H3Cell} from "../transit/H3Cell";
 
 export function createTripStop(
     trip: Trip,
@@ -71,7 +72,8 @@ export function createTripStop(
         sequence_in_trip: stopTime.stop_sequence,
         sequence_at_stop: hour * 60 + minute,
         hour: hour,
-        h3_cell: stop.h3_cell,
+        h3_cell_le1: stop.h3_cell_le1,
+        h3_cell_le2: stop.h3_cell_le2,
         departure_time: is_destination || stopTime.departure_time == undefined ? undefined : convertStopTimeToInt(stopTime.departure_time),
         arrival_time: is_origin || stopTime.arrival_time === undefined ? undefined : convertStopTimeToInt(stopTime.arrival_time),
         trip_name: trip.name,
@@ -109,6 +111,8 @@ tokenizer.defineConfig({
     quoted_phrase: false
 })
 
+const cell = new H3Cell()
+
 export function createStop(feedId: number, stop: GTFSStop): Stop {
     const platform = stop.platform_code?.match(platformCodeRegex)?.pop() || stop.stop_name.match(platformInStopNameRegex)?.pop()
     const name = platform && stop.stop_name.endsWith(platform) ?
@@ -117,6 +121,9 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
     const tokens = tokenizer.tokenize(stop.stop_name).map(token => token.value);
     const transliterations = tokens.map(token => transliterate(token))
 
+    cell.fromIndex(latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION))
+    const cellIndex = cell.toIndexInput()
+
     return {
         id: `${feedId}-${stop.stop_id}`,
         feed_id: feedId,
@@ -124,7 +131,8 @@ export function createStop(feedId: number, stop: GTFSStop): Stop {
         name: name.trim(),
         platform: platform?.trim(),
         keywords: [...tokens, ...transliterations, name.trim(), transliterate(name.trim())],
-        h3_cell: latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION),
+        h3_cell_le1: cellIndex[0] as number,
+        h3_cell_le2: cellIndex[1] as number
     };
 }
 

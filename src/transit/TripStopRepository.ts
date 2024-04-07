@@ -2,6 +2,7 @@ import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
 import {TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
+import {H3Cell} from "./H3Cell";
 
 export class TripStopRepository {
     async findByTrip(tripId: string): Promise<TripStop[]> {
@@ -18,13 +19,17 @@ export class TripStopRepository {
         }
 
         const hours = date.getHours();
-        const cells = gridDisk(stop.h3_cell, ringSize);
-        const filters = cells.map(cell => [cell, hours]);
+        const cells = gridDisk([stop.h3_cell_le1, stop.h3_cell_le2], ringSize);
+        const cellObj = new H3Cell()
+        const filters = cells.map(cell => {
+            cellObj.fromIndex(cell)
+            return [...cellObj.toIndexInput(), hours]
+        });
 
         const tripStops = new Map<string, TripStop>
         for (const filter of filters) {
             await scheduleDB.trip_stop
-                .where('[h3_cell+hour]')
+                .where('[h3_cell_le1+h3_cell_le2+hour]')
                 .equals(filter)
                 .each(tripStop => {
                     if (isTripStopActiveOn(tripStop, date)) {

@@ -39,19 +39,16 @@ describe('TripStopFactory', () => {
         keywords: [],
         feed_stop_id: '1',
         feed_id: 9,
-        h3_cell: latLngToCell(1, 1, H3_RESOLUTION)
-
+        h3_cell_le1: 0,
+        h3_cell_le2: 0,
     }
     it('should throw error for mismatched data', () => {
         expect(() => createTripStop({
             ...trip,
             feed_trip_id: '99'
         }, stop, stopTime)).toThrowError('Data mismatch')
+        expect(() => createTripStop(trip, stop, {...stopTime, stop_id: '99'})).toThrowError('Data mismatch')
         expect(() => createTripStop(trip, stop, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
-        expect(() => createTripStop(trip, {
-            ...stop,
-            h3_cell: ''
-        }, {...stopTime, trip_id: '99'})).toThrowError('Data mismatch')
 
     })
     it('should throw error for stop time without time', () => {
