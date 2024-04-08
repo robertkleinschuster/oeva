@@ -40,12 +40,11 @@ const StopSearch: React.FC = () => {
                 )
             }
 
-            const stopMap = new Map(stops.map(stop => [stop.id, stop]))
-
-            if (keywords.length === 1 && stopMap.size > 500) {
+            if (keywords.length === 1 && stops.length > 500) {
                 return Promise.resolve([])
             }
 
+            const stopMap = new Map(stops.map(stop => [stop.id, stop]))
             const fuse = new Fuse(
                 Array.from(stopMap.values()),
                 {
