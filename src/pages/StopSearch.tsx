@@ -23,25 +23,29 @@ const StopSearch: React.FC = () => {
 
     const stops = useLiveQuery(async () => {
         if (keyword.length > 1) {
-            const tokenizer = new Tokenizer
-            const keywords = tokenizer.tokenize(keyword).map(token => token.value)
-            const transliterations = keywords.map(token => transliterate(token))
-            keywords.push(...transliterations)
-            keywords.push(keyword)
-            keywords.push(transliterate(keyword))
+            const stops = await scheduleDB.stop
+                .where('keywords')
+                .equalsIgnoreCase(keyword)
+                .toArray();
 
-            const stops = [];
-            for (const keyword of keywords) {
-                stops.push(...await scheduleDB.stop
-                    .where('keywords')
-                    .startsWithIgnoreCase(keyword)
-                    .distinct()
-                    .toArray()
-                )
-            }
+            if (stops.length === 0) {
+                const tokenizer = new Tokenizer
+                const keywords = tokenizer.tokenize(keyword).map(token => token.value)
+                const transliterations = keywords.map(token => transliterate(token))
+                keywords.push(...transliterations)
+                keywords.push(keyword)
+                keywords.push(transliterate(keyword))
 
-            if (keywords.length === 1 && stops.length > 500) {
-                return Promise.resolve([])
+                for (const keyword of keywords) {
+                    stops.push(...await scheduleDB.stop
+                        .where('keywords')
+                        .startsWithIgnoreCase(keyword)
+                        .toArray()
+                    )
+                }
+                if (keywords.length === 1 && stops.length > 500) {
+                    return Promise.resolve([])
+                }
             }
 
             const stopMap = new Map(stops.map(stop => [stop.id, stop]))
