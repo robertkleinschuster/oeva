@@ -32,7 +32,6 @@ describe('FeedImporter', () => {
         expect(feedDb.transit.add).toHaveBeenCalledWith({
             name,
             url,
-            is_ifopt: true,
             timestamp: expect.any(Number),
             download_progress: 0,
             downloaded_megabytes: 0,
