@@ -16,53 +16,18 @@ import {scheduleDB} from "../db/ScheduleDB";
 import Tokenizer from "wink-tokenizer";
 import Fuse from "fuse.js";
 import {useLiveQuery} from "dexie-react-hooks";
-import {transliterate} from "transliteration";
-import {Stop} from "../db/Schedule";
+import {searchStop} from "../transit/StopSearch";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
 
         const stops = useLiveQuery(async () => {
                 if (keyword.length > 1) {
-                    const tokenizer = new Tokenizer()
-                    const keywords = tokenizer.tokenize(keyword).map(token => transliterate(token.value))
-                    const stops = new Map<string, Stop>()
-
-                    await scheduleDB.stop
-                        .where('keywords')
-                        .equalsIgnoreCase(transliterate(keyword))
-                        .each(stop => stops.set(stop.id, stop));
-
-                    if (keywords.length === 1 && stops.size > 500) {
-                        return Promise.resolve([])
-                    }
-
-                    if (stops.size === 0) {
-                        for (const keyword of keywords) {
-                            await scheduleDB.stop
-                                .where('keywords')
-                                .startsWithIgnoreCase(keyword)
-                                .each(stop => stops.set(stop.id, stop));
-                        }
-                    }
-
-                    const fuse = new Fuse(
-                        Array.from(stops.values()),
-                        {
-                            keys: ['name', 'keywords'],
-                            threshold: 0.4,
-                            useExtendedSearch: true,
-                        }
-                    )
-                    return fuse.search(transliterate(keyword)).map(result => result.item)
+                    return searchStop(keyword)
                 }
                 return Promise.resolve([])
             }, [keyword]
         )
-
-        useEffect(() => {
-
-        }, [keyword]);
 
         return (
             <IonPage>
@@ -71,7 +36,7 @@ const StopSearch: React.FC = () => {
                         <IonButtons slot="start">
                             <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                         </IonButtons>
-                        <IonTitle>Haltepunkte</IonTitle>
+                        <IonTitle>Stationen</IonTitle>
                     </IonToolbar>
                 </IonHeader>
                 <IonContent>

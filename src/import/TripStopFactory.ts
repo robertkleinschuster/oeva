@@ -125,6 +125,7 @@ export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
         id: `${feed.id}-${stop.stop_id}`,
         feed_id: feed.id,
         feed_stop_id: stop.stop_id,
+        feed_parent_station: stop.parent_station === "" ? undefined : stop.parent_station,
         name: name,
         platform: platform?.trim(),
         keywords: keywords,

@@ -64,6 +64,7 @@ export interface Stop {
     id: string;
     feed_id: number;
     feed_stop_id: string;
+    feed_parent_station?: string;
     name: string;
     platform?: string;
     h3_cell_le1: number; // little endian first part
