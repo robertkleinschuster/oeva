@@ -36,10 +36,10 @@ const StopSearch: React.FC = () => {
                             .toArray()
                         )
 
-                        const tokenizer = new Tokenizer
-                        const keywords = tokenizer.tokenize(keyword).map(token => token.value)
-
                         if (stops.length === 0) {
+                            const tokenizer = new Tokenizer
+                            const keywords = tokenizer.tokenize(keyword).map(token => token.value)
+
                             for (const keyword of keywords) {
                                 stops.push(...await scheduleDB.stop
                                     .where('keywords')
@@ -47,21 +47,22 @@ const StopSearch: React.FC = () => {
                                     .toArray()
                                 )
                             }
-                        }
 
-                        if (stops.length === 0) {
-                            const transliterations = keywords.map(token => transliterate(token))
-                            for (const transliteration of transliterations) {
-                                stops.push(...await scheduleDB.stop
-                                    .where('keywords')
-                                    .startsWithIgnoreCase(transliteration)
-                                    .toArray()
-                                )
+
+                            if (stops.length === 0) {
+                                const transliterations = keywords.map(token => transliterate(token))
+                                for (const transliteration of transliterations) {
+                                    stops.push(...await scheduleDB.stop
+                                        .where('keywords')
+                                        .startsWithIgnoreCase(transliteration)
+                                        .toArray()
+                                    )
+                                }
                             }
-                        }
 
-                        if (keywords.length === 1 && stops.length > 500) {
-                            return Promise.resolve([])
+                            if (keywords.length === 1 && stops.length > 500) {
+                                return Promise.resolve([])
+                            }
                         }
                     }
 
