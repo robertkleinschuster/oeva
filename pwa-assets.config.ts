@@ -14,21 +14,21 @@ export default defineConfig({
             apple: {
                 sizes: minimal2023Preset.apple.sizes,
                 resizeOptions: {
-                    background: '#5598AD',
+                    background: '#6ab9d2',
                     fit: 'contain'
                 },
             },
             maskable: {
                 sizes: minimal2023Preset.maskable.sizes,
                 resizeOptions: {
-                    background: '#5598AD',
+                    background: '#6ab9d2',
                     fit: 'contain'
                 },
             }
         },
         {
             padding: 0.3,
-            resizeOptions: {fit: 'contain', background: '#5598AD'},
+            resizeOptions: {fit: 'contain', background: '#5ba4bb'},
             darkResizeOptions: {fit: 'contain', background: '#3b6975'},
             linkMediaOptions: {
                 log: true,
