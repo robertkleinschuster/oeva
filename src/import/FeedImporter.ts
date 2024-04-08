@@ -56,7 +56,6 @@ class FeedImporter {
         return feedDb.transit.add({
             name,
             url,
-            is_ifopt: is_ifopt,
             status: TransitFeedStatus.DRAFT,
             downloaded_megabytes: 0,
             download_progress: 0,

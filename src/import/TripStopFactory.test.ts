@@ -1,8 +1,8 @@
 import {GTFSStop, GTFSStopTime} from "../db/GTFS";
 import {createStop, createTripStop} from "./TripStopFactory";
-import {Boarding, H3_RESOLUTION, RouteType, Stop, Trip} from "../db/Schedule";
+import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
-import {latLngToCell} from "h3-js";
+import {TransitFeed, TransitFeedStatus} from "../db/Feed";
 
 describe('TripStopFactory', () => {
     const trip: Trip = {
@@ -41,6 +41,12 @@ describe('TripStopFactory', () => {
         feed_id: 9,
         h3_cell_le1: 0,
         h3_cell_le2: 0,
+    }
+    const feed: TransitFeed = {
+        id: 1,
+        name: '',
+        url: '',
+        status: TransitFeedStatus.DONE,
     }
     it('should throw error for mismatched data', () => {
         expect(() => createTripStop({
@@ -117,7 +123,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop = createStop(1, gtfsStop)
+        const stop = createStop(feed, gtfsStop)
         expect(stop.platform).toEqual('1b')
         expect(stop.name).toEqual('Graz Hbf')
 
@@ -127,7 +133,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop2 = createStop(1, gtfsStop2)
+        const stop2 = createStop(feed, gtfsStop2)
         expect(stop2.platform).toEqual('1')
         expect(stop2.name).toEqual('Graz Hbf')
 
@@ -137,7 +143,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop3 = createStop(1, gtfsStop3)
+        const stop3 = createStop(feed, gtfsStop3)
         expect(stop3.platform).toEqual('X')
         expect(stop3.name).toEqual('Graz Hbf')
 
@@ -147,7 +153,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop4 = createStop(1, gtfsStop4)
+        const stop4 = createStop(feed, gtfsStop4)
         expect(stop4.platform).toEqual('12')
         expect(stop4.name).toEqual('Graz Hbf')
     })
@@ -159,7 +165,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop = createStop(1, gtfsStop)
+        const stop = createStop(feed, gtfsStop)
         expect(stop.platform).toEqual('1b')
         expect(stop.name).toEqual('Graz Hbf')
 
@@ -170,7 +176,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop2 = createStop(1, gtfsStop2)
+        const stop2 = createStop(feed, gtfsStop2)
         expect(stop2.platform).toEqual('1')
         expect(stop2.name).toEqual('Graz Hbf')
 
@@ -181,7 +187,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop3 = createStop(1, gtfsStop3)
+        const stop3 = createStop(feed, gtfsStop3)
         expect(stop3.platform).toEqual('X')
         expect(stop3.name).toEqual('Graz Hbf')
 
@@ -192,7 +198,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop4 = createStop(1, gtfsStop4)
+        const stop4 = createStop(feed, gtfsStop4)
         expect(stop4.platform).toEqual('X')
         expect(stop4.name).toEqual('Graz Hbf')
     })
@@ -204,7 +210,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop = createStop(1, gtfsStop)
+        const stop = createStop(feed, gtfsStop)
         expect(stop.platform).toEqual('1c')
         expect(stop.name).toEqual('Graz Hbf 1b')
 
@@ -215,7 +221,7 @@ describe('TripStopFactory', () => {
             stop_lat: 0,
             stop_lon: 0,
         }
-        const stop2 = createStop(1, gtfsStop2)
+        const stop2 = createStop(feed, gtfsStop2)
         expect(stop2.platform).toEqual('1')
         expect(stop2.name).toEqual('Graz Hbf 99')
     })

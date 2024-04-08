@@ -18,7 +18,7 @@ import {TransitFeedStatus} from "../db/Feed";
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
-    const [ifopt, setIFOPT] = useState(false)
+    const [keywords, setKeywords] = useState<string|undefined>('')
     const [startImport, setStartImport] = useState(true)
 
     const modal = useRef<HTMLIonModalElement>(null)
@@ -27,7 +27,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
         await feedDb.transit.add({
             name,
             url,
-            is_ifopt: ifopt,
+            keywords,
             status: startImport ? TransitFeedStatus.DOWNLOADING : TransitFeedStatus.DRAFT
         })
         modal.current?.dismiss()
@@ -37,10 +37,10 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
         return name.length && url.length;
     }
 
-    const onChange = async (name: string, url: string, ifopt: boolean) => {
+    const onChange = async (name: string, url: string, keywords: string) => {
         setName(name)
         setURL(url)
-        setIFOPT(ifopt)
+        setKeywords(keywords)
     }
 
     return (
@@ -53,7 +53,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
                     <IonTitle>Feed hinzufügen</IonTitle>
                     <IonButtons slot="end">
                         <IonButton
-                            onClick={(e) => {
+                            onClick={() => {
                                 if (validate()) {
                                     void save()
                                 }
@@ -68,7 +68,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
                     <IonItem>
                         <IonCheckbox
                             checked={startImport}
-                            onIonChange={e => setStartImport(!startImport)}
+                            onIonChange={() => setStartImport(!startImport)}
                         >
                             Import direkt starten
                         </IonCheckbox>

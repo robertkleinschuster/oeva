@@ -104,7 +104,7 @@ export class FeedProcessor {
 
         try {
             for (const stop of stops) {
-                await this.scheduleDb.stop.put(createStop(feedId, stop))
+                await this.scheduleDb.stop.put(createStop(feed, stop))
                 this.offset++;
             }
         } finally {
@@ -157,7 +157,7 @@ export class FeedProcessor {
                 )
 
                 if (route) {
-                    await this.scheduleDb.trip.put(createTrip(feedId, trip, route, service, exceptions))
+                    await this.scheduleDb.trip.put(createTrip(feed, trip, route, service, exceptions))
                 }
 
                 this.offset++;

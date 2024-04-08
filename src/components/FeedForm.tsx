@@ -4,18 +4,18 @@ import {IonInput, IonItem, IonList} from "@ionic/react";
 interface FeedFormProps {
     name?: string,
     url?: string,
-    ifopt?: boolean,
-    onChange: (name: string, url: string, ifopt: boolean) => void
+    keywords?: string,
+    onChange: (name: string, url: string, keywords: string) => void
 }
 
 const FeedForm: React.FC<FeedFormProps> = (props) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
-    const [ifopt, setIFOPT] = useState(false)
+    const [keywords, setKeywords] = useState('')
 
     useEffect(() => {
-        props.onChange(name, url, ifopt)
-    }, [ifopt, name, props, props.onChange, url]);
+        props.onChange(name, url, keywords)
+    }, [keywords, name, props, props.onChange, url]);
 
     useEffect(() => {
         if (props.name) {
@@ -24,8 +24,8 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
         if (props.url) {
             setURL(props.url)
         }
-        if (props.ifopt) {
-            setIFOPT(props.ifopt)
+        if (props.keywords) {
+            setKeywords(props.keywords)
         }
 
     }, [props]);
@@ -39,6 +39,16 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
                 value={name}
                 onInput={(e) => {
                     setName(String(e.currentTarget.value))
+                }}/>
+        </IonItem>
+        <IonItem>
+            <IonInput
+                label="Keywords"
+                labelPlacement="stacked"
+                placeholder=""
+                value={keywords}
+                onInput={(e) => {
+                    setKeywords(String(e.currentTarget.value))
                 }}/>
         </IonItem>
         <IonItem>

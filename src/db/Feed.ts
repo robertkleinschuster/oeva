@@ -25,10 +25,10 @@ export interface TransitFeed {
     id?: number;
     url: string;
     name: string;
+    keywords?: string,
     step?: TransitFeedStep
     offset?: number;
     progress?: string;
-    is_ifopt: boolean;
     downloaded_megabytes?: number;
     download_progress?: number;
     status: TransitFeedStatus;

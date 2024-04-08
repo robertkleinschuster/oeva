@@ -17,58 +17,37 @@ import Tokenizer from "wink-tokenizer";
 import Fuse from "fuse.js";
 import {useLiveQuery} from "dexie-react-hooks";
 import {transliterate} from "transliteration";
+import {Stop} from "../db/Schedule";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
 
         const stops = useLiveQuery(async () => {
                 if (keyword.length > 1) {
-                    const stops = await scheduleDB.stop
+                    const tokenizer = new Tokenizer()
+                    const keywords = tokenizer.tokenize(keyword).map(token => transliterate(token.value))
+                    const stops = new Map<string, Stop>()
+
+                    await scheduleDB.stop
                         .where('keywords')
-                        .equalsIgnoreCase(keyword)
-                        .toArray();
+                        .equalsIgnoreCase(transliterate(keyword))
+                        .each(stop => stops.set(stop.id, stop));
 
-                    if (stops.length === 0) {
+                    if (keywords.length === 1 && stops.size > 500) {
+                        return Promise.resolve([])
+                    }
 
-                        stops.push(...await scheduleDB.stop
-                            .where('keywords')
-                            .startsWithIgnoreCase(transliterate(keyword))
-                            .toArray()
-                        )
-
-                        if (stops.length === 0) {
-                            const tokenizer = new Tokenizer
-                            const keywords = tokenizer.tokenize(keyword).map(token => token.value)
-
-                            for (const keyword of keywords) {
-                                stops.push(...await scheduleDB.stop
-                                    .where('keywords')
-                                    .startsWithIgnoreCase(keyword)
-                                    .toArray()
-                                )
-                            }
-
-
-                            if (stops.length === 0) {
-                                const transliterations = keywords.map(token => transliterate(token))
-                                for (const transliteration of transliterations) {
-                                    stops.push(...await scheduleDB.stop
-                                        .where('keywords')
-                                        .startsWithIgnoreCase(transliteration)
-                                        .toArray()
-                                    )
-                                }
-                            }
-
-                            if (keywords.length === 1 && stops.length > 500) {
-                                return Promise.resolve([])
-                            }
+                    if (stops.size === 0) {
+                        for (const keyword of keywords) {
+                            await scheduleDB.stop
+                                .where('keywords')
+                                .startsWithIgnoreCase(keyword)
+                                .each(stop => stops.set(stop.id, stop));
                         }
                     }
 
-                    const stopMap = new Map(stops.map(stop => [stop.id, stop]))
                     const fuse = new Fuse(
-                        Array.from(stopMap.values()),
+                        Array.from(stops.values()),
                         {
                             keys: ['name', 'keywords'],
                             threshold: 0.4,

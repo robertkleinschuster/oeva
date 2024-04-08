@@ -26,7 +26,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
-    const [ifopt, setIFOPT] = useState(false)
+    const [keywords, setKeywords] = useState<string|undefined>('')
 
     const modal = useRef<HTMLIonModalElement>(null)
 
@@ -34,7 +34,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         if (feed) {
             setName(feed.name)
             setURL(feed.url)
-            setIFOPT(feed.is_ifopt)
+            setKeywords(feed.keywords)
         }
     }, [feed]);
 
@@ -42,7 +42,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             name,
             url,
-            is_ifopt: ifopt
+            keywords
         })
     }
 
@@ -132,10 +132,10 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         return Boolean(name.length && url.length);
     }
 
-    const onChange = async (name: string, url: string, ifopt: boolean) => {
+    const onChange = async (name: string, url: string, keywords: string) => {
         setName(name)
         setURL(url)
-        setIFOPT(ifopt)
+        setKeywords(keywords)
     }
 
     return (
@@ -161,7 +161,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <FeedForm onChange={onChange} name={name} url={url} ifopt={ifopt}/>
+                <FeedForm onChange={onChange} name={name} url={url} keywords={keywords}/>
                 <IonList>
                     <IonItem>
                         {feed?.status && stoppedStatuses.includes(feed?.status)

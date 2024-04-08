@@ -5,6 +5,7 @@ import {convertStopTimeToInt, parseServiceDate} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
 import {transliterate} from "transliteration";
 import {H3Cell} from "../transit/H3Cell";
+import {TransitFeed} from "../db/Feed";
 
 export function createTripStop(
     trip: Trip,
@@ -113,31 +114,43 @@ tokenizer.defineConfig({
 
 const cell = new H3Cell()
 
-export function createStop(feedId: number, stop: GTFSStop): Stop {
-    const platform = stop.platform_code?.match(platformCodeRegex)?.pop() || stop.stop_name.match(platformInStopNameRegex)?.pop()
-    const name = platform && stop.stop_name.endsWith(platform) ?
-        stop.stop_name.substring(0, stop.stop_name.length - platform.length) : stop.stop_name
+export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
+    if (!feed.id) {
+        throw new Error('Invalid feed')
+    }
 
-    const tokens = tokenizer.tokenize(stop.stop_name).map(token => token.value);
-    const transliterations = tokens.map(token => transliterate(token))
+    const platform = stop.platform_code?.match(platformCodeRegex)?.pop() || stop.stop_name.match(platformInStopNameRegex)?.pop()
+
+    const name = platform && stop.stop_name.endsWith(platform) ?
+        stop.stop_name.substring(0, stop.stop_name.length - platform.length).trim() : stop.stop_name
+
+    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (feed.keywords ?? '')))
+        .map(token => token.value)
+        .filter(keyword => keyword.length > 1 || keyword.match(/[A-Za-z0-9]/));
+    keywords.push(transliterate(name))
+    keywords.push(transliterate(feed.name))
 
     cell.fromIndex(latLngToCell(stop.stop_lat, stop.stop_lon, H3_RESOLUTION))
     const cellIndex = cell.toIndexInput()
 
     return {
-        id: `${feedId}-${stop.stop_id}`,
-        feed_id: feedId,
+        id: `${feed.id}-${stop.stop_id}`,
+        feed_id: feed.id,
         feed_stop_id: stop.stop_id,
-        name: name.trim(),
+        name: name,
         platform: platform?.trim(),
-        keywords: [...tokens, ...transliterations, name.trim(), transliterate(name.trim())],
+        keywords: keywords,
         h3_cell_le1: cellIndex[0] as number,
         h3_cell_le2: cellIndex[1] as number
     };
 }
 
 
-export function createTrip(feedId: number, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
+export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
+    if (!feed.id) {
+        throw new Error('Invalid feed')
+    }
+
     let name = trip.trip_short_name;
 
     if (!name) {
@@ -148,14 +161,20 @@ export function createTrip(feedId: number, trip: GTFSTrip, route: GTFSRoute, ser
         name = route.route_long_name;
     }
 
+    name = (name ?? '').trim();
+
+    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (feed.keywords ?? ''))).map(token => token.value);
+    keywords.push(transliterate(name))
+    keywords.push(transliterate(feed.name))
+
     return {
-        id: `${feedId}-${trip.trip_id}`,
-        feed_id: feedId,
+        id: `${feed.id}-${trip.trip_id}`,
+        feed_id: feed.id,
         feed_trip_id: trip.trip_id,
         route_type: route.route_type,
-        name: name?.trim(),
+        name: name,
         direction: trip.trip_headsign ?? '',
-        keywords: tokenizer.tokenize(`${trip.trip_short_name} ${route.route_short_name}`).map(token => token.value),
+        keywords: keywords,
         service,
         service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
     }
