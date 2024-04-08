@@ -11,18 +11,9 @@ describe('TripStopFactory', () => {
         feed_trip_id: '2',
         direction: 'Budapest-Keleti',
         name: 'IC 311',
-        service: {
-            service_id: '4',
-            start_date: 20230101,
-            end_date: 20221231,
-            friday: 1,
-            monday: 1,
-            saturday: 1,
-            sunday: 1,
-            thursday: 1,
-            tuesday: 1,
-            wednesday: 1
-        },
+        service_weekdays: 127,
+        service_start_date: 20230101,
+        service_end_date: 20221231,
         route_type: RouteType.RAIL,
         service_exceptions: new Map,
         keywords: []

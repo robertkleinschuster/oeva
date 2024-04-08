@@ -1,7 +1,7 @@
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
 import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
-import {convertStopTimeToInt, parseServiceDate} from "../transit/DateTime";
+import {convertStopTimeToInt} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
 import {transliterate} from "transliteration";
 import {H3Cell} from "../transit/H3Cell";
@@ -52,18 +52,6 @@ export function createTripStop(
         boarding = Boarding.ON_CALL
     }
 
-    let weekdays = 0;
-    if (trip.service) {
-        weekdays += trip.service.monday ? Weekday.Monday : 0;
-        weekdays += trip.service.tuesday ? Weekday.Tuesday : 0;
-        weekdays += trip.service.wednesday ? Weekday.Wednesday : 0;
-        weekdays += trip.service.thursday ? Weekday.Thursday : 0;
-        weekdays += trip.service.friday ? Weekday.Friday : 0;
-        weekdays += trip.service.saturday ? Weekday.Saturday : 0;
-        weekdays += trip.service.sunday ? Weekday.Sunday : 0;
-    }
-
-
     return {
         id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
         feed_id: trip.feed_id,
@@ -84,10 +72,10 @@ export function createTripStop(
         boarding,
         stop_name: stop.name,
         stop_platform: stop.platform,
-        service_start_date: trip.service ? parseServiceDate(trip.service.start_date) : undefined,
-        service_end_date: trip.service ? parseServiceDate(trip.service.end_date) : undefined,
+        service_start_date: trip.service_start_date,
+        service_end_date: trip.service_end_date,
         service_exceptions: trip.service_exceptions,
-        service_weekdays: weekdays,
+        service_weekdays: trip.service_weekdays,
     };
 }
 
@@ -167,6 +155,17 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
     keywords.push(transliterate(name))
     keywords.push(transliterate(feed.name))
 
+    let weekdays = 0;
+    if (service) {
+        weekdays += service.monday ? Weekday.Monday : 0;
+        weekdays += service.tuesday ? Weekday.Tuesday : 0;
+        weekdays += service.wednesday ? Weekday.Wednesday : 0;
+        weekdays += service.thursday ? Weekday.Thursday : 0;
+        weekdays += service.friday ? Weekday.Friday : 0;
+        weekdays += service.saturday ? Weekday.Saturday : 0;
+        weekdays += service.sunday ? Weekday.Sunday : 0;
+    }
+
     return {
         id: `${feed.id}-${trip.trip_id}`,
         feed_id: feed.id,
@@ -175,7 +174,9 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
         name: name,
         direction: trip.trip_headsign ?? '',
         keywords: keywords,
-        service,
         service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
+        service_start_date: service?.start_date,
+        service_end_date: service?.end_date,
+        service_weekdays: weekdays,
     }
 }

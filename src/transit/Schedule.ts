@@ -24,8 +24,8 @@ function extractWeekday(date: Date): Weekday {
 }
 
 export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
-    const serviceDate = formatServiceDate(date);
-    const exceptionType = tripStop.service_exceptions?.get(serviceDate)
+    const dateAsInt = formatServiceDate(date);
+    const exceptionType = tripStop.service_exceptions?.get(dateAsInt)
     if (exceptionType !== undefined) {
         if (exceptionType === ExceptionType.RUNNING) {
             return true
@@ -36,8 +36,8 @@ export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
     }
     return tripStop.service_start_date !== undefined
         && tripStop.service_end_date !== undefined
-        && date >= tripStop.service_start_date
-        && date <= tripStop.service_end_date
+        && dateAsInt >= tripStop.service_start_date
+        && dateAsInt <= tripStop.service_end_date
         && (tripStop.service_weekdays & extractWeekday(date)) !== 0
 }
 

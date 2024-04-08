@@ -1,4 +1,4 @@
-import {ExceptionType, GTFSCalendar} from "./GTFS";
+import {ExceptionType} from "./GTFS";
 
 export enum RouteType {
     TRAM = 0,
@@ -54,8 +54,8 @@ export interface TripStop {
     stop_platform: string | undefined;
     is_origin: boolean;
     is_destination: boolean;
-    service_start_date: Date | undefined;
-    service_end_date: Date | undefined;
+    service_start_date: number | undefined;
+    service_end_date: number | undefined;
     service_weekdays: number;
     service_exceptions: Map<number, ExceptionType>;
 }
@@ -78,7 +78,9 @@ export interface Trip {
     name: string;
     direction: string;
     route_type: RouteType
-    service: GTFSCalendar | undefined;
+    service_start_date: number | undefined;
+    service_end_date: number | undefined;
+    service_weekdays: number;
     service_exceptions: Map<number, ExceptionType>;
     keywords: string[];
 }

@@ -2,7 +2,6 @@ import {isTripStopActiveOn} from "./Schedule";
 import {ExceptionType} from "../db/GTFS";
 import {describe, expect, it} from "vitest";
 import {Boarding, RouteType, TripStop} from "../db/Schedule";
-import {parseServiceDate} from "./DateTime";
 
 describe('Schedule', () => {
     const tripStop: TripStop = {
@@ -10,8 +9,8 @@ describe('Schedule', () => {
         trip_id: '1',
         stop_id: '2',
         feed_id: 1,
-        service_end_date: parseServiceDate(20241214),
-        service_start_date: parseServiceDate(20231214),
+        service_end_date: 20241214,
+        service_start_date: 20231214,
         service_exceptions: new Map,
         service_weekdays: 127,
         stop_platform: undefined,
