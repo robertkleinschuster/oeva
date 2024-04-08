@@ -124,6 +124,7 @@ export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
     return {
         id: `${feed.id}-${stop.stop_id}`,
         feed_id: feed.id,
+        feed_name: feed.name,
         feed_stop_id: stop.stop_id,
         feed_parent_station: stop.parent_station === "" ? undefined : stop.parent_station,
         name: name,
@@ -170,6 +171,7 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
     return {
         id: `${feed.id}-${trip.trip_id}`,
         feed_id: feed.id,
+        feed_name: feed.name,
         feed_trip_id: trip.trip_id,
         route_type: route.route_type,
         name: name,

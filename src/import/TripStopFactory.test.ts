@@ -8,6 +8,7 @@ describe('TripStopFactory', () => {
     const trip: Trip = {
         id: '9-2',
         feed_id: 9,
+        feed_name: '',
         feed_trip_id: '2',
         direction: 'Budapest-Keleti',
         name: 'IC 311',
@@ -27,6 +28,7 @@ describe('TripStopFactory', () => {
     const stop: Stop = {
         id: '9-1',
         name: 'Graz Hbf',
+        feed_name: '',
         keywords: [],
         feed_stop_id: '1',
         feed_id: 9,

@@ -81,6 +81,9 @@ class FeedImporter {
         if (feed?.status === TransitFeedStatus.PROCESSING) {
             await this.processData(feedId)
         }
+        if (feed?.status === TransitFeedStatus.PROCESSING_KEYWORDS) {
+            await this.processData(feedId, true)
+        }
     }
 
     async updateStatus(feedId: number, status: TransitFeedStatus) {
@@ -179,7 +182,7 @@ class FeedImporter {
         }
     }
 
-    async processData(feedId: number): Promise<void> {
+    async processData(feedId: number, skipTripStops = false): Promise<void> {
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found');
@@ -203,8 +206,10 @@ class FeedImporter {
                 step: TransitFeedStep.TRIPSTOPS,
                 offset: undefined
             });
-        } else if (feed.step === TransitFeedStep.TRIPSTOPS) {
+        } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
             await processor.processTripStops(feedId)
+            await this.updateStatus(feedId, TransitFeedStatus.DONE)
+        } if (skipTripStops) {
             await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
     }

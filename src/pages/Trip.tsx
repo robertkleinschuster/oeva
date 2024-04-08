@@ -40,7 +40,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{trip?.name} {trip?.direction}</IonTitle>
+                    <IonTitle>{trip?.name} {trip?.direction}<IonNote style={{display: 'block'}}>{trip?.feed_name}</IonNote></IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent>

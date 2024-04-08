@@ -6,15 +6,13 @@ import {
     IonItem,
     IonLabel,
     IonList,
+    IonNote,
     IonPage,
     IonSearchbar,
     IonTitle,
     IonToolbar, isPlatform
 } from '@ionic/react';
-import React, {useEffect, useState} from "react";
-import {scheduleDB} from "../db/ScheduleDB";
-import Tokenizer from "wink-tokenizer";
-import Fuse from "fuse.js";
+import React, {useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {searchStop} from "../transit/StopSearch";
 
@@ -52,7 +50,12 @@ const StopSearch: React.FC = () => {
                         {stops?.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
                                 key={stop.id}>
-                                <IonLabel>{stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}</IonLabel>
+                                <IonLabel>
+                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                </IonLabel>
+                            <IonNote slot="end">
+                                {stop.feed_name}
+                            </IonNote>
                             </IonItem>
                         )}
                     </IonList>

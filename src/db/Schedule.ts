@@ -63,6 +63,7 @@ export interface TripStop {
 export interface Stop {
     id: string;
     feed_id: number;
+    feed_name: string;
     feed_stop_id: string;
     feed_parent_station?: string;
     name: string;
@@ -75,6 +76,7 @@ export interface Stop {
 export interface Trip {
     id: string;
     feed_id: number;
+    feed_name: string;
     feed_trip_id: string;
     name: string;
     direction: string;

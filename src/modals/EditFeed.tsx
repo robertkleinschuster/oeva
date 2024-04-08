@@ -17,6 +17,7 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
+import {FeedProcessor} from "../import/FeedProcessor";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -44,6 +45,14 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             url,
             keywords
         })
+
+        if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
+            if (stoppedStatuses.includes(feed.status)) {
+                await feedDb.transit.update(feed!, {
+                    status: TransitFeedStatus.PROCESSING_KEYWORDS
+                })
+            }
+        }
     }
 
     const deleteFeed = async () => {

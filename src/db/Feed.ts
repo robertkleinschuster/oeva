@@ -3,6 +3,7 @@ export enum TransitFeedStatus {
     DOWNLOADING,
     SAVING,
     PROCESSING,
+    PROCESSING_KEYWORDS,
     DONE,
     ERROR,
     ABORTED,
