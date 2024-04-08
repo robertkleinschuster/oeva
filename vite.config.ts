@@ -14,6 +14,7 @@ export default defineConfig({
       injectRegister: "script",
       manifest: {
         name: 'OeVA Beta',
+        theme_color: '#000000'
       },
       pwaAssets: {
         config: true,
