@@ -115,8 +115,10 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                                 {tripStop.trip_name} {tripStop.direction}
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
-                                {stop ? <>{calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m: </> : ''}{tripStop.stop_name}{tripStop.stop_platform ? <>:
-                                Steig {tripStop.stop_platform}</> : null}
+                                {stop ? <>{calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m: </> : ''}
+                                {tripStop.stop_name !== stop?.name ? <>{tripStop.stop_name}</> : null}
+                                {tripStop.stop_name !== stop?.name && tripStop.stop_platform ? ': ' : ''}
+                                {tripStop.stop_platform ? <>Steig {tripStop.stop_platform}</> : null}
                             </IonNote>
                         </IonLabel>
                     </IonItem>)}
