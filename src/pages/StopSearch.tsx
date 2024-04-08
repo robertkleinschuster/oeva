@@ -40,7 +40,7 @@ const StopSearch: React.FC = () => {
                 )
             }
 
-            const stopMap = new Map(stops.map(stop => [stop.id, {...stop, name_transliterated: transliterate(stop.name)}]))
+            const stopMap = new Map(stops.map(stop => [stop.id, stop]))
 
             if (keywords.length === 1 && stopMap.size > 500) {
                 return Promise.resolve([])
@@ -49,8 +49,8 @@ const StopSearch: React.FC = () => {
             const fuse = new Fuse(
                 Array.from(stopMap.values()),
                 {
-                    keys: ['name', 'name_transliterated'],
-                    threshold: 0.5,
+                    keys: ['name', 'keywords'],
+                    threshold: 0.4,
                     useExtendedSearch: true,
                 }
             )
