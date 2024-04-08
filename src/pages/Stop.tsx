@@ -4,11 +4,13 @@ import {
     IonButtons,
     IonContent,
     IonHeader,
+    IonIcon,
     IonItem,
     IonLabel,
     IonList,
     IonNote,
     IonPage,
+    IonPopover,
     IonRange,
     IonText,
     IonTitle,
@@ -24,6 +26,7 @@ import {parseStopTimeInt} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {addHours, setMinutes, setSeconds, subHours} from "date-fns";
 import {calcDistance, calcRingRadius} from "../transit/Geo";
+import {add, remove} from "ionicons/icons";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
@@ -35,21 +38,15 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const [date, setDate] = useState(setSeconds(setMinutes(new Date(), 0), 0))
     const [debouncedDate, setDebouncedDate] = useState(date)
     const [ringSize, setRingSize] = useState(12)
-    const [ringSizeToLoad, setRingSizeToLoad] = useState(ringSize)
+    const [debouncedRingSize, setDebouncedRingSize] = useState(ringSize)
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
-    const [ringRadius, setRingRadius] = useState(0)
     const tripStops = useLiveQuery(async () => {
             await presentLoading('Lädt...')
-            return (new TripStopRepository().findByStop(match.params.id, debouncedDate, ringSize))
+            return (new TripStopRepository().findByStop(match.params.id, debouncedDate, debouncedRingSize))
         },
-        [ringSizeToLoad, debouncedDate]
+        [debouncedRingSize, debouncedDate]
     )
 
-    useEffect(() => {
-        if (stop) {
-            setRingRadius(calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSize))
-        }
-    }, [ringSize, stop]);
 
     useEffect(() => {
         const delayInputTimeoutId = setTimeout(() => {
@@ -69,28 +66,11 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}<IonNote style={{display: 'block'}}>{stop?.feed_name}</IonNote></IonTitle>
-                </IonToolbar>
-                <IonToolbar>
-                    <IonRange style={{margin: '0 1rem'}}
-                              value={ringSize}
-                              max={27}
-                              label={`Umgebung ${ringRadius} m`}
-                              onIonInput={e => setRingSize(Number(e.detail.value))}
-                              onIonChange={() => setRingSizeToLoad(ringSize)}></IonRange>
-                </IonToolbar>
-                <IonToolbar>
+                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}<IonNote
+                        style={{display: 'block'}}>{stop?.feed_name}</IonNote></IonTitle>
                     <IonButtons slot="end">
-                        <IonLabel>ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr</IonLabel>
-                        <IonButton onClick={() => {
-                            setDate(subHours(date, 1))
-                        }}>
-                            <IonLabel>Früher</IonLabel>
-                        </IonButton>
-                        <IonButton onClick={() => {
-                            setDate(addHours(date, 1))
-                        }}>
-                            <IonLabel>Später</IonLabel>
+                        <IonButton id="filter">
+                            Filter
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>
@@ -124,6 +104,37 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     </IonItem>)}
                 </IonList>
             </IonContent>
+            <IonPopover trigger="filter" triggerAction="click">
+                <IonContent>
+                    <IonItem>
+                        <IonRange value={ringSize}
+                                  min={1}
+                                  max={26}
+                                  snaps
+                                  labelPlacement="start"
+                                  onIonChange={(e) => setDebouncedRingSize(e.detail.value as number)}
+                                  onIonInput={(e) => setRingSize(e.detail.value as number)}
+                        >
+                            <div slot="label">{stop ? calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSize as number) : 0} m</div>
+                        </IonRange>
+                    </IonItem>
+                    <IonItem>
+                        <IonLabel>
+                            ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr
+                        </IonLabel>
+                        <IonButton onClick={() => {
+                            setDate(subHours(date, 1))
+                        }}>
+                            <IonIcon slot="icon-only" icon={remove}></IonIcon>
+                        </IonButton>
+                        <IonButton onClick={() => {
+                            setDate(addHours(date, 1))
+                        }}>
+                            <IonIcon slot="icon-only" icon={add}></IonIcon>
+                        </IonButton>
+                    </IonItem>
+                </IonContent>
+            </IonPopover>
         </IonPage>
     );
 };

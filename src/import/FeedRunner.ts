@@ -11,12 +11,6 @@ export class FeedRunner {
 
     async run() {
         if (this.running === undefined) {
-            const interval = setInterval(() => {
-                if (this.running && this.audio && this.audio.paused) {
-                    this.audio.play()
-                }
-            }, 500)
-
             try {
                 const feed = await feedDb.transit
                     .where('status')
@@ -24,6 +18,11 @@ export class FeedRunner {
                     .first()
                 if (feed) {
                     this.running = feed.id
+                    const interval = setInterval(() => {
+                        if (this.running && this.audio && this.audio.paused) {
+                            this.audio.play()
+                        }
+                    }, 500)
                     this.backgroundExec();
                     try {
                         const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
@@ -35,13 +34,14 @@ export class FeedRunner {
                             previous_status: feed.status,
                             progress: String(error)
                         });
+                    } finally {
+                        clearInterval(interval)
+                        this.audio?.pause()
                     }
                 }
             } catch (e) {
                 console.log(e)
             }
-            this.audio?.pause()
-            clearInterval(interval)
             this.running = undefined
         }
 

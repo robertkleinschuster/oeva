@@ -8,24 +8,30 @@ import {
     IonList,
     IonNote,
     IonPage,
+    IonProgressBar,
     IonSearchbar,
     IonTitle,
     IonToolbar, isPlatform
 } from '@ionic/react';
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {searchStop} from "../transit/StopSearch";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
+        const [loading, setLoading] = useState(false)
 
         const stops = useLiveQuery(async () => {
                 if (keyword.length > 1) {
                     return searchStop(keyword)
                 }
-                return Promise.resolve([])
+                return Promise.resolve(undefined)
             }, [keyword]
         )
+
+        useEffect(() => {
+            setLoading(false)
+        }, [stops]);
 
         return (
             <IonPage>
@@ -35,15 +41,19 @@ const StopSearch: React.FC = () => {
                             <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                         </IonButtons>
                         <IonTitle>Stationen</IonTitle>
+                        {loading ? <IonProgressBar type="indeterminate"></IonProgressBar> : null}
                     </IonToolbar>
                 </IonHeader>
                 <IonContent>
                     <form action="#" onSubmit={e => e.preventDefault()}>
                         <IonSearchbar
                             debounce={500}
-                            placeholder="Haltepunkt Suchen"
+                            placeholder="Suchen..."
                             inputmode="search"
-                            onIonInput={e => setKeyword(String(e.detail.value))}
+                            onIonInput={e => {
+                                setLoading(true)
+                                setKeyword(String(e.detail.value))
+                            }}
                         />
                     </form>
                     <IonList>
@@ -53,9 +63,9 @@ const StopSearch: React.FC = () => {
                                 <IonLabel>
                                     {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
                                 </IonLabel>
-                            <IonNote slot="end">
-                                {stop.feed_name}
-                            </IonNote>
+                                <IonNote slot="end">
+                                    {stop.feed_name}
+                                </IonNote>
                             </IonItem>
                         )}
                     </IonList>

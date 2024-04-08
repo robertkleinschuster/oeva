@@ -1,7 +1,5 @@
 import Dexie from 'dexie';
 import {Stop, TripStop, Trip} from "./Schedule";
-import {feedDb} from "./FeedDb";
-import {stoppedStatuses, TransitFeedStatus} from "./Feed";
 
 export class ScheduleDB extends Dexie {
     public trip_stop: Dexie.Table<TripStop, string>;

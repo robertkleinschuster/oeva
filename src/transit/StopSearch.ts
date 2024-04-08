@@ -4,32 +4,28 @@ import {transliterate} from "transliteration";
 import {scheduleDB} from "../db/ScheduleDB";
 import Fuse from "fuse.js";
 
-export async function searchStop(keyword: string): Promise<Stop[]> {
+export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
     const transliteratedKeyword = transliterate(keyword);
     const tokenizer = new Tokenizer()
     const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value)
 
     const stops = new Map<string, Stop>()
-    await findStations(transliteratedKeyword, stop => stops.set(stop.id, stop))
+    await findStations(transliteratedKeyword, stop => stops.set(stop.id, stop), limit)
 
     if (stops.size === 0) {
         for (const token of tokens) {
-            await findStations(token, stop => stops.set(stop.id, stop))
+            await findStations(token, stop => stops.set(stop.id, stop), limit)
         }
     }
 
     if (stops.size === 0) {
-        await findStops(transliteratedKeyword, stop => stops.set(stop.id, stop))
+        await findStops(transliteratedKeyword, stop => stops.set(stop.id, stop), limit)
     }
 
     if (stops.size === 0) {
         for (const token of tokens) {
-            await findStops(token, stop => stops.set(stop.id, stop))
+            await findStops(token, stop => stops.set(stop.id, stop), limit)
         }
-    }
-
-    if (tokens.length === 1 && stops.size > 500) {
-        return Promise.resolve([])
     }
 
     const fuse = new Fuse(
@@ -40,25 +36,28 @@ export async function searchStop(keyword: string): Promise<Stop[]> {
             useExtendedSearch: true,
         }
     )
-    return fuse.search(transliteratedKeyword).map(result => result.item)
+
+    const result = fuse.search(transliteratedKeyword).map(result => result.item)
+    if (result.length === 0 && limit !== 1000) {
+        return searchStop(keyword, 1000)
+    }
+
+    return result;
 }
 
-async function findStops(keyword: string, each: (stop: Stop) => void)
-{
+async function findStops(keyword: string, each: (stop: Stop) => void, limit: number) {
     await scheduleDB.stop
         .where('keywords')
         .startsWithIgnoreCase(keyword)
+        .limit(limit)
         .each(each);
 }
 
-async function findStations(keyword: string, each: (stop: Stop) => void)
-{
+async function findStations(keyword: string, each: (stop: Stop) => void, limit: number) {
     await scheduleDB.stop
         .where('keywords')
         .startsWithIgnoreCase(keyword)
-        .each(stop => {
-            if (!stop.feed_parent_station) {
-                each(stop)
-            }
-        });
+        .filter(stop => !stop.feed_parent_station)
+        .limit(limit)
+        .each(each);
 }

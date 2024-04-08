@@ -17,7 +17,6 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
-import {FeedProcessor} from "../import/FeedProcessor";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -82,7 +81,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         const gtfsDB = new GTFSDB(feed!.id!)
         await gtfsDB.delete()
         await feedDb.transit.update(feed!, {
-            previous_status: TransitFeedStatus.DOWNLOADING,
+            previous_status: TransitFeedStatus.SAVING,
             status: TransitFeedStatus.ABORTED,
             progress: undefined,
             step: undefined,
