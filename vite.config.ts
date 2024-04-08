@@ -10,13 +10,13 @@ export default defineConfig({
     react(),
     legacy(),
     VitePWA({
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png', '/public/**/*'],
+      includeAssets: ['/public/**/*'],
       injectRegister: "script",
       manifest: {
         name: 'OeVA Beta',
-        short_name: 'OeVA Beta',
-        theme_color: '#333131',
-        icons: [],
+      },
+      pwaAssets: {
+        config: true,
       },
       workbox: {
         // workbox options for more advanced scenarios
