@@ -1,5 +1,5 @@
 import {ExceptionType} from "../db/GTFS";
-import {formatServiceDate} from "./DateTime";
+import {formatServiceDate, parseServiceDate} from "./DateTime";
 import {TripStop, Weekday} from "../db/Schedule";
 
 function extractWeekday(date: Date): Weekday {
@@ -41,3 +41,48 @@ export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
         && (tripStop.service_weekdays & extractWeekday(date)) !== 0
 }
 
+export function extractWeekdays(service_weeekdays: number) {
+    const weekdays = [];
+    if (service_weeekdays & Weekday.Monday) {
+        weekdays.push(Weekday.Monday)
+    }
+    if (service_weeekdays & Weekday.Tuesday) {
+        weekdays.push(Weekday.Tuesday)
+    }
+    if (service_weeekdays & Weekday.Wednesday) {
+        weekdays.push(Weekday.Wednesday)
+    }
+    if (service_weeekdays & Weekday.Thursday) {
+        weekdays.push(Weekday.Thursday)
+    }
+    if (service_weeekdays & Weekday.Friday) {
+        weekdays.push(Weekday.Friday)
+    }
+    if (service_weeekdays & Weekday.Saturday) {
+        weekdays.push(Weekday.Saturday)
+    }
+    if (service_weeekdays & Weekday.Sunday) {
+        weekdays.push(Weekday.Sunday)
+    }
+    return weekdays;
+}
+
+export function extractExceptions(service_exceptions: Map<number, ExceptionType>, exceptionType: ExceptionType) {
+    const dates = [];
+    for (const [date, type] of service_exceptions) {
+        if (type === exceptionType) {
+            dates.push(parseServiceDate(date))
+        }
+    }
+    return dates;
+}
+
+export const weekdayNames = new Map([
+    [Weekday.Monday, 'Mo.'],
+    [Weekday.Tuesday, 'Di.'],
+    [Weekday.Wednesday, 'Mi.'],
+    [Weekday.Thursday, 'Do.'],
+    [Weekday.Friday, 'Fr.'],
+    [Weekday.Saturday, 'Sa.'],
+    [Weekday.Sunday, 'So.'],
+])
