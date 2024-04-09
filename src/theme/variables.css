@@ -240,6 +240,6 @@ html {
   https://ionicframework.com/docs/layout/dynamic-font-scaling */
   --ion-dynamic-font: var(--ion-default-dynamic-font);
 }
-#root, .ios.overscroll {
+#root, .ios.overscroll::part(scroll) {
   overscroll-behavior: contain;
 }
