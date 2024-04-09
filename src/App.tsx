@@ -7,7 +7,6 @@ import {
     IonRouterOutlet,
     setupIonicReact
 } from '@ionic/react';
-import {IonReactMemoryRouter} from '@ionic/react-router';
 import Home from './pages/Home';
 
 /* Core CSS required for Ionic components to work properly */
@@ -33,16 +32,14 @@ import Feeds from "./pages/Feeds";
 import StopSearch from "./pages/StopSearch";
 import Stop from "./pages/Stop";
 import Trip from "./pages/Trip";
-import {createMemoryHistory} from "history";
 import {useRegisterSW} from "virtual:pwa-register/react";
 import {RunnerContext} from "./RunnerContext";
 import Storage from "./pages/Storage";
+import Router from "./Router";
 
 setupIonicReact({
     swipeBackEnabled: true,
 });
-
-const history = createMemoryHistory()
 
 const App: React.FC = () => {
     const {
@@ -70,7 +67,7 @@ const App: React.FC = () => {
                 </IonButton>
             </IonItem> : null}
 
-        <IonReactMemoryRouter history={history}>
+        <Router>
             <IonRouterOutlet>
                 <Route exact path="/home" component={Home}/>
                 <Route exact path="/feeds" component={Feeds}/>
@@ -82,7 +79,7 @@ const App: React.FC = () => {
                     <Redirect to="/home"/>
                 </Route>
             </IonRouterOutlet>
-        </IonReactMemoryRouter>
+        </Router>
     </IonApp>
 };
 
