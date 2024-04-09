@@ -69,7 +69,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}<IonNote
                         style={{display: 'block'}}>{stop?.feed_name}</IonNote></IonTitle>
                     <IonButtons slot="end">
-                        <IonButton id="filter">
+                        <IonButton id={"filter-" + stop?.id}>
                             Filter
                         </IonButton>
                     </IonButtons>
@@ -104,7 +104,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     </IonItem>)}
                 </IonList>
             </IonContent>
-            <IonPopover trigger="filter" triggerAction="click">
+            <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
                 <IonContent>
                     <IonItem>
                         <IonRange value={ringSize}
