@@ -11,9 +11,10 @@ export default defineConfig({
     legacy(),
     VitePWA({
       includeAssets: ['/public/**/*'],
-      injectRegister: "script",
       manifest: {
         name: 'OeVA Beta',
+        short_name: 'OeVA Beta',
+        display: "standalone",
         theme_color: '#000000'
       },
       pwaAssets: {
