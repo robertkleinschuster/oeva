@@ -47,7 +47,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">
-                <IonList inset>
+                <IonList>
                     {tripStops?.map(tripStop => <IonItem
                         routerLink={`/stops/${tripStop.stop_id}`}
                         key={tripStop.id}>
@@ -68,16 +68,17 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                         </IonLabel>
                     </IonItem>)}
                 </IonList>
-                <IonNote className="ion-margin-horizontal" color="medium">
+                <br/>
+                <IonNote className="ion-padding" color="medium">
                     Verkehrt:&nbsp;{trip ? extractWeekdays(trip.service_weekdays).map(weekday => weekdayNames.get(weekday)).join(', ') : null}
                 </IonNote>
                 <br/>
-                <IonNote className="ion-margin-horizontal" color="medium">
+                <IonNote className="ion-padding" color="medium">
                     Ausgenommen:&nbsp;
                     {trip?.service_exceptions ? extractExceptions(trip.service_exceptions, ExceptionType.NOT_RUNNING).map(date => date.toLocaleDateString()).join(', ') : null}
                 </IonNote>
                 <br/>
-                <IonNote className="ion-margin-horizontal" color="medium">
+                <IonNote className="ion-padding" color="medium">
                     Zusätzlich:&nbsp;
                     {trip?.service_exceptions ? extractExceptions(trip.service_exceptions, ExceptionType.RUNNING).map(date => date.toLocaleDateString()).join(', ') : null}
                 </IonNote>
