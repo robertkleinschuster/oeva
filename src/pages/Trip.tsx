@@ -36,6 +36,9 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
         .findByTrip(match.params.id))
     )
     const date = setSeconds(new Date(), 0);
+    const weekdays = trip ? extractWeekdays(trip.service_weekdays).map(weekday => weekdayNames.get(weekday)) : [];
+    const additional = trip ? extractExceptions(trip.service_exceptions, ExceptionType.RUNNING) : [];
+    const exceptions = trip ? extractExceptions(trip.service_exceptions, ExceptionType.NOT_RUNNING) : [];
     return (
         <IonPage>
             <IonHeader>
@@ -68,20 +71,18 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                         </IonLabel>
                     </IonItem>)}
                 </IonList>
-                <br/>
-                <IonNote className="ion-padding" color="medium">
-                    Verkehrt:&nbsp;{trip ? extractWeekdays(trip.service_weekdays).map(weekday => weekdayNames.get(weekday)).join(', ') : null}
-                </IonNote>
-                <br/>
-                <IonNote className="ion-padding" color="medium">
-                    Ausgenommen:&nbsp;
-                    {trip?.service_exceptions ? extractExceptions(trip.service_exceptions, ExceptionType.NOT_RUNNING).map(date => date.toLocaleDateString()).join(', ') : null}
-                </IonNote>
-                <br/>
-                <IonNote className="ion-padding" color="medium">
-                    Zusätzlich:&nbsp;
-                    {trip?.service_exceptions ? extractExceptions(trip.service_exceptions, ExceptionType.RUNNING).map(date => date.toLocaleDateString()).join(', ') : null}
-                </IonNote>
+                {weekdays.length ?
+                <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
+                    Verkehrt:<br/>{weekdays.join(', ')}
+                </IonNote>: null}
+                {exceptions.length ?
+                    <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
+                        Ausgenommen:<br/>{exceptions.map(date => date.toLocaleDateString()).join(', ')}
+                    </IonNote> : null}
+                {additional.length ?
+                    <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
+                        Zusätzlich:<br/>{additional.map(date => date.toLocaleDateString()).join(', ')}
+                    </IonNote> : null}
             </IonContent>
         </IonPage>
     );
