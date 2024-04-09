@@ -27,7 +27,7 @@ import {formatDisplayTime} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {addHours, setMinutes, setSeconds, subHours} from "date-fns";
 import {calcDistance, calcRingRadius} from "../transit/Geo";
-import {add, remove} from "ionicons/icons";
+import {add, filter, remove} from "ionicons/icons";
 import {RouteType} from "../db/Schedule";
 
 interface StopPageProps extends RouteComponentProps<{
@@ -96,8 +96,8 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     </IonButtons>
                     <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null} <IonNote>({stop?.feed_name})</IonNote></IonTitle>
                     <IonButtons slot="end">
-                        <IonButton id={"filter-" + stop?.id}>
-                            Filter
+                        <IonButton id={"filter-" + stop?.id} aria-label="Filter">
+                            <IonIcon slot="icon-only" icon={filter}/>
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>
@@ -127,7 +127,6 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                 </IonList>
             </IonContent>
             <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
-                <IonContent>
                     <IonItem>
                         <IonRange value={ringSize}
                                   min={1}
@@ -172,7 +171,6 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonItem>
                         <IonToggle checked={other} onIonChange={() => setOther(!other)}>Andere</IonToggle>
                     </IonItem>
-                </IonContent>
             </IonPopover>
         </IonPage>
     );
