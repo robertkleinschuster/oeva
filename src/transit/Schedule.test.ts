@@ -9,6 +9,7 @@ describe('Schedule', () => {
         trip_id: '1',
         stop_id: '2',
         feed_id: 1,
+        feed_name: '',
         service_end_date: 20241214,
         service_start_date: 20231214,
         service_exceptions: new Map,

@@ -13,6 +13,10 @@ export function parseStopTimeInt(time: number, referenceDate: Date): Date {
     return set(addDays(new Date(referenceDate), Math.floor(hours / 24)), {hours: hours % 24, minutes})
 }
 
+export function formatDisplayTime(time: number, referenceDate: Date): string {
+    return format(parseStopTimeInt(time, referenceDate), 'HH:mm')
+}
+
 export function convertStopTimeToInt(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 100 + minutes;

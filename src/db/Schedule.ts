@@ -39,6 +39,7 @@ export interface TripStop {
     stop_id: string;
     trip_id: string;
     feed_id: number;
+    feed_name: string;
     h3_cell_le1: number; // little endian first part
     h3_cell_le2: number; // little endian second part
     route_type: RouteType;

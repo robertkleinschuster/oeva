@@ -55,6 +55,7 @@ export function createTripStop(
     return {
         id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
         feed_id: trip.feed_id,
+        feed_name: trip.feed_name,
         stop_id: stop.id,
         trip_id: trip.id,
         route_type: trip.route_type,

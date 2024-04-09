@@ -61,11 +61,8 @@ const StopSearch: React.FC = () => {
                                 routerLink={`/stops/${stop.id}`}
                                 key={stop.id}>
                                 <IonLabel>
-                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null} <IonNote>({stop.feed_name})</IonNote>
                                 </IonLabel>
-                                <IonNote slot="end">
-                                    {stop.feed_name}
-                                </IonNote>
                             </IonItem>
                         )}
                     </IonList>

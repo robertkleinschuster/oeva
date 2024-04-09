@@ -23,7 +23,7 @@ import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {parseStopTimeInt} from "../transit/DateTime";
+import {formatDisplayTime} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {addHours, setMinutes, setSeconds, subHours} from "date-fns";
 import {calcDistance, calcRingRadius} from "../transit/Geo";
@@ -94,8 +94,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}<IonNote
-                        style={{display: 'block'}}>{stop?.feed_name}</IonNote></IonTitle>
+                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null} <IonNote>({stop?.feed_name})</IonNote></IonTitle>
                     <IonButtons slot="end">
                         <IonButton id={"filter-" + stop?.id}>
                             Filter
@@ -109,18 +108,13 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                         routerLink={`/trips/${tripStop.trip_id}`}
                         key={tripStop.id}>
                         <IonLabel>
-                            {tripStop.arrival_time ?
-                                <IonNote
-                                    style={{display: 'block'}}>
-                                    Ankunft: {parseStopTimeInt(tripStop.arrival_time, date).toLocaleTimeString()}
-                                </IonNote> : null}
-                            {tripStop.departure_time ?
-                                <IonNote
-                                    style={{display: 'block'}}>
-                                    Abfahrt: {parseStopTimeInt(tripStop.departure_time, date).toLocaleTimeString()}
-                                </IonNote> : null}
+                            <IonNote>
+                                {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
+                                {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
+                                {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
+                            </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {tripStop.trip_name} {tripStop.direction}
+                                {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
                             </IonText>
                             <IonNote color="medium" style={{display: 'block'}}>
                                 {tripStop.stop_name !== stop?.name ? <>{tripStop.stop_name}</> : null}
