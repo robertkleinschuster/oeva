@@ -1,6 +1,6 @@
 import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
-import {TripStop} from "../db/Schedule";
+import {RouteType, TripStop} from "../db/Schedule";
 import {gridDisk} from "h3-js";
 import {H3Cell} from "./H3Cell";
 
@@ -12,7 +12,7 @@ export class TripStopRepository {
             .sortBy('sequence_in_trip')
     }
 
-    async findByStop(stopId: string, date: Date, ringSize: number): Promise<TripStop[]> {
+    async findByStop(stopId: string, date: Date, ringSize: number, routeTypes: RouteType[]): Promise<TripStop[]> {
         const stop = await scheduleDB.stop.get(stopId)
         if (!stop) {
             throw new Error('Stop not found')
@@ -32,7 +32,7 @@ export class TripStopRepository {
                 .where('[h3_cell_le1+h3_cell_le2+hour]')
                 .equals(filter)
                 .each(tripStop => {
-                    if (isTripStopActiveOn(tripStop, date)) {
+                    if (routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, date)) {
                         tripStops.set(tripStop.id, tripStop)
                     }
                 })
