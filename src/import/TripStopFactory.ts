@@ -154,7 +154,7 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
 
     name = (name ?? '').trim();
 
-    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (feed.keywords ?? ''))).map(token => token.value);
+    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (trip.trip_headsign ?? '') + ' ' + (feed.keywords ?? ''))).map(token => token.value);
     keywords.push(transliterate(name))
     keywords.push(transliterate(feed.name))
 
