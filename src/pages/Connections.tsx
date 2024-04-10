@@ -27,6 +27,7 @@ import {calcRingRadius} from "../transit/Geo";
 import {add, filter, remove} from "ionicons/icons";
 import {RouteType} from "../db/Schedule";
 import {Trips} from "../components/Trips";
+import {parseStopTimeInt} from "../transit/DateTime";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -73,7 +74,17 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                 routeTypes.push(RouteType.MONORAIL)
             }
             await presentLoading('Lädt...')
-            return (new TripStopRepository().findConnections(tripStop, debouncedDate, debouncedRingSize, routeTypes))
+            const repo = new TripStopRepository();
+            const tripStops = await repo.findConnections(tripStop, debouncedDate, debouncedRingSize, routeTypes)
+            tripStops.push(...await repo.findConnections(tripStop, addHours(debouncedDate, 1), debouncedRingSize, routeTypes))
+            return tripStops.filter(tripStop => {
+                const time = tripStop.arrival_time ?? tripStop.departure_time;
+                if (time !== undefined) {
+                    const stopDate = parseStopTimeInt(time, debouncedDate);
+                    return stopDate >= debouncedDate && stopDate <= addHours(debouncedDate, 1);
+                }
+                return false;
+            })
         },
         [tripStop, debouncedRingSize, debouncedDate, rail, subway, trams, busses, other]
     )
@@ -87,7 +98,10 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
 
     useEffect(() => {
         const hour = tripStop?.hour
-        if (hour !== undefined) {
+        const time = tripStop?.arrival_time ?? tripStop?.departure_time;
+        if (time !== undefined) {
+            setDate(parseStopTimeInt(time, new Date()))
+        } else if (hour !== undefined) {
             setDate(setHours(setSeconds(setMinutes(new Date(), 0), 0), hour))
         }
     }, [tripStop]);
