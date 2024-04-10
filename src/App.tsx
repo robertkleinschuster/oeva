@@ -36,6 +36,8 @@ import {useRegisterSW} from "virtual:pwa-register/react";
 import {RunnerContext} from "./RunnerContext";
 import Storage from "./pages/Storage";
 import Router from "./Router";
+import Connections from "./pages/Connections";
+import TripSearch from "./pages/TripSearch";
 
 setupIonicReact({
     swipeBackEnabled: true,
@@ -73,8 +75,10 @@ const App: React.FC = () => {
                 <Route exact path="/feeds" component={Feeds}/>
                 <Route exact path="/storage" component={Storage}/>
                 <Route exact path="/stops" component={StopSearch}/>
+                <Route exact path="/trips" component={TripSearch}/>
                 <Route exact path="/stops/:id" component={Stop}/>
                 <Route exact path="/trips/:id" component={Trip}/>
+                <Route exact path="/connections/:id" component={Connections}/>
                 <Route exact path="/">
                     <Redirect to="/home"/>
                 </Route>

@@ -94,7 +94,8 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null} <IonNote>({stop?.feed_name})</IonNote></IonTitle>
+                    <IonTitle>{stop?.name}{stop?.platform ? <>:
+                        Steig {stop?.platform}</> : null}{" "}<IonNote>({stop?.feed_name})</IonNote></IonTitle>
                     <IonButtons slot="end">
                         <IonButton id={"filter-" + stop?.id} aria-label="Filter">
                             <IonIcon slot="icon-only" icon={filter}/>
@@ -127,50 +128,50 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                 </IonList>
             </IonContent>
             <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
-                    <IonItem>
-                        <IonRange value={ringSize}
-                                  min={1}
-                                  max={26}
-                                  snaps
-                                  labelPlacement="start"
-                                  onIonChange={(e) => setDebouncedRingSize(e.detail.value as number)}
-                                  onIonInput={(e) => setRingSize(e.detail.value as number)}
-                        >
-                            <div
-                                slot="label">{stop ? calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSize as number) : 0} m
-                            </div>
-                        </IonRange>
-                    </IonItem>
-                    <IonItem>
-                        <IonLabel>
-                            ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr
-                        </IonLabel>
-                        <IonButton onClick={() => {
-                            setDate(subHours(date, 1))
-                        }}>
-                            <IonIcon slot="icon-only" icon={remove}></IonIcon>
-                        </IonButton>
-                        <IonButton onClick={() => {
-                            setDate(addHours(date, 1))
-                        }}>
-                            <IonIcon slot="icon-only" icon={add}></IonIcon>
-                        </IonButton>
-                    </IonItem>
-                    <IonItem>
-                        <IonToggle checked={rail} onIonChange={() => setRail(!rail)}>Züge</IonToggle>
-                    </IonItem>
-                    <IonItem>
-                        <IonToggle checked={subway} onIonChange={() => setSubway(!subway)}>U-Bahn</IonToggle>
-                    </IonItem>
-                    <IonItem>
-                        <IonToggle checked={trams} onIonChange={() => setTrams(!trams)}>Straßenbahnen</IonToggle>
-                    </IonItem>
-                    <IonItem>
-                        <IonToggle checked={busses} onIonChange={() => setBuses(!busses)}>Busse</IonToggle>
-                    </IonItem>
-                    <IonItem>
-                        <IonToggle checked={other} onIonChange={() => setOther(!other)}>Andere</IonToggle>
-                    </IonItem>
+                <IonItem>
+                    <IonRange value={ringSize}
+                              min={1}
+                              max={26}
+                              snaps
+                              labelPlacement="start"
+                              onIonChange={(e) => setDebouncedRingSize(e.detail.value as number)}
+                              onIonInput={(e) => setRingSize(e.detail.value as number)}
+                    >
+                        <div
+                            slot="label">{stop ? calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSize as number) : 0} m
+                        </div>
+                    </IonRange>
+                </IonItem>
+                <IonItem>
+                    <IonLabel>
+                        ab {date.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr
+                    </IonLabel>
+                    <IonButton onClick={() => {
+                        setDate(subHours(date, 1))
+                    }}>
+                        <IonIcon slot="icon-only" icon={remove}></IonIcon>
+                    </IonButton>
+                    <IonButton onClick={() => {
+                        setDate(addHours(date, 1))
+                    }}>
+                        <IonIcon slot="icon-only" icon={add}></IonIcon>
+                    </IonButton>
+                </IonItem>
+                <IonItem>
+                    <IonToggle checked={rail} onIonChange={() => setRail(!rail)}>Züge</IonToggle>
+                </IonItem>
+                <IonItem>
+                    <IonToggle checked={subway} onIonChange={() => setSubway(!subway)}>U-Bahn</IonToggle>
+                </IonItem>
+                <IonItem>
+                    <IonToggle checked={trams} onIonChange={() => setTrams(!trams)}>Straßenbahnen</IonToggle>
+                </IonItem>
+                <IonItem>
+                    <IonToggle checked={busses} onIonChange={() => setBuses(!busses)}>Busse</IonToggle>
+                </IonItem>
+                <IonItem>
+                    <IonToggle checked={other} onIonChange={() => setOther(!other)}>Andere</IonToggle>
+                </IonItem>
             </IonPopover>
         </IonPage>
     );

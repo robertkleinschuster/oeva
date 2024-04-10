@@ -46,13 +46,13 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{trip?.name} {trip?.direction} <IonNote>({trip?.feed_name})</IonNote></IonTitle>
+                    <IonTitle>{trip?.name} {trip?.direction}{" "}<IonNote>({trip?.feed_name})</IonNote></IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
-                        routerLink={`/stops/${tripStop.stop_id}`}
+                        routerLink={`/connections/${tripStop.id}`}
                         key={tripStop.id}>
                         <IonLabel>
                             <IonNote>
@@ -72,9 +72,9 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     </IonItem>)}
                 </IonList>
                 {weekdays.length ?
-                <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
-                    Verkehrt:<br/>{weekdays.join(', ')}
-                </IonNote>: null}
+                    <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
+                        Verkehrt:<br/>{weekdays.join(', ')}
+                    </IonNote> : null}
                 {exceptions.length ?
                     <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
                         Ausgenommen:<br/>{exceptions.map(date => date.toLocaleDateString()).join(', ')}

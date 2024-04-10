@@ -1,7 +1,7 @@
 import {isTripStopActiveOn} from "./Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
 import {RouteType, TripStop} from "../db/Schedule";
-import {gridDisk} from "h3-js";
+import {gridDisk, H3IndexInput} from "h3-js";
 import {H3Cell} from "./H3Cell";
 
 export class TripStopRepository {
@@ -17,9 +17,12 @@ export class TripStopRepository {
         if (!stop) {
             throw new Error('Stop not found')
         }
+        return this.findByCell([stop.h3_cell_le1, stop.h3_cell_le2], date, ringSize, routeTypes);
+    }
 
+    async findByCell(cell: H3IndexInput, date: Date, ringSize: number, routeTypes: RouteType[]): Promise<TripStop[]> {
         const hours = date.getHours();
-        const cells = gridDisk([stop.h3_cell_le1, stop.h3_cell_le2], ringSize);
+        const cells = gridDisk(cell, ringSize);
         const cellObj = new H3Cell()
         const filters = cells.map(cell => {
             cellObj.fromIndex(cell)
@@ -40,6 +43,11 @@ export class TripStopRepository {
 
         return Array.from(tripStops.values())
             .sort((a, b) => a.sequence_at_stop - b.sequence_at_stop);
+    }
+
+    async findConnections(tripStop: TripStop, date: Date, ringSize: number, routeTypes: RouteType[]) {
+        return await this.findByCell([tripStop.h3_cell_le1, tripStop.h3_cell_le2], date, ringSize, routeTypes)
+            .then(connections => connections.filter(connection => connection.trip_id !== tripStop.trip_id));
     }
 }
 

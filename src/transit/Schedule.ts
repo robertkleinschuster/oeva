@@ -1,6 +1,6 @@
 import {ExceptionType} from "../db/GTFS";
 import {formatServiceDate, parseServiceDate} from "./DateTime";
-import {TripStop, Weekday} from "../db/Schedule";
+import {Trip, TripStop, Weekday} from "../db/Schedule";
 
 function extractWeekday(date: Date): Weekday {
     switch (date.getDay()) {
@@ -39,6 +39,24 @@ export function isTripStopActiveOn(tripStop: TripStop, date: Date): boolean {
         && dateAsInt >= tripStop.service_start_date
         && dateAsInt <= tripStop.service_end_date
         && (tripStop.service_weekdays & extractWeekday(date)) !== 0
+}
+
+export function isTripActiveOn(trip: Trip, date: Date): boolean {
+    const dateAsInt = formatServiceDate(date);
+    const exceptionType = trip.service_exceptions?.get(dateAsInt)
+    if (exceptionType !== undefined) {
+        if (exceptionType === ExceptionType.RUNNING) {
+            return true
+        }
+        if (exceptionType === ExceptionType.NOT_RUNNING) {
+            return false
+        }
+    }
+    return trip.service_start_date !== undefined
+        && trip.service_end_date !== undefined
+        && dateAsInt >= trip.service_start_date
+        && dateAsInt <= trip.service_end_date
+        && (trip.service_weekdays & extractWeekday(date)) !== 0
 }
 
 export function extractWeekdays(service_weeekdays: number) {

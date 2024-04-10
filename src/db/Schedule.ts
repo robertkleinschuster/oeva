@@ -1,5 +1,7 @@
 import {ExceptionType} from "./GTFS";
 
+export const H3_RESOLUTION = 12;
+
 export enum RouteType {
     TRAM = 0,
     SUBWAY = 1,
@@ -21,9 +23,6 @@ export enum Boarding {
     ON_REQUEST,
     ON_CALL,
 }
-
-export const H3_RESOLUTION = 12;
-
 export enum Weekday {
     Sunday = 1,
     Saturday = 2,

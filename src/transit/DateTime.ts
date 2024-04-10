@@ -2,7 +2,7 @@ import {addDays, format, parse, set} from "date-fns";
 
 const DATE_FORMAT = 'yyyyMMdd';
 
-export function parseStopTime(time: string, referenceDate: Date): Date {
+export function parseStopTimeString(time: string, referenceDate: Date): Date {
     const [hours, minutes, seconds] = time.split(':').map(Number);
     return set(addDays(new Date(referenceDate), Math.floor(hours / 24)), {hours: hours % 24, minutes, seconds})
 }
