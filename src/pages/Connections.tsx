@@ -48,7 +48,6 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
     const tripStop = useLiveQuery(() => scheduleDB.trip_stop.get(match.params.id), [match.params.id])
     const stop = useLiveQuery(() => tripStop ? scheduleDB.stop.get(tripStop.stop_id) : undefined, [tripStop])
     const tripStops = useLiveQuery(async () => {
-            await presentLoading('Lädt...')
             if (!tripStop || !debouncedDate) {
                 return undefined;
             }
@@ -73,6 +72,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                 routeTypes.push(RouteType.FUNICULAR)
                 routeTypes.push(RouteType.MONORAIL)
             }
+            await presentLoading('Lädt...')
             return (new TripStopRepository().findConnections(tripStop, debouncedDate, debouncedRingSize, routeTypes))
         },
         [tripStop, debouncedRingSize, debouncedDate, rail, subway, trams, busses, other]
