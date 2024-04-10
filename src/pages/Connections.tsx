@@ -27,7 +27,7 @@ import {calcRingRadius} from "../transit/Geo";
 import {add, filter, remove} from "ionicons/icons";
 import {RouteType} from "../db/Schedule";
 import {Trips} from "../components/Trips";
-import {parseStopTimeInt} from "../transit/DateTime";
+import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -127,6 +127,11 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
+                {tripStop && date && tripStop.arrival_time ?
+                    <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
+                        Anschlüsse an {tripStop.trip_name} {tripStop.direction} um {formatDisplayTime(tripStop.arrival_time, date)}
+                    </IonNote>
+                    : null}
                 {stop && tripStops && date ? <Trips stop={stop} tripStops={tripStops} date={date}/> : null}
             </IonContent>
             {date ?
