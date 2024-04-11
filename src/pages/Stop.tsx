@@ -16,12 +16,11 @@ import React, {useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {TripStopRepository} from "../transit/TripStopRepository";
+import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
 import { setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
-import {RouteType} from "../db/Schedule";
 import {Trips} from "../components/Trips";
-import Filter, {FilterState} from "../components/Filter";
+import Filter from "../components/Filter";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
@@ -43,28 +42,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const tripStops = useLiveQuery(async () => {
             await presentLoading('Lädt...')
-            const routeTypes: RouteType[] = [];
-            if (filterState.rail) {
-                routeTypes.push(RouteType.RAIL)
-            }
-            if (filterState.subway) {
-                routeTypes.push(RouteType.SUBWAY)
-            }
-            if (filterState.trams) {
-                routeTypes.push(RouteType.TRAM)
-                routeTypes.push(RouteType.CABLE_TRAM)
-            }
-            if (filterState.busses) {
-                routeTypes.push(RouteType.BUS)
-                routeTypes.push(RouteType.TROLLEYBUS)
-            }
-            if (filterState.other) {
-                routeTypes.push(RouteType.AERIAL_LIFT)
-                routeTypes.push(RouteType.FERRY)
-                routeTypes.push(RouteType.FUNICULAR)
-                routeTypes.push(RouteType.MONORAIL)
-            }
-            return (new TripStopRepository().findByStop(match.params.id, filterState.date, filterState.ringSize, routeTypes))
+            return (new TripStopRepository().findByStop(match.params.id, filterState))
         },
         [filterState]
     )

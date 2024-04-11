@@ -4,16 +4,7 @@ import {addHours, subHours} from "date-fns";
 import {add, remove} from "ionicons/icons";
 import React, {useEffect, useState} from "react";
 import {Stop} from "../db/Schedule";
-
-export interface FilterState {
-    ringSize: number,
-    date: Date,
-    rail: boolean,
-    subway: boolean,
-    trams: boolean,
-    busses: boolean,
-    other: boolean,
-}
+import {FilterState} from "../transit/TripStopRepository";
 
 interface FilterProps {
     stop: Stop,

@@ -16,13 +16,12 @@ import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {TripStopRepository} from "../transit/TripStopRepository";
-import {addHours, setHours, setMinutes, setSeconds, subHours} from "date-fns";
+import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
+import {addHours, setHours, setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
-import {RouteType} from "../db/Schedule";
 import {Trips} from "../components/Trips";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
-import Filter, {FilterState} from "../components/Filter";
+import Filter from "../components/Filter";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -39,31 +38,10 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             if (!tripStop || !filterState) {
                 return undefined;
             }
-            const routeTypes: RouteType[] = [];
-            if (filterState.rail) {
-                routeTypes.push(RouteType.RAIL)
-            }
-            if (filterState.subway) {
-                routeTypes.push(RouteType.SUBWAY)
-            }
-            if (filterState.trams) {
-                routeTypes.push(RouteType.TRAM)
-                routeTypes.push(RouteType.CABLE_TRAM)
-            }
-            if (filterState.busses) {
-                routeTypes.push(RouteType.BUS)
-                routeTypes.push(RouteType.TROLLEYBUS)
-            }
-            if (filterState.other) {
-                routeTypes.push(RouteType.AERIAL_LIFT)
-                routeTypes.push(RouteType.FERRY)
-                routeTypes.push(RouteType.FUNICULAR)
-                routeTypes.push(RouteType.MONORAIL)
-            }
             await presentLoading('Lädt...')
             const repo = new TripStopRepository();
-            const tripStops = await repo.findConnections(tripStop, filterState.date, filterState.ringSize, routeTypes)
-            tripStops.push(...await repo.findConnections(tripStop, addHours(filterState.date, 1), filterState.ringSize, routeTypes))
+            const tripStops = await repo.findConnections(tripStop, filterState)
+            tripStops.push(...await repo.findConnections(tripStop, {...filterState, date: addHours(filterState.date, 1)}))
             return tripStops.filter(tripStop => {
                 const time = tripStop.arrival_time ?? tripStop.departure_time;
                 if (time !== undefined) {
