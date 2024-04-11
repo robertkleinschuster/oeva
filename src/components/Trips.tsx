@@ -11,11 +11,12 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
             key={tripStop.id}>
             <IonLabel>
                 <IonNote>
+                    {tripStop.departure_time === undefined ? 'Ankunft: ' : null}
                     {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
                     {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
                     {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                 </IonNote>
-                <IonText style={{display: 'block'}}>
+                <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined} style={{display: 'block'}}>
                     {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>

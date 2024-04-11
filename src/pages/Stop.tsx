@@ -7,12 +7,10 @@ import {
     IonIcon,
     IonItem,
     IonLabel,
-    IonList,
     IonNote,
     IonPage,
     IonPopover,
     IonRange,
-    IonText,
     IonTitle,
     IonToggle,
     IonToolbar,
@@ -23,12 +21,12 @@ import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
-import {formatDisplayTime} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {addHours, setMinutes, setSeconds, subHours} from "date-fns";
-import {calcDistance, calcRingRadius} from "../transit/Geo";
+import {calcRingRadius} from "../transit/Geo";
 import {add, filter, remove} from "ionicons/icons";
 import {RouteType} from "../db/Schedule";
+import {Trips} from "../components/Trips";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
@@ -104,28 +102,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <IonList>
-                    {tripStops?.map(tripStop => <IonItem
-                        routerLink={`/trips/${tripStop.trip_id}`}
-                        key={tripStop.id}>
-                        <IonLabel>
-                            <IonNote>
-                                {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
-                                {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
-                                {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
-                            </IonNote>
-                            <IonText style={{display: 'block'}}>
-                                {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
-                            </IonText>
-                            <IonNote color="medium" style={{display: 'block'}}>
-                                {tripStop.stop_name !== stop?.name ? <>{tripStop.stop_name}</> : null}
-                                {tripStop.stop_name !== stop?.name && tripStop.stop_platform ? ': ' : ''}
-                                {tripStop.stop_platform ? <>Steig {tripStop.stop_platform}</> : null}
-                                {stop && (stop.feed_parent_station || tripStop.stop_name !== stop.name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
-                            </IonNote>
-                        </IonLabel>
-                    </IonItem>)}
-                </IonList>
+                {stop && tripStops && date ? <Trips stop={stop} tripStops={tripStops} date={date}/> : null}
             </IonContent>
             <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
                 <IonItem>
