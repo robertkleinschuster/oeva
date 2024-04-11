@@ -7,6 +7,7 @@ import {H3Cell} from "./H3Cell";
 export interface FilterState {
     ringSize: number,
     date: Date,
+    arrivals: boolean,
     rail: boolean,
     subway: boolean,
     trams: boolean,
@@ -68,7 +69,7 @@ export class TripStopRepository {
                 .where('[h3_cell_le1+h3_cell_le2+hour]')
                 .equals(filter)
                 .each(tripStop => {
-                    if (routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, filterState.date)) {
+                    if ((filterState.arrivals || !tripStop.is_destination) && routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, filterState.date)) {
                         tripStops.set(tripStop.id, tripStop)
                     }
                 })

@@ -56,9 +56,10 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
 
 
     useEffect(() => {
-        const filterDefaults = {
+        const filterDefaults: FilterState = {
             ringSize: 12,
             date: setSeconds(setMinutes(new Date(), 0), 0),
+            arrivals: false,
             rail: true,
             subway: true,
             trams: true,

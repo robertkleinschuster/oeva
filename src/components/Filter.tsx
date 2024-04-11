@@ -1,4 +1,4 @@
-import {IonButton, IonIcon, IonItem, IonLabel, IonPopover, IonRange, IonToggle} from "@ionic/react";
+import {IonButton, IonIcon, IonItem, IonItemDivider, IonLabel, IonPopover, IonRange, IonToggle} from "@ionic/react";
 import {calcRingRadius} from "../transit/Geo";
 import {addHours, subHours} from "date-fns";
 import {add, remove} from "ionicons/icons";
@@ -53,6 +53,12 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
                 <IonIcon slot="icon-only" icon={add}></IonIcon>
             </IonButton>
         </IonItem>
+        <IonItem>
+            <IonToggle checked={state.arrivals} onIonChange={() => onChange({...state, arrivals: !state.arrivals})}>Ankünfte anzeigen</IonToggle>
+        </IonItem>
+        <IonItemDivider>
+            <IonLabel>Verkehrsmittel</IonLabel>
+        </IonItemDivider>
         <IonItem>
             <IonToggle checked={state.rail} onIonChange={() => onChange({...state, rail: !state.rail})}>Züge</IonToggle>
         </IonItem>

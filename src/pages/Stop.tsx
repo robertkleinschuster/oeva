@@ -32,6 +32,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const [filterState, setFilter] = useState<FilterState>({
         ringSize: 12,
         date: setSeconds(setMinutes(new Date(), 0), 0),
+        arrivals: false,
         rail: true,
         subway: true,
         trams: true,
