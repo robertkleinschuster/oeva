@@ -8,7 +8,8 @@ const TripName: React.FC<{ trip: Trip }> = ({trip}) => <>
     {trip.line && trip.category && trip.line.startsWith(trip.category) ?
         <>{trip.line}{trip.number ?
             <IonNote color="medium"> {trip.number}</IonNote> : null}</>
-        : trip.name
+        : <>{trip.name}{trip.line ?
+            <IonNote color="medium"> {trip.line}</IonNote> : null}</>
     }
     {" "}
     {trip.direction}
