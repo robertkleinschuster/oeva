@@ -6,17 +6,18 @@ interface FeedFormProps {
     url?: string,
     keywords?: string,
     disabled?: boolean,
-    onChange: (name: string, url: string, keywords: string) => void
+    onChange: (name: string, url: string, keywords: string, file?: File) => void
 }
 
 const FeedForm: React.FC<FeedFormProps> = (props) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [keywords, setKeywords] = useState('')
+    const [file, setFile] = useState<File>()
 
     useEffect(() => {
-        props.onChange(name, url, keywords)
-    }, [keywords, name, props, props.onChange, url]);
+        props.onChange(name, url, keywords, file)
+    }, [keywords, name, props, props.onChange, url, file]);
 
     useEffect(() => {
         if (props.name) {
@@ -64,6 +65,14 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
                 onInput={(e) => {
                     setURL(String(e.currentTarget.value))
                 }}/>
+        </IonItem>
+        <IonItem>
+            <input type="file" onInput={e => {
+                const file = e.currentTarget.files?.item(0);
+                if (file) {
+                    setFile(file)
+                }
+            }}/>
         </IonItem>
     </IonList>
 }

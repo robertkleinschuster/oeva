@@ -17,6 +17,8 @@ import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
+import {FeedImporter} from "../import/FeedImporter";
+import axios from "axios";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -26,6 +28,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
+    const [file, setFile] = useState<File>()
     const [keywords, setKeywords] = useState<string | undefined>('')
 
     const modal = useRef<HTMLIonModalElement>(null)
@@ -45,7 +48,11 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             keywords
         })
 
-        if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
+        if (file) {
+            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, axios);
+            await importer.saveData(feedId, file)
+            await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
+        } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
             if (stoppedStatuses.includes(feed.status)) {
                 await feedDb.transit.update(feed!, {
                     status: TransitFeedStatus.PROCESSING_KEYWORDS
@@ -143,13 +150,14 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     }
 
     const validateFeed = () => {
-        return Boolean(name.length && url.length);
+        return Boolean(name.length && (url.length || file || feed?.status === TransitFeedStatus.DONE));
     }
 
-    const onChange = async (name: string, url: string, keywords: string) => {
+    const onChange = async (name: string, url: string, keywords: string, file?: File) => {
         setName(name)
         setURL(url)
         setKeywords(keywords)
+        setFile(file)
     }
 
     return (
@@ -181,10 +189,11 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                     {feed && stoppedStatuses.includes(feed.status) ?
                         <>
                             <IonItem>
-                                <IonButton color="primary"
-                                           onClick={importFeed}>
-                                    Herunterladen
-                                </IonButton>
+                                {feed.url ?
+                                    <IonButton color="primary"
+                                               onClick={importFeed}>
+                                        Herunterladen
+                                    </IonButton> : null}
                                 <IonButton color="primary"
                                            onClick={processFeed}>
                                     Importieren
