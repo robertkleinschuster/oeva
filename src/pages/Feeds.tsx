@@ -5,6 +5,9 @@ import {
     IonContent,
     IonHeader,
     IonItem,
+    IonItemOption,
+    IonItemOptions,
+    IonItemSliding,
     IonLabel,
     IonList,
     IonNote,
@@ -22,6 +25,7 @@ import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
 import {scheduleDB} from "../db/ScheduleDB";
+import {TransitFeedStatus} from "../db/Feed";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
@@ -64,20 +68,28 @@ const Feeds: React.FC = () => {
             </IonHeader>
             <IonContent>
                 <IonList>
-                    {feeds?.map(feed => <IonItem
-                        button
-                        detail={false}
-                        id={'edit-feed-' + feed.id}
-                        key={feed.id}>
-                        <EditFeed feedId={feed.id!} trigger={'edit-feed-' + feed.id}/>
-                        <IonLabel>
-                            <IonText style={{display: 'block'}}>
-                                {feed.name}
-                            </IonText>
-                            <IonNote color="medium"><FeedStatus feed={feed}/></IonNote>
-                        </IonLabel>
-                        {runningFeed === feed.id ? <IonSpinner/> : null}
-                    </IonItem>)}
+                    {feeds?.map(feed => <IonItemSliding key={feed.id}>
+                        <IonItem
+                            button
+                            detail={false}
+                            id={'edit-feed-' + feed.id}>
+                            <EditFeed feedId={feed.id!} trigger={'edit-feed-' + feed.id}/>
+                            <IonLabel>
+                                <IonText style={{display: 'block'}}>
+                                    {feed.name}
+                                </IonText>
+                                <IonNote color="medium"><FeedStatus feed={feed}/></IonNote>
+                            </IonLabel>
+                            {runningFeed === feed.id ? <IonSpinner/> : null}
+                        </IonItem>
+                        <IonItemOptions>
+                            <IonItemOption onClick={() => {
+                                feedDb.transit.update(feed!, {
+                                    status: TransitFeedStatus.PROCESSING
+                                })
+                            }}>Importieren</IonItemOption>
+                        </IonItemOptions>
+                    </IonItemSliding>)}
                     <IonItem id="add-feed" button detail={false}>
                         <AddFeed trigger="add-feed"/>
                         <IonLabel>Feed hinzufügen</IonLabel>
