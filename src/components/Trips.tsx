@@ -1,4 +1,4 @@
-import {Stop, TripStop} from "../db/Schedule";
+import {routeTypeNames, Stop, TripStop} from "../db/Schedule";
 import {formatDisplayTime} from "../transit/DateTime";
 import {IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";
@@ -17,7 +17,7 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                     {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                 </IonNote>
                 <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined} style={{display: 'block'}}>
-                    {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
+                    {routeTypeNames.get(tripStop.route_type)} {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>
                     {tripStop.stop_name !== stop?.name ? <>{tripStop.stop_name}</> : null}

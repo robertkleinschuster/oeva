@@ -15,6 +15,19 @@ export enum RouteType {
     MONORAIL = 12
 }
 
+export const routeTypeNames = new Map<RouteType, string>([
+    [RouteType.RAIL, 'Zug'],
+    [RouteType.SUBWAY, 'U-Bahn'],
+    [RouteType.TRAM, 'Tram'],
+    [RouteType.CABLE_TRAM, 'Straßenseilbahn'],
+    [RouteType.BUS, 'Bus'],
+    [RouteType.TROLLEYBUS, 'O-Bus'],
+    [RouteType.FUNICULAR, 'Standseilbahn'],
+    [RouteType.MONORAIL, 'Einschienenbahn'],
+    [RouteType.FERRY, 'Fähre'],
+    [RouteType.AERIAL_LIFT, 'Luftseilbahn'],
+])
+
 export enum Boarding {
     NONE,
     STANDARD,
