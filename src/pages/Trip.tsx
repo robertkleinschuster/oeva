@@ -61,8 +61,8 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                                 {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {tripStop.stop_name}{tripStop.stop_platform ? <>:
-                                Steig {tripStop.stop_platform}</> : null}
+                                {tripStop.stop?.name}{tripStop.stop?.platform ? <>:
+                                Steig {tripStop.stop.platform}</> : null}
                             </IonText>
                             {tripStop.boarding !== Boarding.STANDARD ?
                                 <IonNote>

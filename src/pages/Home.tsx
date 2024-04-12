@@ -29,7 +29,7 @@ const Home: React.FC = () => {
                         <IonLabel>Stationen</IonLabel>
                     </IonItem>
                     <IonItem routerLink="/trips">
-                        <IonLabel>Fahrten</IonLabel>
+                        <IonLabel>Züge</IonLabel>
                     </IonItem>
                     <IonItem routerLink="/feeds">
                         <IonLabel>Feeds</IonLabel>

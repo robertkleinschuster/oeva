@@ -15,16 +15,20 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {searchTrip} from "../transit/TripSearch";
 import {isTripActiveOn} from "../transit/Schedule";
+import {scheduleDB} from "../db/ScheduleDB";
 
-const StopSearch: React.FC = () => {
+const TripSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
 
         const trips = useLiveQuery(async () => {
                 if (keyword.length > 1) {
-                    return searchTrip(keyword).then(trips => trips.filter(trip => isTripActiveOn(trip, new Date())))
+                    return scheduleDB.trip
+                        .where('number')
+                        .equals(keyword)
+                        .filter(trip => isTripActiveOn(trip, new Date()))
+                        .toArray();
                 }
                 return Promise.resolve(undefined)
             }, [keyword]
@@ -41,7 +45,7 @@ const StopSearch: React.FC = () => {
                         <IonButtons slot="start">
                             <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                         </IonButtons>
-                        <IonTitle>Fahrten</IonTitle>
+                        <IonTitle>Züge</IonTitle>
                         {loading ? <IonProgressBar type="indeterminate"></IonProgressBar> : null}
                     </IonToolbar>
                 </IonHeader>
@@ -49,7 +53,7 @@ const StopSearch: React.FC = () => {
                     <form action="#" onSubmit={e => e.preventDefault()}>
                         <IonSearchbar
                             debounce={500}
-                            placeholder="Suchen..."
+                            placeholder="Zugnummer"
                             inputmode="search"
                             onIonInput={e => {
                                 setLoading(true)
@@ -73,4 +77,4 @@ const StopSearch: React.FC = () => {
     }
 ;
 
-export default StopSearch;
+export default TripSearch;

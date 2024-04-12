@@ -18,10 +18,18 @@ export interface FilterState {
 
 export class TripStopRepository {
     async findByTrip(tripId: string): Promise<TripStop[]> {
-        return scheduleDB.trip_stop
-            .where('trip_id')
-            .equals(tripId)
-            .sortBy('sequence_in_trip')
+        return scheduleDB.transaction('r', [scheduleDB.trip_stop, scheduleDB.trip, scheduleDB.stop], async () => {
+            const tripStops = await scheduleDB.trip_stop
+                .where('trip_id')
+                .equals(tripId)
+                .sortBy('sequence_in_trip')
+            
+            for (const tripStop of tripStops) {
+                tripStop.trip = await scheduleDB.trip.get(tripStop.trip_id)
+                tripStop.stop = await scheduleDB.stop.get(tripStop.stop_id)
+            }
+            return tripStops
+        })
     }
 
     async findByStop(stopId: string, filterState: FilterState): Promise<TripStop[]> {
@@ -65,14 +73,16 @@ export class TripStopRepository {
 
         const tripStops = new Map<string, TripStop>
         for (const filter of filters) {
-            await scheduleDB.trip_stop
+            await scheduleDB.transaction('r', [scheduleDB.trip_stop, scheduleDB.trip, scheduleDB.stop], () => scheduleDB.trip_stop
                 .where('[h3_cell_le1+h3_cell_le2+hour]')
                 .equals(filter)
-                .each(tripStop => {
+                .each(async tripStop => {
                     if ((filterState.arrivals || !tripStop.is_destination) && routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, filterState.date)) {
+                        tripStop.trip = await scheduleDB.trip.get(tripStop.trip_id)
+                        tripStop.stop = await scheduleDB.stop.get(tripStop.stop_id)
                         tripStops.set(tripStop.id, tripStop)
                     }
-                })
+                }))
         }
 
         return Array.from(tripStops.values())

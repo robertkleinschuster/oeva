@@ -98,7 +98,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             <IonContent>
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
-                        Anschlüsse an {tripStop.trip_name} {tripStop.direction} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
+                        Anschlüsse an {tripStop.trip?.name} {tripStop.trip?.direction} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
                     </IonNote>
                     : null}
                 {stop && tripStops && filterState ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}

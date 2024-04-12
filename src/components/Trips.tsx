@@ -16,14 +16,24 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                     {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
                     {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                 </IonNote>
-                <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined} style={{display: 'block'}}>
-                    {routeTypeNames.get(tripStop.route_type)} {tripStop.trip_name} {tripStop.direction} <IonNote>({tripStop.feed_name})</IonNote>
+                <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined}
+                         style={{display: 'block'}}>
+                    {routeTypeNames.get(tripStop.route_type)}
+                    {" "}
+                    {tripStop.trip?.line && tripStop.trip.category && tripStop.trip.line.startsWith(tripStop.trip.category) ?
+                        <>{tripStop.trip.line}{tripStop.trip?.number ?
+                            <IonNote color="medium"> {tripStop.trip.number}</IonNote> : null}</>
+                        : tripStop.trip?.name
+                    }
+                    {" "}
+                    {tripStop.trip?.direction}
+                    <IonNote> ({tripStop.trip?.feed_name})</IonNote>
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>
-                    {tripStop.stop_name !== stop?.name ? <>{tripStop.stop_name}</> : null}
-                    {tripStop.stop_name !== stop?.name && tripStop.stop_platform ? ': ' : ''}
-                    {tripStop.stop_platform ? <>Steig {tripStop.stop_platform}</> : null}
-                    {stop && (stop.feed_parent_station || tripStop.stop_name !== stop.name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
+                    {tripStop.stop?.name !== stop?.name ? <>{tripStop.stop?.name}</> : null}
+                    {tripStop.stop?.name !== stop?.name && tripStop.stop?.platform ? ': ' : ''}
+                    {tripStop.stop?.platform ? <>Steig {tripStop.stop.platform}</> : null}
+                    {stop && (stop.feed_parent_station || tripStop.stop?.name !== stop.name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
                 </IonNote>
             </IonLabel>
         </IonItem>)}

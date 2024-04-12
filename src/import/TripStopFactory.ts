@@ -1,5 +1,5 @@
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION} from "../db/Schedule";
+import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION, RouteType} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import {convertStopTimeToInt} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
@@ -55,7 +55,6 @@ export function createTripStop(
     return {
         id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
         feed_id: trip.feed_id,
-        feed_name: trip.feed_name,
         stop_id: stop.id,
         trip_id: trip.id,
         route_type: trip.route_type,
@@ -66,13 +65,9 @@ export function createTripStop(
         h3_cell_le2: stop.h3_cell_le2,
         departure_time: is_destination || stopTime.departure_time == undefined ? undefined : convertStopTimeToInt(stopTime.departure_time),
         arrival_time: is_origin || stopTime.arrival_time === undefined ? undefined : convertStopTimeToInt(stopTime.arrival_time),
-        trip_name: trip.name,
-        direction: trip.direction,
         is_origin,
         is_destination,
         boarding,
-        stop_name: stop.name,
-        stop_platform: stop.platform,
         service_start_date: trip.service_start_date,
         service_end_date: trip.service_end_date,
         service_exceptions: trip.service_exceptions,
@@ -137,12 +132,12 @@ export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
 }
 
 
-export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
+export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
     if (!feed.id) {
         throw new Error('Invalid feed')
     }
 
-    let name = trip.trip_short_name;
+    let name = gtfsTrip.trip_short_name;
 
     if (!name) {
         name = route.route_short_name
@@ -154,7 +149,7 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
 
     name = (name ?? '').trim();
 
-    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (trip.trip_headsign ?? '') + ' ' + (feed.keywords ?? ''))).map(token => token.value);
+    const keywords = tokenizer.tokenize(transliterate(name + ' ' + (gtfsTrip.trip_headsign ?? '') + ' ' + (feed.keywords ?? ''))).map(token => token.value);
     keywords.push(transliterate(name))
     keywords.push(transliterate(feed.name))
 
@@ -169,18 +164,31 @@ export function createTrip(feed: TransitFeed, trip: GTFSTrip, route: GTFSRoute, 
         weekdays += service.sunday ? Weekday.Sunday : 0;
     }
 
-    return {
-        id: `${feed.id}-${trip.trip_id}`,
+    const trip: Trip = {
+        id: `${feed.id}-${gtfsTrip.trip_id}`,
         feed_id: feed.id,
         feed_name: feed.name,
-        feed_trip_id: trip.trip_id,
+        feed_trip_id: gtfsTrip.trip_id,
         route_type: route.route_type,
         name: name,
-        direction: trip.trip_headsign ?? '',
+        line: route.route_short_name,
+        direction: gtfsTrip.trip_headsign ?? '',
         keywords: keywords,
         service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
         service_start_date: service?.start_date,
         service_end_date: service?.end_date,
         service_weekdays: weekdays,
     }
+
+    if (route.route_type === RouteType.RAIL) {
+        const matches = name.match(/(?<category>[A-Z]{1,3}) (?<number>[0-9]+)/)
+        trip.category = matches?.groups?.category
+        trip.number = matches?.groups?.number
+        if (!matches) {
+            const matches = name.match(/(?<number>^[0-9]+) /)
+            trip.number = matches?.groups?.number
+        }
+    }
+
+    return trip;
 }

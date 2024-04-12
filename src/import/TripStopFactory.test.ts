@@ -1,5 +1,5 @@
-import {GTFSStop, GTFSStopTime} from "../db/GTFS";
-import {createStop, createTripStop} from "./TripStopFactory";
+import {GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {createStop, createTrip, createTripStop} from "./TripStopFactory";
 import {Boarding, RouteType, Stop, Trip} from "../db/Schedule";
 import {describe, expect, it} from "vitest";
 import {TransitFeed, TransitFeedStatus} from "../db/Feed";
@@ -65,8 +65,6 @@ describe('TripStopFactory', () => {
         expect(tripStop.stop_id).toEqual(stop.id)
         expect(tripStop.arrival_time).toBeUndefined()
         expect(tripStop.departure_time).toEqual(837)
-        expect(tripStop.direction).toEqual('Budapest-Keleti')
-        expect(tripStop.trip_name).toEqual('IC 311')
         expect(tripStop.boarding).toEqual(Boarding.STANDARD)
     })
     it('should set boarding none for service stop', () => {
@@ -217,5 +215,41 @@ describe('TripStopFactory', () => {
         const stop2 = createStop(feed, gtfsStop2)
         expect(stop2.platform).toEqual('1')
         expect(stop2.name).toEqual('Graz Hbf 99')
+    })
+    it('should extract train category and number for route typ rail', () => {
+        const gtfsTrip: GTFSTrip = {
+            trip_id: '1',
+            route_id: '2',
+            service_id: '3',
+            trip_short_name: 'S 4040'
+        }
+        const gtfsRoute: GTFSRoute = {
+            route_id: '2',
+            route_type: RouteType.RAIL,
+            route_long_name: '',
+            route_short_name: 'S5',
+        }
+        const trip = createTrip(feed, gtfsTrip, gtfsRoute, undefined, [])
+        expect(trip.number).toEqual('4040')
+        expect(trip.category).toEqual('S')
+        expect(trip.line).toEqual('S5')
+    })
+    it('should only set the line name for non rail route types', () => {
+        const gtfsTrip: GTFSTrip = {
+            trip_id: '1',
+            route_id: '2',
+            service_id: '3',
+            trip_short_name: 'S 4040'
+        }
+        const gtfsRoute: GTFSRoute = {
+            route_id: '2',
+            route_type: RouteType.BUS,
+            route_long_name: '',
+            route_short_name: '62',
+        }
+        const trip = createTrip(feed, gtfsTrip, gtfsRoute, undefined, [])
+        expect(trip.line).toEqual('62')
+        expect(trip.number).toBeUndefined()
+        expect(trip.category).toBeUndefined()
     })
 })

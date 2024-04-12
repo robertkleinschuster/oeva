@@ -51,26 +51,23 @@ export interface TripStop {
     stop_id: string;
     trip_id: string;
     feed_id: number;
-    feed_name: string;
     h3_cell_le1: number; // little endian first part
     h3_cell_le2: number; // little endian second part
-    route_type: RouteType;
-    boarding: Boarding;
+    hour: number | undefined;
     sequence_in_trip: number;
     sequence_at_stop: number;
-    hour: number | undefined;
+    route_type: RouteType;
     departure_time: number | undefined;
     arrival_time: number | undefined;
-    trip_name: string;
-    direction: string | undefined;
-    stop_name: string;
-    stop_platform: string | undefined;
+    boarding: Boarding;
     is_origin: boolean;
     is_destination: boolean;
     service_start_date: number | undefined;
     service_end_date: number | undefined;
     service_weekdays: number;
     service_exceptions: Map<number, ExceptionType>;
+    trip?: Trip;
+    stop?: Stop;
 }
 
 export interface Stop {
@@ -92,6 +89,9 @@ export interface Trip {
     feed_name: string;
     feed_trip_id: string;
     name: string;
+    line?: string;
+    number?: string;
+    category?: string;
     direction: string;
     route_type: RouteType
     service_start_date: number | undefined;
