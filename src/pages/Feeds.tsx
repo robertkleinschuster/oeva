@@ -25,7 +25,7 @@ import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
 import {scheduleDB} from "../db/ScheduleDB";
-import {TransitFeedStatus} from "../db/Feed";
+import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
@@ -83,11 +83,18 @@ const Feeds: React.FC = () => {
                             {runningFeed === feed.id ? <IonSpinner/> : null}
                         </IonItem>
                         <IonItemOptions>
-                            <IonItemOption onClick={() => {
-                                feedDb.transit.update(feed!, {
-                                    status: TransitFeedStatus.PROCESSING
-                                })
-                            }}>Importieren</IonItemOption>
+                            {stoppedStatuses.includes(feed.status) ?
+                                <IonItemOption onClick={() => {
+                                    feedDb.transit.update(feed!, {
+                                        status: TransitFeedStatus.PROCESSING
+                                    })
+                                }}>Importieren</IonItemOption>
+                                : <IonItemOption color="warning" onClick={() => {
+                                    feedDb.transit.update(feed!, {
+                                        status: TransitFeedStatus.ABORTED
+                                    })
+                                    window.location.reload()
+                                }}>Abbrechen</IonItemOption>}
                         </IonItemOptions>
                     </IonItemSliding>)}
                     <IonItem id="add-feed" button detail={false}>

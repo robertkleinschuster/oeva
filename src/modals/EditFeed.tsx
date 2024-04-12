@@ -26,7 +26,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
-    const [keywords, setKeywords] = useState<string|undefined>('')
+    const [keywords, setKeywords] = useState<string | undefined>('')
 
     const modal = useRef<HTMLIonModalElement>(null)
 
@@ -93,14 +93,20 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const importFeed = async () => {
         await saveFeed()
         await feedDb.transit.update(feed!, {
-            status: TransitFeedStatus.DOWNLOADING
+            status: TransitFeedStatus.DOWNLOADING,
+            progress: undefined,
+            step: undefined,
+            offset: undefined
         })
         modal.current?.dismiss()
     }
     const processFeed = async () => {
         await saveFeed()
         await feedDb.transit.update(feed!, {
-            status: TransitFeedStatus.PROCESSING
+            status: TransitFeedStatus.PROCESSING,
+            progress: undefined,
+            step: undefined,
+            offset: undefined
         })
         modal.current?.dismiss()
     }
@@ -169,16 +175,12 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <FeedForm onChange={onChange} name={name} url={url} keywords={keywords}/>
+                <FeedForm disabled={feed && !stoppedStatuses.includes(feed.status)} onChange={onChange} name={name}
+                          url={url} keywords={keywords}/>
                 <IonList>
-                    <IonItem>
-                        {feed?.status && stoppedStatuses.includes(feed?.status)
-                        && feed.status !== TransitFeedStatus.DONE
-                        && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
-                            <IonButton color="primary"
-                                       onClick={continueFeed}>
-                                Fortsetzen ({feed.previous_status})
-                            </IonButton> : <>
+                    {feed && stoppedStatuses.includes(feed.status) ?
+                        <>
+                            <IonItem>
                                 <IonButton color="primary"
                                            onClick={importFeed}>
                                     Herunterladen
@@ -187,22 +189,30 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                            onClick={processFeed}>
                                     Importieren
                                 </IonButton>
-                            </>}
-                    </IonItem>
-                    <IonItem>
-                        <IonButton color="danger"
-                                   onClick={deleteFeed}>
-                            Entfernen
-                        </IonButton>
-                        <IonButton color="danger"
-                                   onClick={deleteFeedDownload}>
-                            Download löschen
-                        </IonButton>
-                        <IonButton color="danger"
-                                   onClick={deleteFeedData}>
-                            Daten löschen
-                        </IonButton>
-                    </IonItem>
+                                {feed?.status !== TransitFeedStatus.DONE
+                                && feed?.previous_status && !stoppedStatuses.includes(feed.previous_status) ?
+                                    <IonButton color="primary"
+                                               onClick={continueFeed}>
+                                        Fortsetzen ({feed.previous_status})
+                                    </IonButton> : null}
+                            </IonItem>
+                            <IonItem>
+                                <IonButton color="danger"
+                                           onClick={deleteFeed}>
+                                    Entfernen
+                                </IonButton>
+                                <IonButton color="danger"
+                                           onClick={deleteFeedDownload}>
+                                    Download löschen
+                                </IonButton>
+                                <IonButton color="danger"
+                                           onClick={deleteFeedData}>
+                                    Daten löschen
+                                </IonButton>
+                            </IonItem>
+                        </>
+                        : null
+                    }
                     <IonItem>
                         {feed?.status && !stoppedStatuses.includes(feed?.status) ?
                             <IonButton color="warning"

@@ -5,6 +5,7 @@ interface FeedFormProps {
     name?: string,
     url?: string,
     keywords?: string,
+    disabled?: boolean,
     onChange: (name: string, url: string, keywords: string) => void
 }
 
@@ -33,6 +34,7 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
     return <IonList>
         <IonItem>
             <IonInput
+                disabled={props.disabled}
                 label="Name"
                 labelPlacement="stacked"
                 placeholder="Feed Name"
@@ -43,6 +45,7 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
         </IonItem>
         <IonItem>
             <IonInput
+                disabled={props.disabled}
                 label="Keywords"
                 labelPlacement="stacked"
                 placeholder=""
@@ -53,6 +56,7 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
         </IonItem>
         <IonItem>
             <IonInput
+                disabled={props.disabled}
                 label="URL"
                 labelPlacement="stacked"
                 placeholder="https://example.com/gtfs.zip"
