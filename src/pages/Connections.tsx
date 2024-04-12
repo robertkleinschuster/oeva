@@ -22,6 +22,7 @@ import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import Filter from "../components/Filter";
+import TripName from "../components/TripName";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -33,6 +34,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
     const [filterState, setFilter] = useState<FilterState|undefined>()
 
     const tripStop = useLiveQuery(() => scheduleDB.trip_stop.get(match.params.id), [match.params.id])
+    const trip = useLiveQuery(() => tripStop ? scheduleDB.trip.get(tripStop?.trip_id) : undefined, [tripStop])
     const stop = useLiveQuery(() => tripStop ? scheduleDB.stop.get(tripStop.stop_id) : undefined, [tripStop])
     const tripStops = useLiveQuery(async () => {
             if (!tripStop || !filterState) {
@@ -98,7 +100,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             <IonContent>
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
-                        Anschlüsse an {tripStop.trip?.name} {tripStop.trip?.direction} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
+                        Anschlüsse an {trip ? <TripName trip={trip}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
                     </IonNote>
                     : null}
                 {stop && tripStops && filterState ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}

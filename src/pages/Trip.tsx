@@ -24,6 +24,7 @@ import StopBoarding from "../components/StopBoarding";
 import {setSeconds} from "date-fns";
 import {extractExceptions, extractWeekdays, weekdayNames} from "../transit/Schedule";
 import {ExceptionType} from "../db/GTFS";
+import TripName from "../components/TripName";
 
 interface TripPageProps extends RouteComponentProps<{
     id: string
@@ -46,7 +47,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{trip?.name} {trip?.direction}{" "}<IonNote>({trip?.feed_name})</IonNote></IonTitle>
+                    <IonTitle>{trip ? <TripName trip={trip}/> : null}</IonTitle>
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">

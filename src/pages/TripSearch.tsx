@@ -17,6 +17,7 @@ import React, {useEffect, useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {isTripActiveOn} from "../transit/Schedule";
 import {scheduleDB} from "../db/ScheduleDB";
+import TripName from "../components/TripName";
 
 const TripSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
@@ -66,7 +67,7 @@ const TripSearch: React.FC = () => {
                                 routerLink={`/trips/${trip.id}`}
                                 key={trip.id}>
                                 <IonLabel>
-                                    {trip.name} {trip.direction} <IonNote>({trip.feed_name})</IonNote>
+                                    <TripName trip={trip}/>
                                 </IonLabel>
                             </IonItem>
                         )}

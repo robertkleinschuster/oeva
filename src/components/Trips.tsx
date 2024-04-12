@@ -3,6 +3,7 @@ import {formatDisplayTime} from "../transit/DateTime";
 import {IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";
 import {calcDistance} from "../transit/Geo";
+import TripName from "./TripName";
 
 export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> = ({stop, tripStops, date}) => (
     <IonList>
@@ -18,16 +19,7 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                 </IonNote>
                 <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined}
                          style={{display: 'block'}}>
-                    {routeTypeNames.get(tripStop.route_type)}
-                    {" "}
-                    {tripStop.trip?.line && tripStop.trip.category && tripStop.trip.line.startsWith(tripStop.trip.category) ?
-                        <>{tripStop.trip.line}{tripStop.trip?.number ?
-                            <IonNote color="medium"> {tripStop.trip.number}</IonNote> : null}</>
-                        : tripStop.trip?.name
-                    }
-                    {" "}
-                    {tripStop.trip?.direction}
-                    <IonNote> ({tripStop.trip?.feed_name})</IonNote>
+                    {tripStop.trip ? <TripName trip={tripStop.trip}/> : null}
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>
                     {tripStop.stop?.name !== stop?.name ? <>{tripStop.stop?.name}</> : null}
