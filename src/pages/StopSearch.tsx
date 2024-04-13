@@ -1,5 +1,6 @@
 import {
     IonBackButton,
+    IonButton,
     IonButtons,
     IonContent,
     IonHeader,
@@ -28,6 +29,7 @@ import {formatDisplayTime} from "../transit/DateTime";
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
+        const [showNearby, setShowNearby] = useState(false)
         const [nearbyStops, setNearbyStops] = useState<Stop[]>([])
         const [currentCell, setCurrentCell] = useState<H3IndexInput>()
 
@@ -62,6 +64,7 @@ const StopSearch: React.FC = () => {
                 }
 
                 setNearbyStops(Array.from(stops.values()))
+                setShowNearby(true)
             }, undefined, {
                 enableHighAccuracy: true,
                 timeout: 15000,
@@ -108,9 +111,10 @@ const StopSearch: React.FC = () => {
                                 </IonLabel>
                             </IonItem>
                         )}
-                        {!stops ? <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
+                        {!stops && nearbyStops ? <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
                             In der Nähe:
                         </IonNote> : null}
+                        {!showNearby ? <IonButton fill="clear" onClick={() => setShowNearby(true)}>Stationen in der Nähe anzeigen</IonButton> : null}
                         {!stops && currentCell ? nearbyStops.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
                                 key={stop.id}>
