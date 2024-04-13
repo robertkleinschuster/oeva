@@ -40,7 +40,7 @@ const StopSearch: React.FC = () => {
         )
 
         useEffect(() => {
-            navigator.geolocation.getCurrentPosition(async (position) => {
+            const watchId = navigator.geolocation.watchPosition(async (position) => {
                 const cell = new H3Cell()
                 cell.fromIndex(latLngToCell(position.coords.latitude, position.coords.longitude, H3_RESOLUTION))
                 setCurrentCell(cell.toIndexInput())
@@ -62,7 +62,13 @@ const StopSearch: React.FC = () => {
                 }
 
                 setNearbyStops(Array.from(stops.values()))
+            }, undefined, {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
             });
+
+            return () => navigator.geolocation.clearWatch(watchId)
         }, []);
 
         useEffect(() => {
