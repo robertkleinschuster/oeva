@@ -42,38 +42,42 @@ export class FeedProcessor {
 
         try {
             for (const gtfsTrip of trips) {
-                const tripStops: TripStop[] = [];
-                const stopTimes = await this.transitDb.stopTimes
-                    .where({trip_id: gtfsTrip.trip_id})
-                    .toArray();
-
-                await this.scheduleDb.transaction(
-                    'rw',
-                    [this.scheduleDb.trip, this.scheduleDb.stop, this.scheduleDb.trip_stop],
-                    async () => {
-                        const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
-                        if (trip) {
-                            for (const stopTime of stopTimes) {
-                                const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
-                                if (stop) {
-                                    try {
-                                        tripStops.push(createTripStop(
-                                            trip,
-                                            stop,
-                                            stopTime,
-                                            stopTimes
-                                        ))
-                                    } catch (e) {
-                                        await this.log(feedId, `${String(e)}, stop: ${stopTime.stop_id}, trip: ${stopTime.trip_id}`)
+                const errors: string[] = [];
+                try {
+                    const tripStops: TripStop[] = [];
+                    const stopTimes = await this.transitDb.stopTimes
+                        .where({trip_id: gtfsTrip.trip_id})
+                        .toArray();
+                    await this.scheduleDb.transaction(
+                        'rw',
+                        [this.scheduleDb.trip, this.scheduleDb.stop, this.scheduleDb.trip_stop],
+                        async () => {
+                            const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
+                            if (trip) {
+                                for (const stopTime of stopTimes) {
+                                    const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
+                                    if (stop) {
+                                        try {
+                                            tripStops.push(createTripStop(
+                                                trip,
+                                                stop,
+                                                stopTime,
+                                                stopTimes
+                                            ))
+                                        } catch (e) {
+                                            errors.push(`${String(e)}, stop: ${stopTime.stop_id}, trip: ${stopTime.trip_id}`)
+                                        }
+                                    } else {
+                                        errors.push(`Stop with id ${stopTime.stop_id} not found.`)
                                     }
-                                } else {
-                                    await this.log(feedId, `Stop with id ${stopTime.stop_id} not found.`)
                                 }
                             }
-                        }
-                        await this.scheduleDb.trip_stop.bulkPut(tripStops);
-                        this.offset++
-                    })
+                            await this.scheduleDb.trip_stop.bulkPut(tripStops);
+                            this.offset++
+                        })
+                } finally {
+                    errors.forEach(error => this.log(feedId, error))
+                }
             }
         } finally {
             clearInterval(interval)
