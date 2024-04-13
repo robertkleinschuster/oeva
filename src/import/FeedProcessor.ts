@@ -56,12 +56,18 @@ export class FeedProcessor {
                             for (const stopTime of stopTimes) {
                                 const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
                                 if (stop) {
-                                    tripStops.push(createTripStop(
-                                        trip,
-                                        stop,
-                                        stopTime,
-                                        stopTimes
-                                    ))
+                                    try {
+                                        tripStops.push(createTripStop(
+                                            trip,
+                                            stop,
+                                            stopTime,
+                                            stopTimes
+                                        ))
+                                    } catch (e) {
+                                        await this.log(feedId, `${String(e)}, stop: ${stopTime.stop_id}, trip: ${stopTime.trip_id}`)
+                                    }
+                                } else {
+                                    await this.log(feedId, `Stop with id ${stopTime.stop_id} not found.`)
                                 }
                             }
                         }
@@ -72,6 +78,10 @@ export class FeedProcessor {
         } finally {
             clearInterval(interval)
         }
+    }
+
+    async log(feedId: number, message: string) {
+        return this.feedDb.log.add({feed_id: feedId, message: message})
     }
 
     async processStops(feedId: number) {

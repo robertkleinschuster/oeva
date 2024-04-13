@@ -50,3 +50,8 @@ export interface FeedFile {
     status: FeedFileStatus;
     content: Uint8Array;
 }
+
+export interface FeedLog {
+    feed_id: number;
+    message: string;
+}

@@ -4,6 +4,8 @@ import {
     IonContent,
     IonHeader,
     IonItem,
+    IonItemDivider,
+    IonLabel,
     IonList,
     IonModal,
     IonTitle,
@@ -30,6 +32,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const [url, setURL] = useState('')
     const [file, setFile] = useState<File>()
     const [keywords, setKeywords] = useState<string | undefined>('')
+    const logs = useLiveQuery(() => feedDb.log.where({feed_id: feedId}).toArray())
 
     const modal = useRef<HTMLIonModalElement>(null)
 
@@ -99,6 +102,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const importFeed = async () => {
         await saveFeed()
+        await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.DOWNLOADING,
             progress: undefined,
@@ -109,6 +113,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     }
     const processFeed = async () => {
         await saveFeed()
+        await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.PROCESSING,
             progress: undefined,
@@ -233,6 +238,12 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                 Fortschritt zurücksetzen
                             </IonButton>}
                     </IonItem>
+                    <IonItemDivider>
+                        <IonLabel>Log</IonLabel>
+                    </IonItemDivider>
+                    {logs?.map(log => <IonItem>
+                        <IonLabel>{log.message}</IonLabel>
+                    </IonItem>)}
                 </IonList>
             </IonContent>
         </IonModal>
