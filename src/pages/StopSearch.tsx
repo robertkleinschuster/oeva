@@ -64,7 +64,9 @@ const StopSearch: React.FC = () => {
                 }
 
                 setNearbyStops(Array.from(stops.values()))
-                setShowNearby(true)
+                if (!showNearby) {
+                    setShowNearby(true)
+                }
             }, undefined, {
                 enableHighAccuracy: true,
                 timeout: 15000,
@@ -72,7 +74,7 @@ const StopSearch: React.FC = () => {
             });
 
             return () => navigator.geolocation.clearWatch(watchId)
-        }, []);
+        }, [showNearby]);
 
         useEffect(() => {
             setLoading(false)
