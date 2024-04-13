@@ -16,10 +16,20 @@ import {
 import React, {useEffect, useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {searchStop} from "../transit/StopSearch";
+import {gridDisk, H3IndexInput, latLngToCell} from "h3-js";
+import {H3_RESOLUTION, Stop, TripStop} from "../db/Schedule";
+import {H3Cell} from "../transit/H3Cell";
+import {scheduleDB} from "../db/ScheduleDB";
+import {isTripStopActiveOn} from "../transit/Schedule";
+import {calcDistance} from "../transit/Geo";
+import TripName from "../components/TripName";
+import {formatDisplayTime} from "../transit/DateTime";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
+        const [nearbyStops, setNearbyStops] = useState<Stop[]>([])
+        const [currentCell, setCurrentCell] = useState<H3IndexInput>()
 
         const stops = useLiveQuery(async () => {
                 if (keyword.length > 1) {
@@ -28,6 +38,32 @@ const StopSearch: React.FC = () => {
                 return Promise.resolve(undefined)
             }, [keyword]
         )
+
+        useEffect(() => {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const cell = new H3Cell()
+                cell.fromIndex(latLngToCell(position.coords.latitude, position.coords.longitude, H3_RESOLUTION))
+                setCurrentCell(cell.toIndexInput())
+                const cells = gridDisk(cell.toIndexInput(), 14).map(c => {
+                    cell.fromIndex(c)
+                    return cell.toIndexInput()
+                });
+
+                const stops = new Map<string, Stop>()
+                for (const cell of cells) {
+                    await scheduleDB.stop
+                        .where('[h3_cell_le1+h3_cell_le2]')
+                        .equals(cell)
+                        .each(stop => {
+                            if (!stop.feed_parent_station) {
+                                stops.set(stop.id, stop)
+                            }
+                        })
+                }
+
+                setNearbyStops(Array.from(stops.values()))
+            });
+        }, []);
 
         useEffect(() => {
             setLoading(false)
@@ -61,10 +97,25 @@ const StopSearch: React.FC = () => {
                                 routerLink={`/stops/${stop.id}`}
                                 key={stop.id}>
                                 <IonLabel>
-                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null} <IonNote>({stop.feed_name})</IonNote>
+                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                    <IonNote>({stop.feed_name})</IonNote>
                                 </IonLabel>
                             </IonItem>
                         )}
+                        {!stops ? <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
+                            In der Nähe:
+                        </IonNote> : null}
+                        {!stops && currentCell ? nearbyStops.map(stop => <IonItem
+                                routerLink={`/stops/${stop.id}`}
+                                key={stop.id}>
+                                <IonLabel>
+                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                    <IonNote> ({stop.feed_name})</IonNote>
+                                    <IonNote
+                                        style={{display: 'block'}}>{calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], currentCell)} m</IonNote>
+                                </IonLabel>
+                            </IonItem>
+                        ) : null}
                     </IonList>
                 </IonContent>
             </IonPage>
