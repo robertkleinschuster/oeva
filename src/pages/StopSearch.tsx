@@ -41,12 +41,17 @@ const StopSearch: React.FC = () => {
             }, [keyword]
         )
 
+        const lastUsedStops = useLiveQuery(
+            () => scheduleDB.stop.orderBy('last_used').limit(10).toArray(stops => stops.reverse())
+        )
+
         useEffect(() => {
             const watchId = navigator.geolocation.watchPosition(async (position) => {
                 const cell = new H3Cell()
                 cell.fromIndex(latLngToCell(position.coords.latitude, position.coords.longitude, H3_RESOLUTION))
-                setCurrentCell(cell.toIndexInput())
-                const cells = gridDisk(cell.toIndexInput(), 14).map(c => {
+                const currentCell = cell.toIndexInput();
+                setCurrentCell(currentCell)
+                const cells = gridDisk(cell.toIndexInput(), 26).map(c => {
                     cell.fromIndex(c)
                     return cell.toIndexInput()
                 });
@@ -63,7 +68,11 @@ const StopSearch: React.FC = () => {
                         })
                 }
 
-                setNearbyStops(Array.from(stops.values()))
+                setNearbyStops(Array.from(stops.values())
+                    .sort(
+                        (a, b) =>
+                            calcDistance([a.h3_cell_le1, a.h3_cell_le2], currentCell) - calcDistance([b.h3_cell_le1, b.h3_cell_le2], currentCell))
+                )
                 if (!showNearby) {
                     setShowNearby(true)
                 }
@@ -106,23 +115,26 @@ const StopSearch: React.FC = () => {
                     <IonList>
                         {stops?.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
+                                onClick={() => {
+                                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                                }}
                                 key={stop.id}>
                                 <IonLabel>
                                     {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
-                                    <IonNote>({stop.feed_name})</IonNote>
+                                    <IonNote> ({stop.feed_name})</IonNote>
                                 </IonLabel>
                             </IonItem>
                         )}
                         {!stops && nearbyStops ? <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
-                            In der Nähe:
+                            In der Nähe
                         </IonNote> : null}
-                        {!showNearby ? <IonButton fill="clear" onClick={() => {
+                        {!stops && !showNearby ? <IonButton fill="clear" onClick={() => {
                             navigator.permissions.query({name: "geolocation"}).then(value => {
                                 if (value.state === 'prompt') {
                                     navigator.geolocation.getCurrentPosition(() => {
-                                            setShowNearby(true)
-                                        }, console.error)
-                                }  else {
+                                        setShowNearby(true)
+                                    }, console.error)
+                                } else {
                                     setShowNearby(value.state === 'granted')
                                 }
                                 value.onchange = (() => {
@@ -132,6 +144,9 @@ const StopSearch: React.FC = () => {
                         }}>Stationen in der Nähe anzeigen</IonButton> : null}
                         {!stops && currentCell ? nearbyStops.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
+                                onClick={() => {
+                                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                                }}
                                 key={stop.id}>
                                 <IonLabel>
                                     {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
@@ -141,6 +156,25 @@ const StopSearch: React.FC = () => {
                                 </IonLabel>
                             </IonItem>
                         ) : null}
+                        {!stops ?
+                            <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
+                                Zuletzt verwendet
+                            </IonNote> : null}
+                        {!stops && lastUsedStops?.map(stop => <IonItem
+                                routerLink={`/stops/${stop.id}`}
+                                onClick={() => {
+                                    scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
+                                }}
+                                key={stop.id}>
+                                <IonLabel>
+                                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                    <IonNote> ({stop.feed_name})</IonNote>
+                                    {currentCell ?
+                                        <IonNote
+                                            style={{display: 'block'}}>{calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], currentCell)} m</IonNote> : null}
+                                </IonLabel>
+                            </IonItem>
+                        )}
                     </IonList>
                 </IonContent>
             </IonPage>

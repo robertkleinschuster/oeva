@@ -8,9 +8,9 @@ export class ScheduleDB extends Dexie {
 
     public constructor() {
         super('Schedule');
-        this.version(25).stores({
+        this.version(26).stores({
             trip_stop: 'id,feed_id,trip_id,stop_id,[h3_cell_le1+h3_cell_le2+hour]',
-            stop: 'id,feed_id,[h3_cell_le1+h3_cell_le2],*keywords',
+            stop: 'id,feed_id,[h3_cell_le1+h3_cell_le2],*keywords,last_used,favorite_order',
             trip: 'id,feed_id,number,*keywords',
         })
 

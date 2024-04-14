@@ -81,6 +81,8 @@ export interface Stop {
     h3_cell_le1: number; // little endian first part
     h3_cell_le2: number; // little endian second part
     keywords: string[];
+    last_used?: number;
+    favorite_order?: number;
 }
 
 export interface Trip {

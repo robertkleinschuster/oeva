@@ -23,7 +23,7 @@ export class TripStopRepository {
                 .where('trip_id')
                 .equals(tripId)
                 .sortBy('sequence_in_trip')
-            
+
             for (const tripStop of tripStops) {
                 tripStop.trip = await scheduleDB.trip.get(tripStop.trip_id)
                 tripStop.stop = await scheduleDB.stop.get(tripStop.stop_id)
