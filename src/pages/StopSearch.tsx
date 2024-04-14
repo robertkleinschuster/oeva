@@ -63,7 +63,7 @@ const StopSearch: React.FC = () => {
                         .equals(cell)
                         .each(stop => {
                             if (!stop.feed_parent_station) {
-                                stops.set(stop.id, stop)
+                                stops.set(stop.name + stop.platform, stop)
                             }
                         })
                 }
