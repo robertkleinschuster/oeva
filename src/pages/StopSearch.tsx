@@ -116,7 +116,7 @@ const StopSearch: React.FC = () => {
                         {stops?.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
                                 onClick={() => {
-                                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                                    scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
                                 }}
                                 key={stop.id}>
                                 <IonLabel>
@@ -145,7 +145,7 @@ const StopSearch: React.FC = () => {
                         {!stops && currentCell ? nearbyStops.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
                                 onClick={() => {
-                                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                                    scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
                                 }}
                                 key={stop.id}>
                                 <IonLabel>
