@@ -116,7 +116,20 @@ const StopSearch: React.FC = () => {
                         {!stops && nearbyStops ? <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
                             In der Nähe:
                         </IonNote> : null}
-                        {!showNearby ? <IonButton fill="clear" onClick={() => setShowNearby(true)}>Stationen in der Nähe anzeigen</IonButton> : null}
+                        {!showNearby ? <IonButton fill="clear" onClick={() => {
+                            navigator.permissions.query({name: "geolocation"}).then(value => {
+                                if (value.state === 'prompt') {
+                                    navigator.geolocation.getCurrentPosition(() => {
+                                            setShowNearby(true)
+                                        }, console.error)
+                                }  else {
+                                    setShowNearby(value.state === 'granted')
+                                }
+                                value.onchange = (() => {
+                                    setShowNearby(value.state === 'granted')
+                                })
+                            })
+                        }}>Stationen in der Nähe anzeigen</IonButton> : null}
                         {!stops && currentCell ? nearbyStops.map(stop => <IonItem
                                 routerLink={`/stops/${stop.id}`}
                                 key={stop.id}>
