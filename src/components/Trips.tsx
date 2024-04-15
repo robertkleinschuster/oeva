@@ -17,9 +17,9 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                     {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
                     {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                 </IonNote>
-                <IonText color={tripStop.departure_time === undefined ? 'medium' : undefined}
+                <IonText color={tripStop.is_destination ? 'medium' : undefined}
                          style={{display: 'block'}}>
-                    {tripStop.trip ? <TripName trip={tripStop.trip}/> : null}
+                    {tripStop.trip ? <TripName trip={tripStop.trip} isDestination={tripStop.is_destination}/> : null}
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>
                     {tripStop.stop?.name !== stop?.name ? <>{tripStop.stop?.name}</> : null}

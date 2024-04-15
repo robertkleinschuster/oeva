@@ -44,7 +44,6 @@ export class FeedProcessor {
             for (const gtfsTrip of trips) {
                 const errors: string[] = [];
                 try {
-                    const tripStops: TripStop[] = [];
                     const stopTimes = await this.transitDb.stopTimes
                         .where({trip_id: gtfsTrip.trip_id})
                         .toArray();
@@ -54,16 +53,26 @@ export class FeedProcessor {
                         async () => {
                             const trip = await this.scheduleDb.trip.get(`${feedId}-${gtfsTrip.trip_id}`)
                             if (trip) {
+                                const tripStops: TripStop[] = [];
                                 for (const stopTime of stopTimes) {
                                     const stop = await this.scheduleDb.stop.get(this.prefixId(feedId, stopTime.stop_id))
                                     if (stop) {
                                         try {
-                                            tripStops.push(createTripStop(
+                                            const tripStop = createTripStop(
                                                 trip,
                                                 stop,
                                                 stopTime,
                                                 stopTimes
-                                            ))
+                                            );
+                                            tripStops.push(tripStop)
+                                            if (tripStop.is_origin) {
+                                                trip.origin_stop_id = stop.id;
+                                                trip.origin = stop.name;
+                                            }
+                                            if (tripStop.is_destination) {
+                                                trip.destination_stop_id = stop.id;
+                                                trip.destination = stop.name;
+                                            }
                                         } catch (e) {
                                             errors.push(`${String(e)}, stop: ${stopTime.stop_id}, trip: ${stopTime.trip_id}`)
                                         }
@@ -71,8 +80,9 @@ export class FeedProcessor {
                                         errors.push(`Stop with id ${stopTime.stop_id} not found.`)
                                     }
                                 }
+                                await this.scheduleDb.trip_stop.bulkPut(tripStops);
+                                await this.scheduleDb.trip.put(trip)
                             }
-                            await this.scheduleDb.trip_stop.bulkPut(tripStops);
                             this.offset++
                         })
                 } finally {

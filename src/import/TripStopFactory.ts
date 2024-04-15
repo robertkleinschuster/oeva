@@ -171,7 +171,7 @@ export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRou
         feed_trip_id: gtfsTrip.trip_id,
         route_type: route.route_type,
         name: name,
-        line: route.route_short_name,
+        line: route.route_short_name !== name ? route.route_short_name : undefined,
         direction: gtfsTrip.trip_headsign ?? '',
         keywords: keywords,
         service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),

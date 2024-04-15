@@ -9,6 +9,7 @@ import {
     IonModal,
     IonTitle,
     IonToolbar,
+    useIonLoading,
 } from '@ionic/react';
 import React, {useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
@@ -20,6 +21,7 @@ import {scheduleDB} from "../db/ScheduleDB";
 import axios from "axios";
 
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
+    const [presentLoading, dismissLoading] = useIonLoading();
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
     const [file, setFile] = useState<File>()
@@ -40,7 +42,6 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             await importer.saveData(feedId, file)
             await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
         }
-        modal.current?.dismiss()
     }
 
     const validate = () => {
@@ -64,9 +65,12 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
                     <IonTitle>Feed hinzufügen</IonTitle>
                     <IonButtons slot="end">
                         <IonButton
-                            onClick={() => {
+                            onClick={async () => {
                                 if (validate()) {
-                                    void save()
+                                    await presentLoading('Wird gespeichert...')
+                                    await save()
+                                    await dismissLoading()
+                                    modal.current?.dismiss()
                                 }
                             }}
                         >Hinzufügen</IonButton>

@@ -95,6 +95,10 @@ export interface Trip {
     number?: string;
     category?: string;
     direction: string;
+    origin?: string;
+    origin_stop_id?: string;
+    destination?: string;
+    destination_stop_id?: string;
     route_type: RouteType
     service_start_date: number | undefined;
     service_end_date: number | undefined;
