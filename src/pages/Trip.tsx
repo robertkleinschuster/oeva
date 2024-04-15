@@ -66,7 +66,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                                 Steig {tripStop.stop.platform}</> : null}
                             </IonText>
                             {tripStop.boarding !== Boarding.STANDARD ?
-                                <IonNote>
+                                <IonNote color="warning" style={{display: 'block', fontWeight: 'bold'}}>
                                     <StopBoarding boarding={tripStop.boarding}/>
                                 </IonNote> : null}
                         </IonLabel>

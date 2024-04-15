@@ -1,9 +1,10 @@
-import {Stop, TripStop} from "../db/Schedule";
+import {Boarding, Stop, TripStop} from "../db/Schedule";
 import {formatDisplayTime} from "../transit/DateTime";
 import {IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";
 import {calcDistance} from "../transit/Geo";
 import TripName from "./TripName";
+import StopBoarding from "./StopBoarding";
 
 export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> = ({stop, tripStops, date}) => (
     <IonList>
@@ -27,6 +28,10 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                     {tripStop.stop?.platform ? <>Steig {tripStop.stop.platform}</> : null}
                     {stop && (stop.feed_parent_station || tripStop.stop?.name !== stop.name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
                 </IonNote>
+                {tripStop.boarding !== Boarding.STANDARD ?
+                    <IonNote color="warning" style={{display: 'block', fontWeight: 'bold'}}>
+                        <StopBoarding boarding={tripStop.boarding}/>
+                    </IonNote> : null}
             </IonLabel>
         </IonItem>)}
     </IonList>
