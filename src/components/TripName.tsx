@@ -2,7 +2,7 @@ import React from "react";
 import {routeTypeNames, Trip} from "../db/Schedule";
 import {IonNote} from "@ionic/react";
 
-const TripName: React.FC<{ trip: Trip, isDestination: boolean }> = ({trip, isDestination = false}) => <>
+const TripName: React.FC<{ trip: Trip, isDestination?: boolean }> = ({trip, isDestination = false}) => <>
     {routeTypeNames.get(trip.route_type)}
     {" "}
     {trip.line && trip.category && trip.line.startsWith(trip.category) ?
