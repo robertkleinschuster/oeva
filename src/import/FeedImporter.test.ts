@@ -22,22 +22,6 @@ describe('FeedImporter', () => {
     beforeEach(() => {
         vi.resetAllMocks()
     })
-    test('create should add a draft import', async () => {
-        const url = 'http://example.com/data.zip';
-        const name = 'Test Import';
-
-        await FeedImporter.create(feedDb, url, name, true);
-
-        // Verify if the add method was called with the correct parameters
-        expect(feedDb.transit.add).toHaveBeenCalledWith({
-            name,
-            url,
-            timestamp: expect.any(Number),
-            download_progress: 0,
-            downloaded_megabytes: 0,
-            status: TransitFeedStatus.DRAFT
-        });
-    });
     test('should download data successfully', async () => {
         // Setup mock import data
         const importId = 1;

@@ -3,7 +3,7 @@ import {FeedRunner} from "./import/FeedRunner";
 import {TransitFeed} from "./db/Feed";
 import {feedDb} from "./db/FeedDb";
 import FeedStatus from "./components/FeedStatus";
-import {IonItem, IonLabel, IonSpinner, IonToggle} from "@ionic/react";
+import {IonItem, IonLabel, IonSpinner} from "@ionic/react";
 
 export const RunnerContext = createContext<number | undefined>(undefined)
 

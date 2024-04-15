@@ -52,17 +52,6 @@ class FeedImporter {
     constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private axios: Axios) {
     }
 
-    static async create(feedDb: FeedDB, url: string, name: string, is_ifopt: boolean) {
-        return feedDb.transit.add({
-            name,
-            url,
-            status: TransitFeedStatus.DRAFT,
-            downloaded_megabytes: 0,
-            download_progress: 0,
-            timestamp: (new Date()).getTime()
-        });
-    }
-
     async run(feedId: number) {
         const feed = await this.feedDb.transit.get(feedId);
 

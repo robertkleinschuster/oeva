@@ -1,4 +1,4 @@
-import {routeTypeNames, Stop, TripStop} from "../db/Schedule";
+import {Stop, TripStop} from "../db/Schedule";
 import {formatDisplayTime} from "../transit/DateTime";
 import {IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";

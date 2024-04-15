@@ -6,7 +6,6 @@ import {
     IonItem,
     IonLabel,
     IonList,
-    IonNote,
     IonPage,
     IonProgressBar,
     IonSearchbar,

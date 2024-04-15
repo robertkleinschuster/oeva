@@ -18,13 +18,10 @@ import React, {useEffect, useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {searchStop} from "../transit/StopSearch";
 import {gridDisk, H3IndexInput, latLngToCell} from "h3-js";
-import {H3_RESOLUTION, Stop, TripStop} from "../db/Schedule";
+import {H3_RESOLUTION, Stop} from "../db/Schedule";
 import {H3Cell} from "../transit/H3Cell";
 import {scheduleDB} from "../db/ScheduleDB";
-import {isTripStopActiveOn} from "../transit/Schedule";
 import {calcDistance} from "../transit/Geo";
-import TripName from "../components/TripName";
-import {formatDisplayTime} from "../transit/DateTime";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
