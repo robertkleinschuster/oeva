@@ -23,6 +23,7 @@ import {Trips} from "../components/Trips";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import Filter from "../components/Filter";
 import TripName from "../components/TripName";
+import StopMap from "../components/StopMap";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -98,6 +99,9 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
+                {stop ?
+                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]}/>
+                    : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
                         Anschlüsse an {trip ? <TripName trip={trip}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}

@@ -11,13 +11,16 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
         {tripStops?.map(tripStop => <IonItem
             routerLink={`/trips/${tripStop.trip_id}`}
             key={tripStop.id}>
+            <IonText slot="start">
+                {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
+                {tripStop.departure_time === undefined && tripStop.arrival_time !== undefined ? <>
+                    An. {formatDisplayTime(tripStop.arrival_time, date)}
+                </> : null}
+            </IonText>
             <IonLabel>
-                <IonNote>
-                    {tripStop.departure_time === undefined ? 'Ankunft: ' : null}
-                    {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
-                    {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
-                    {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
-                </IonNote>
+                {tripStop.departure_time !== undefined && tripStop.arrival_time !== undefined && tripStop.departure_time !== tripStop.arrival_time ? <IonNote>
+                    An. {formatDisplayTime(tripStop.arrival_time, date)}
+                </IonNote> : null}
                 <IonText color={tripStop.is_destination ? 'medium' : undefined}
                          style={{display: 'block'}}>
                     {tripStop.trip ? <TripName trip={tripStop.trip} isDestination={tripStop.is_destination}/> : null}

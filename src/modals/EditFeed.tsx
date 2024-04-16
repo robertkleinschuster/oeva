@@ -32,7 +32,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const [url, setURL] = useState('')
     const [file, setFile] = useState<File>()
     const [keywords, setKeywords] = useState<string | undefined>('')
-    const logs = useLiveQuery(() => feedDb.log.where({feed_id: feedId}).toArray())
+    const logs = useLiveQuery(() => feedDb.log.where({feed_id: feedId}).limit(100).toArray())
 
     const modal = useRef<HTMLIonModalElement>(null)
 
