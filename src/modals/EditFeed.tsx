@@ -65,6 +65,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     }
 
     const deleteFeed = async () => {
+        await feedDb.log.where({feed_id: feed!.id}).delete()
         await deleteFeedData()
         await deleteFeedDownload()
         await modal.current?.dismiss()
