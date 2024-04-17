@@ -1,9 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {cellToLatLng, H3IndexInput} from "h3-js";
-import {CircleMarker, MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
+import {MapContainer, Marker, TileLayer} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
-
+import {Icon} from "leaflet";
+import locationOutline from "ionicons/dist/svg/location-outline.svg"
+import locate from "ionicons/dist/svg/locate.svg"
 const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
 
@@ -26,18 +28,23 @@ const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={position}/>
-        {currentPosition ? <CircleMarker
-            center={{
+        <Marker
+            position={position}
+            icon={new Icon({
+                iconUrl: locationOutline,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+            })}
+        />
+        {currentPosition ? <Marker
+            position={{
                 lat: currentPosition.coords.latitude,
                 lng: currentPosition.coords.longitude,
             }}
-            radius={15}
-            pathOptions={{
-                color: '#fff',
-                fillColor: '#17769d',
-                fillOpacity: .8,
-            }}
+            icon={new Icon({
+                iconUrl: locate,
+                iconSize: [25, 25],
+            })}
         /> : null}
 
 
