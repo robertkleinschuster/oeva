@@ -1,3 +1,22 @@
 .leaflet-container {
     height: 200px;
 }
+
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+    border: 0 solid transparent;
+    border-radius: 100%;
+}
+
+@-webkit-keyframes "pulse" {
+    0% {
+        border-width: 0;
+    }
+    50% {
+        border-width: 3px;
+    }
+    100% {
+        border-width: 0;
+    }
+}

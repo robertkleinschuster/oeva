@@ -4,7 +4,7 @@ import {MapContainer, Marker, TileLayer} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
-import locationOutline from "ionicons/dist/svg/location-outline.svg"
+import haltestelle from "./haltestelle.svg"
 import locate from "ionicons/dist/svg/locate.svg"
 const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
@@ -31,9 +31,9 @@ const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
         <Marker
             position={position}
             icon={new Icon({
-                iconUrl: locationOutline,
-                iconSize: [40, 40],
-                iconAnchor: [20, 40],
+                iconUrl: haltestelle,
+                iconSize: [25, 25],
+                className: 'pulse'
             })}
         />
         {currentPosition ? <Marker
@@ -43,7 +43,7 @@ const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
             }}
             icon={new Icon({
                 iconUrl: locate,
-                iconSize: [25, 25],
+                iconSize: [20, 20],
             })}
         /> : null}
 
