@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from "react";
-import {MapContainer, Marker, Polyline, TileLayer} from "react-leaflet";
+import {MapContainer, Marker, Polyline, TileLayer, Tooltip} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
 import locate from "ionicons/dist/svg/locate.svg"
-import {useLiveQuery} from "dexie-react-hooks";
-import {GTFSDB} from "../db/GTFSDB";
-import {Trip} from "../db/Schedule";
+import {TripStop} from "../db/Schedule";
+import {cellToLatLng} from "h3-js";
+import haltestelle from "./haltestelle.svg";
 
-const TripMap: React.FC<{ trip: Trip }> = ({trip}) => {
+const TripMap: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
 
     useEffect(() => {
@@ -23,26 +23,21 @@ const TripMap: React.FC<{ trip: Trip }> = ({trip}) => {
         return () => navigator.geolocation.clearWatch(watchId)
     }, []);
 
-    const shapes = useLiveQuery(async () => {
-        const gtfsDb = new GTFSDB(trip.feed_id);
-        const gtfsTrip = await gtfsDb.trips.get(trip.feed_trip_id)
-        if (gtfsTrip?.shape_id) {
-            return gtfsDb.shapes.where({shape_id: gtfsTrip.shape_id}).toArray()
-        }
-        return Promise.resolve(undefined)
-    })
+    if (!tripStops.length) {
+        return <></>
+    }
 
-
-    return shapes?.length ? <MapContainer
-        center={{lat: shapes[0].shape_pt_lat, lng: shapes[0].shape_pt_lon}}
-        zoom={13}
+    return <MapContainer
+        center={cellToLatLng([tripStops[0].h3_cell_le1, tripStops[0].h3_cell_le2])}
+        zoom={10}
         scrollWheelZoom={false}>
         <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {shapes?.length ?
-            <Polyline positions={shapes.map(shape => ({lat: shape.shape_pt_lat, lng: shape.shape_pt_lon}))}/> : null}
+
+        <Polyline positions={tripStops.map(tripStop => cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]))}
+                  pathOptions={{color: 'blue'}}/>
         {currentPosition ? <Marker
             position={{
                 lat: currentPosition.coords.latitude,
@@ -53,9 +48,16 @@ const TripMap: React.FC<{ trip: Trip }> = ({trip}) => {
                 iconSize: [20, 20],
             })}
         /> : null}
+        {tripStops.map(tripStop =>
+        <Marker
+            position={cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2])}
+            icon={new Icon({
+                iconUrl: haltestelle,
+                iconSize: [20, 20]
+            })}
+        ><Tooltip>{tripStop.stop?.name}</Tooltip></Marker>)}
 
-
-    </MapContainer> : <></>
+    </MapContainer>
 }
 
 export default TripMap
