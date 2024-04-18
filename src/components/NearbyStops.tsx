@@ -52,7 +52,7 @@ const NearbyStops: React.FC = () => {
     }, []);
 
     return <IonList>
-        {nearbyStops?.map(stop => <IonItem
+        {nearbyStops?.length ? nearbyStops.map(stop => <IonItem
                 routerLink={`/stops/${stop.id}`}
                 onClick={() => {
                     scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
@@ -65,7 +65,13 @@ const NearbyStops: React.FC = () => {
                         style={{display: 'block'}}>{stop.distance} m</IonNote>
                 </IonLabel>
             </IonItem>
-        )}
+        ) : <IonItem>
+            <IonLabel color="medium">
+                Es wurden keine Stationen in deiner Nähe gefunden.
+                Vergewissere dich, dass du in den Einstellungen deines Browsers die Standortfreigabe für diese Domain
+                aktiviert hast.
+            </IonLabel>
+        </IonItem>}
     </IonList>
 }
 

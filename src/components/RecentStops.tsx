@@ -9,7 +9,7 @@ const RecentStops: React.FC = () => {
     )
 
     return <IonList>
-        {lastUsedStops?.map(stop => <IonItem
+        {lastUsedStops?.length ? lastUsedStops.map(stop => <IonItem
                 routerLink={`/stops/${stop.id}`}
                 onClick={() => {
                     scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
@@ -20,7 +20,7 @@ const RecentStops: React.FC = () => {
                     <IonNote> ({stop.feed_name})</IonNote>
                 </IonLabel>
             </IonItem>
-        )}
+        ) : <IonItem><IonLabel color="medium">Hier erscheinen bis zu 10 deiner zuletzt gesuchten und geöffneten Stationen.</IonLabel></IonItem>}
     </IonList>
 }
 

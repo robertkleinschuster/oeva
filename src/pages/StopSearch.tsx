@@ -25,31 +25,21 @@ import RecentStops from "../components/RecentStops";
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
-    const accordionGroup = useRef<null | HTMLIonAccordionGroupElement>(null);
-
+        const [accordion, setAccordion] = useState<string[]>(['recent'])
+        const [prevAccordion, setPrevAccordion] = useState<string[]>(accordion)
         const stops = useLiveQuery(async () => {
                 if (keyword.length > 1) {
-                    return searchStop(keyword)
+                    setLoading(true)
+                    const stops = await searchStop(keyword)
+                    setAccordion([...accordion, 'search'])
+                    setLoading(false)
+                    return stops;
                 }
+                setLoading(false)
+                setAccordion(prevAccordion)
                 return Promise.resolve(undefined)
             }, [keyword]
         )
-
-
-        useEffect(() => {
-            setLoading(false)
-        }, [stops]);
-
-    useEffect(() => {
-        if (!accordionGroup.current) {
-            return;
-        }
-        if (stops) {
-            accordionGroup.current.value = ['search']
-        } else {
-            accordionGroup.current.value = ['recent']
-        }
-    }, [stops]);
 
         return (
             <IonPage>
@@ -68,20 +58,20 @@ const StopSearch: React.FC = () => {
                             debounce={500}
                             placeholder="Suchen..."
                             inputmode="search"
-                            onIonInput={e => {
-                                setLoading(true)
-                                setKeyword(String(e.detail.value))
-                            }}
+                            onIonInput={e => setKeyword(String(e.detail.value))}
                         />
                     </form>
-                    <IonAccordionGroup ref={accordionGroup} multiple>
+                    <IonAccordionGroup multiple onIonChange={e => {
+                        setAccordion(e.detail.value)
+                        setPrevAccordion(e.detail.value)
+                    }} value={accordion}>
                         <IonAccordion value="search" toggleIconSlot="start">
                             <IonItem slot="header">
                                 <IonLabel>Suchergebnisse</IonLabel>
                             </IonItem>
                             <div slot="content">
                                 <IonList>
-                                    {stops?.map(stop => <IonItem
+                                    {stops?.length ? stops.map(stop => <IonItem
                                             routerLink={`/stops/${stop.id}`}
                                             onClick={() => {
                                                 scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
@@ -92,7 +82,7 @@ const StopSearch: React.FC = () => {
                                                 <IonNote> ({stop.feed_name})</IonNote>
                                             </IonLabel>
                                         </IonItem>
-                                    )}
+                                    ) : <IonItem><IonLabel color="medium">{keyword ? `Es wurde keine Station für deinen Suchbegriff „${keyword}“ gefunden.`: 'Gib den Namen einer Station in das Suchfeld ein.'}</IonLabel></IonItem>}
                                 </IonList>
                             </div>
                         </IonAccordion>
