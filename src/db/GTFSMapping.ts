@@ -10,6 +10,7 @@ const tableMap: Map<string, string> = new Map([
     ['transfers.txt', 'transfers'],
     ['levels.txt', 'levels'],
     ['pathways.txt', 'pathways'],
+    ['shapes.txt', 'shapes'],
 ]);
 
 export const getTableName = (fileName: string): string | undefined => {

@@ -25,6 +25,7 @@ import {setSeconds} from "date-fns";
 import {extractExceptions, extractWeekdays, weekdayNames} from "../transit/Schedule";
 import {ExceptionType} from "../db/GTFS";
 import TripName from "../components/TripName";
+import TripMap from "../components/TripMap";
 
 interface TripPageProps extends RouteComponentProps<{
     id: string
@@ -51,6 +52,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">
+                {trip ? <TripMap trip={trip}/> : null}
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
                         routerLink={`/connections/${tripStop.id}`}
