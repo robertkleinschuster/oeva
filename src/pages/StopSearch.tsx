@@ -76,7 +76,7 @@ const StopSearch: React.FC = () => {
                         />
                     </form>
                     <IonAccordionGroup ref={accordionGroup} multiple>
-                        <IonAccordion value="search">
+                        <IonAccordion value="search" toggleIconSlot="start">
                             <IonItem slot="header">
                                 <IonLabel>Suchergebnisse</IonLabel>
                             </IonItem>
@@ -97,7 +97,7 @@ const StopSearch: React.FC = () => {
                                 </IonList>
                             </div>
                         </IonAccordion>
-                        <IonAccordion value="recent">
+                        <IonAccordion value="recent" toggleIconSlot="start">
                             <IonItem slot="header">
                                 <IonLabel>Zuletzt verwendet</IonLabel>
                             </IonItem>
@@ -105,7 +105,7 @@ const StopSearch: React.FC = () => {
                                 <RecentStops/>
                             </div>
                         </IonAccordion>
-                        <IonAccordion value="nearby">
+                        <IonAccordion value="nearby" toggleIconSlot="start">
                             <IonItem slot="header">
                                 <IonLabel>In der Nähe</IonLabel>
                             </IonItem>
