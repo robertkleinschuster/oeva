@@ -44,11 +44,10 @@ const StopSearch: React.FC = () => {
         if (!accordionGroup.current) {
             return;
         }
-        const currentValue = accordionGroup.current.value
-        if (currentValue) {
-            accordionGroup.current.value = stops ? ['search', ...currentValue] : null;
+        if (stops) {
+            accordionGroup.current.value = ['search']
         } else {
-            accordionGroup.current.value = stops ? ['search'] : null;
+            accordionGroup.current.value = ['recent']
         }
     }, [stops]);
 
