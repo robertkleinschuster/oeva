@@ -71,7 +71,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 {stop ?
-                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]}/>
+                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.name}/>
                     : null}
                 {stop && tripStops ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
             </IonContent>

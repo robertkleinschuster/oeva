@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from "react";
 import {cellToLatLng, H3IndexInput} from "h3-js";
-import {MapContainer, Marker, TileLayer} from "react-leaflet";
+import {MapContainer, Marker, TileLayer, Tooltip} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
 import haltestelle from "./haltestelle.svg"
 import locate from "ionicons/dist/svg/locate.svg"
 
-const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
+const StopMap: React.FC<{ cell: H3IndexInput, tooltip: string }> = ({cell, tooltip}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
 
     useEffect(() => {
@@ -47,7 +47,7 @@ const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
                     iconUrl: locate,
                     iconSize: [20, 20],
                 })}
-            /> : null}
+            ><Tooltip permanent>{tooltip}</Tooltip></Marker> : null}
 
 
         </MapContainer>

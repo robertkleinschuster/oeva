@@ -100,7 +100,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 {stop ?
-                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]}/>
+                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.name}/>
                     : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
