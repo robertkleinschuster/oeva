@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap} from "react-leaflet";
+import {MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvent} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
@@ -23,6 +23,29 @@ const TripPolyline: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
 }
 
 const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
+    const map = useMap()
+    const [zoom, setZoom] = useState(map.getZoom())
+    useMapEvent('zoom', () => {
+        setZoom(map.getZoom())
+    })
+
+    if (zoom < 12) {
+        return <></>
+    }
+
+    if (zoom < 14) {
+        return tripStops.map(tripStop =>
+            <Marker
+                key={tripStop.id}
+                position={cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2])}
+                icon={new Icon({
+                    iconUrl: haltestelle,
+                    iconSize: [20, 20]
+                })}
+            />
+        )
+    }
+
     return tripStops.map(tripStop =>
         <Marker
             key={tripStop.id}
@@ -31,7 +54,9 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
                 iconUrl: haltestelle,
                 iconSize: [20, 20]
             })}
-        ><Tooltip>{tripStop.stop?.name}</Tooltip></Marker>)
+        >
+            <Tooltip permanent>{tripStop.stop?.name}</Tooltip>
+        </Marker>)
 }
 
 const SizeInvalidator: React.FC<{ expanded: boolean }> = ({expanded}) => {

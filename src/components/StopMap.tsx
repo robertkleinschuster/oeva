@@ -37,7 +37,7 @@ const StopMap: React.FC<{ cell: H3IndexInput, tooltip: string }> = ({cell, toolt
                     iconSize: [25, 25],
                     className: 'pulse'
                 })}
-            />
+            ><Tooltip permanent>{tooltip}</Tooltip></Marker>
             {currentPosition ? <Marker
                 position={{
                     lat: currentPosition.coords.latitude,
@@ -47,9 +47,7 @@ const StopMap: React.FC<{ cell: H3IndexInput, tooltip: string }> = ({cell, toolt
                     iconUrl: locate,
                     iconSize: [20, 20],
                 })}
-            ><Tooltip permanent>{tooltip}</Tooltip></Marker> : null}
-
-
+            /> : null}
         </MapContainer>
     </div>
 }
