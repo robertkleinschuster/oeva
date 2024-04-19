@@ -7,7 +7,7 @@ import locate from "ionicons/dist/svg/locate.svg"
 import {TripStop} from "../db/Schedule";
 import {cellToLatLng} from "h3-js";
 import haltestelle from "./haltestelle.svg";
-import {IonButton, IonButtons, IonIcon, IonToolbar} from "@ionic/react";
+import {IonButton, IonIcon, IonItem} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
 
 const TripPolyline: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
@@ -86,38 +86,38 @@ const TripMap: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
         return <></>
     }
 
-    return <div className={expanded ? 'expanded' : 'collapsed'}>
-        <MapContainer center={cellToLatLng([tripStops[0].h3_cell_le1, tripStops[0].h3_cell_le2])}
-                      zoom={10}
-                      trackResize
-                      doubleClickZoom={false}
-                      scrollWheelZoom={false}>
-            <SizeInvalidator expanded={expanded}/>
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <TripPolyline tripStops={tripStops}/>
-            <TripMarker tripStops={tripStops}/>
-            {currentPosition ? <Marker
-                position={{
-                    lat: currentPosition.coords.latitude,
-                    lng: currentPosition.coords.longitude,
-                }}
-                icon={new Icon({
-                    iconUrl: locate,
-                    iconSize: [20, 20],
-                })}
-            /> : null}
-        </MapContainer>
-        <IonToolbar>
-            <IonButtons slot="end">
-                <IonButton onClick={() => setExpanded(!expanded)}>
-                    <IonIcon slot="icon-only" icon={expanded ? chevronCollapse : chevronExpand}/>
-                </IonButton>
-            </IonButtons>
-        </IonToolbar>
-    </div>
+    return <>
+        <div className={expanded ? 'expanded' : 'collapsed'}>
+            <MapContainer center={cellToLatLng([tripStops[0].h3_cell_le1, tripStops[0].h3_cell_le2])}
+                          zoom={10}
+                          trackResize
+                          doubleClickZoom={false}
+                          scrollWheelZoom={false}>
+                <SizeInvalidator expanded={expanded}/>
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <TripPolyline tripStops={tripStops}/>
+                <TripMarker tripStops={tripStops}/>
+                {currentPosition ? <Marker
+                    position={{
+                        lat: currentPosition.coords.latitude,
+                        lng: currentPosition.coords.longitude,
+                    }}
+                    icon={new Icon({
+                        iconUrl: locate,
+                        iconSize: [20, 20],
+                    })}
+                /> : null}
+            </MapContainer>
+        </div>
+        <IonItem>
+            <IonButton slot="end" fill="clear" color="medium" onClick={() => setExpanded(!expanded)}>
+                <IonIcon slot="icon-only" icon={expanded ? chevronCollapse : chevronExpand}/>
+            </IonButton>
+        </IonItem>
+    </>
 }
 
 export default TripMap
