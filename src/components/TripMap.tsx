@@ -4,16 +4,22 @@ import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
 import locate from "ionicons/dist/svg/locate.svg"
-import {TripStop} from "../db/Schedule";
+import {RouteType, Trip, TripStop} from "../db/Schedule";
 import {cellToLatLng} from "h3-js";
 import haltestelle from "./haltestelle.svg";
 import {IonButton, IonIcon, IonItem} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
 
-const TripPolyline: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
+const TripPolyline: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
+    const colors = new Map([
+        [RouteType.RAIL, 'darkred'],
+        [RouteType.BUS, 'green'],
+        [RouteType.TRAM, 'darkorange'],
+    ])
+
     const map = useMap()
     return <Polyline positions={tripStops.map(tripStop => cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]))}
-                     pathOptions={{color: 'blue'}}
+                     pathOptions={{color: colors.get(trip.route_type) ?? 'blue'}}
                      eventHandlers={{
                          add: e => {
                              map.fitBounds(e.target.getBounds())
@@ -25,30 +31,23 @@ const TripPolyline: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
 const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
     const map = useMap()
     const [visibleStops, setVisibleStops] = useState<TripStop[]>([])
+    const handleBoundsChange = () => {
+        if (map.getZoom() > 10) {
+            const visibleStops: TripStop[] = [];
+            tripStops.forEach(tripStop => {
+                const position = cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]);
+                if (map.getBounds().contains(position)) {
+                    visibleStops.push(tripStop);
+                }
+            });
+            setVisibleStops(visibleStops)
+        } else {
+            setVisibleStops([])
+        }
+    }
 
-    useMapEvent('zoom', () => {
-        const visibleStops: TripStop[] = [];
-        tripStops.forEach(tripStop => {
-            const position = cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]);
-            if (map.getBounds().contains(position)) {
-                visibleStops.push(tripStop);
-            }
-        });
-
-        setVisibleStops(visibleStops)
-    })
-
-    useMapEvent('move', () => {
-        const visibleStops: TripStop[] = [];
-        tripStops.forEach(tripStop => {
-            const position = cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]);
-            if (map.getBounds().contains(position)) {
-                visibleStops.push(tripStop);
-            }
-        });
-
-        setVisibleStops(visibleStops)
-    })
+    useMapEvent('zoom', handleBoundsChange)
+    useMapEvent('move', handleBoundsChange)
 
     if (visibleStops.length > 15) {
         return <></>
@@ -88,7 +87,7 @@ const SizeInvalidator: React.FC<{ expanded: boolean }> = ({expanded}) => {
     return <></>
 }
 
-const TripMap: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
+const TripMap: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
     const [expanded, setExpanded] = useState(false)
     useEffect(() => {
@@ -119,7 +118,7 @@ const TripMap: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <TripPolyline tripStops={tripStops}/>
+                <TripPolyline trip={trip} tripStops={tripStops}/>
                 <TripMarker tripStops={tripStops}/>
                 {currentPosition ? <Marker
                     position={{
