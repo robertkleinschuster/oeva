@@ -1,7 +1,15 @@
 .leaflet-container {
-    height: 200px;
+    height: 100%;
+    min-height: 100%;
 }
 
+.expanded {
+    height: 500px;
+}
+
+.collapsed {
+    height: 200px;
+}
 
 .pulse {
     animation: pulse 2s ease-in-out infinite;

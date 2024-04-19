@@ -6,6 +6,7 @@ import './map.css'
 import {Icon} from "leaflet";
 import haltestelle from "./haltestelle.svg"
 import locate from "ionicons/dist/svg/locate.svg"
+
 const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
 
@@ -23,32 +24,34 @@ const StopMap: React.FC<{ cell: H3IndexInput }> = ({cell}) => {
 
 
     const position = cellToLatLng(cell);
-    return <MapContainer center={position} zoom={13} scrollWheelZoom={false}>
-        <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker
-            position={position}
-            icon={new Icon({
-                iconUrl: haltestelle,
-                iconSize: [25, 25],
-                className: 'pulse'
-            })}
-        />
-        {currentPosition ? <Marker
-            position={{
-                lat: currentPosition.coords.latitude,
-                lng: currentPosition.coords.longitude,
-            }}
-            icon={new Icon({
-                iconUrl: locate,
-                iconSize: [20, 20],
-            })}
-        /> : null}
+    return <div className="collapsed">
+        <MapContainer center={position} zoom={13} scrollWheelZoom={false}>
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker
+                position={position}
+                icon={new Icon({
+                    iconUrl: haltestelle,
+                    iconSize: [25, 25],
+                    className: 'pulse'
+                })}
+            />
+            {currentPosition ? <Marker
+                position={{
+                    lat: currentPosition.coords.latitude,
+                    lng: currentPosition.coords.longitude,
+                }}
+                icon={new Icon({
+                    iconUrl: locate,
+                    iconSize: [20, 20],
+                })}
+            /> : null}
 
 
-    </MapContainer>
+        </MapContainer>
+    </div>
 }
 
 export default StopMap

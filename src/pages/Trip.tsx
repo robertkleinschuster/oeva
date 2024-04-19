@@ -52,7 +52,9 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">
-                {tripStops ? <TripMap tripStops={tripStops}/> : null}
+                {tripStops ?
+                    <TripMap tripStops={tripStops}/>
+                    : null}
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
                         routerLink={`/connections/${tripStop.id}`}
