@@ -7,7 +7,7 @@ import Fuse from "fuse.js";
 export async function searchTrip(keyword: string, limit = 10): Promise<Trip[]> {
     const transliteratedKeyword = transliterate(keyword);
     const tokenizer = new Tokenizer()
-    const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value)
+    const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value.toLowerCase())
 
     const trips = new Map<string, Trip>()
     await findTrips(transliteratedKeyword, trip => trips.set(trip.id, trip), limit)
@@ -38,7 +38,7 @@ export async function searchTrip(keyword: string, limit = 10): Promise<Trip[]> {
 async function findTrips(keyword: string, each: (trip: Trip) => void, limit: number) {
     await scheduleDB.trip
         .where('keywords')
-        .startsWithIgnoreCase(keyword)
+        .startsWith(keyword)
         .limit(limit)
         .each(each);
 }

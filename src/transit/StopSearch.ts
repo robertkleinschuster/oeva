@@ -7,7 +7,7 @@ import Fuse from "fuse.js";
 export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
     const transliteratedKeyword = transliterate(keyword);
     const tokenizer = new Tokenizer()
-    const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value)
+    const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value.toLowerCase())
 
     const stops = new Map<string, Stop>()
     await findStations(transliteratedKeyword, stop => stops.set(stop.id, stop), limit)
@@ -48,7 +48,7 @@ export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
 async function findStops(keyword: string, each: (stop: Stop) => void, limit: number) {
     await scheduleDB.stop
         .where('keywords')
-        .startsWithIgnoreCase(keyword)
+        .startsWith(keyword)
         .limit(limit)
         .each(each);
 }
@@ -56,7 +56,7 @@ async function findStops(keyword: string, each: (stop: Stop) => void, limit: num
 async function findStations(keyword: string, each: (stop: Stop) => void, limit: number) {
     await scheduleDB.stop
         .where('keywords')
-        .startsWithIgnoreCase(keyword)
+        .startsWith(keyword)
         .filter(stop => !stop.feed_parent_station)
         .limit(limit)
         .each(each);

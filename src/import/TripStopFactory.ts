@@ -125,7 +125,7 @@ export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
         feed_parent_station: stop.parent_station === "" ? undefined : stop.parent_station,
         name: name,
         platform: platform?.trim(),
-        keywords: keywords,
+        keywords: keywords.map(keyword => keyword.toLowerCase()),
         h3_cell_le1: cellIndex[0] as number,
         h3_cell_le2: cellIndex[1] as number
     };
@@ -173,7 +173,7 @@ export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRou
         name: name,
         line: route.route_short_name !== name ? route.route_short_name : undefined,
         direction: gtfsTrip.trip_headsign ?? '',
-        keywords: keywords,
+        keywords: keywords.map(keyword => keyword.toLowerCase()),
         service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
         service_start_date: service?.start_date,
         service_end_date: service?.end_date,
