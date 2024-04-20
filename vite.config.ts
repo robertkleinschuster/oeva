@@ -25,12 +25,12 @@ export default defineConfig({
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
                 runtimeCaching: [
                     {
-                        urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org\/.*\/\.png/i,
+                        urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org\/.*/i,
                         handler: 'CacheFirst',
                         options: {
                             cacheName: 'osm-tile-cache',
                             expiration: {
-                                maxEntries: 1000,
+                                maxEntries: 10000,
                                 maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
                             },
                             cacheableResponse: {
