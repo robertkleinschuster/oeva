@@ -70,7 +70,7 @@ class FeedImporter {
         if (feed?.status === TransitFeedStatus.PROCESSING) {
             await this.processData(feedId)
         }
-        if (feed?.status === TransitFeedStatus.PROCESSING_KEYWORDS) {
+        if (feed?.status === TransitFeedStatus.PROCESSING_QUICK) {
             await this.processData(feedId, true)
         }
     }
@@ -198,7 +198,7 @@ class FeedImporter {
         } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
             await processor.processTripStops(feedId)
             await this.updateStatus(feedId, TransitFeedStatus.DONE)
-        } if (skipTripStops) {
+        } else if (skipTripStops) {
             await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
     }

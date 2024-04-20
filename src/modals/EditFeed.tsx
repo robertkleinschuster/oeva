@@ -58,7 +58,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
             if (stoppedStatuses.includes(feed.status)) {
                 await feedDb.transit.update(feed!, {
-                    status: TransitFeedStatus.PROCESSING_KEYWORDS
+                    status: TransitFeedStatus.PROCESSING_QUICK
                 })
             }
         }
@@ -117,6 +117,17 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.PROCESSING,
+            progress: undefined,
+            step: undefined,
+            offset: undefined
+        })
+        modal.current?.dismiss()
+    }
+    const processFeedKeywords = async () => {
+        await saveFeed()
+        await feedDb.log.where({feed_id: feed!.id}).delete()
+        await feedDb.transit.update(feed!, {
+            status: TransitFeedStatus.PROCESSING_QUICK,
             progress: undefined,
             step: undefined,
             offset: undefined
@@ -210,6 +221,12 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                                                onClick={continueFeed}>
                                         Fortsetzen ({feed.previous_status})
                                     </IonButton> : null}
+                            </IonItem>
+                            <IonItem>
+                                <IonButton color="primary"
+                                           onClick={processFeedKeywords}>
+                                    Schnellimport
+                                </IonButton>
                             </IonItem>
                             <IonItem>
                                 <IonButton color="danger"
