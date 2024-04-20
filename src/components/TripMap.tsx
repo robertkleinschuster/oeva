@@ -12,14 +12,16 @@ import {chevronCollapse, chevronExpand} from "ionicons/icons";
 
 const TripPolyline: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
     const colors = new Map([
-        [RouteType.RAIL, 'darkred'],
-        [RouteType.BUS, 'green'],
+        [RouteType.BUS, 'darkblue'],
+        [RouteType.TROLLEYBUS, 'darkred'],
         [RouteType.TRAM, 'darkorange'],
+        [RouteType.SUBWAY, 'darkgreen'],
+        [RouteType.FUNICULAR, 'darkgray'],
     ])
 
     const map = useMap()
     return <Polyline positions={tripStops.map(tripStop => cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]))}
-                     pathOptions={{color: colors.get(trip.route_type) ?? 'blue'}}
+                     pathOptions={{color: colors.get(trip.route_type) ?? 'black'}}
                      eventHandlers={{
                          add: e => {
                              map.fitBounds(e.target.getBounds())
