@@ -43,15 +43,14 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
 
     const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
     const tripStops = useLiveQuery(async () => {
+            await dismissLoading()
             await presentLoading('Lädt...')
-            return (new TripStopRepository().findByStop(match.params.id, filterState))
+            const tripStops = await (new TripStopRepository().findByStop(match.params.id, filterState))
+            await dismissLoading()
+            return tripStops;
         },
         [filterState]
     )
-
-    if (tripStops !== undefined) {
-        void dismissLoading()
-    }
 
     return (
         <IonPage>

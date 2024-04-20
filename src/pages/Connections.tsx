@@ -41,10 +41,12 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             if (!tripStop || !filterState) {
                 return undefined;
             }
+            await dismissLoading()
             await presentLoading('Lädt...')
             const repo = new TripStopRepository();
             const tripStops = await repo.findConnections(tripStop, filterState)
             tripStops.push(...await repo.findConnections(tripStop, {...filterState, date: addHours(filterState.date, 1)}))
+            await dismissLoading()
             return tripStops.filter(tripStop => {
                 const time = tripStop.arrival_time ?? tripStop.departure_time;
                 if (time !== undefined) {
@@ -77,10 +79,6 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             setFilter({...filterDefaults, date: setHours(setSeconds(setMinutes(new Date(), 0), 0), hour)})
         }
     }, [tripStop]);
-
-    if (tripStops !== undefined) {
-        void dismissLoading()
-    }
 
     return (
         <IonPage>
