@@ -75,6 +75,10 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
                        onIonChange={() => onChange({...state, busses: !state.busses})}>Busse</IonToggle>
         </IonItem>
         <IonItem>
+            <IonToggle checked={state.trolleybusses}
+                       onIonChange={() => onChange({...state, trolleybusses: !state.trolleybusses})}>O-Busse</IonToggle>
+        </IonItem>
+        <IonItem>
             <IonToggle checked={state.other}
                        onIonChange={() => onChange({...state, other: !state.other})}>Andere</IonToggle>
         </IonItem>

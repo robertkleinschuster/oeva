@@ -69,6 +69,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             subway: true,
             trams: true,
             busses: true,
+            trolleybusses: true,
             other: true
         }
         const hour = tripStop?.hour

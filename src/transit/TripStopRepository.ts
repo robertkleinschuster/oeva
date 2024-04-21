@@ -12,6 +12,7 @@ export interface FilterState {
     subway: boolean,
     trams: boolean,
     busses: boolean,
+    trolleybusses: boolean,
     other: boolean,
 }
 
@@ -54,6 +55,8 @@ export class TripStopRepository {
         }
         if (filterState.busses) {
             routeTypes.push(RouteType.BUS)
+        }
+        if (filterState.trolleybusses) {
             routeTypes.push(RouteType.TROLLEYBUS)
         }
         if (filterState.other) {

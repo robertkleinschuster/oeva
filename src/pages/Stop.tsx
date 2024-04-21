@@ -38,6 +38,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
         subway: true,
         trams: true,
         busses: true,
+        trolleybusses: true,
         other: true
     })
 
