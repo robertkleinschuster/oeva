@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvent} from "react-leaflet";
+import {MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvent} from "react-leaflet";
 import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
@@ -7,8 +7,9 @@ import locate from "ionicons/dist/svg/locate.svg"
 import {RouteType, Trip, TripStop} from "../db/Schedule";
 import {cellToLatLng} from "h3-js";
 import haltestelle from "./haltestelle.svg";
-import {IonButton, IonIcon, IonItem} from "@ionic/react";
+import {IonButton, IonIcon, IonItem, IonRouterLink} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
+import {formatDisplayTime} from "../transit/DateTime";
 
 const TripPolyline: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
     const colors = new Map([
@@ -55,19 +56,6 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
         return <></>
     }
 
-    if (visibleStops.length > 5) {
-        return visibleStops.map(tripStop =>
-            <Marker
-                key={tripStop.id + '-hover'}
-                position={cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2])}
-                icon={new Icon({
-                    iconUrl: haltestelle,
-                    iconSize: [20, 20]
-                })}
-            ><Tooltip>{tripStop.stop?.name}</Tooltip></Marker>
-        )
-    }
-
     return visibleStops.map(tripStop =>
         <Marker
             key={tripStop.id}
@@ -77,7 +65,20 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
                 iconSize: [20, 20]
             })}
         >
-            <Tooltip permanent>{tripStop.stop?.name}</Tooltip>
+            <Popup>
+                <p>
+                    {tripStop.stop?.name}
+                    {tripStop.stop?.platform ? <>: Steig {tripStop.stop.platform}</> : null}
+                </p>
+                <p>
+                    {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, new Date) : null}
+                    {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
+                    {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, new Date) : null}
+                </p>
+                <p>
+                    <IonRouterLink routerLink={`/connections/${tripStop.id}`}>Anschlüsse</IonRouterLink>
+                </p>
+            </Popup>
         </Marker>)
 }
 
