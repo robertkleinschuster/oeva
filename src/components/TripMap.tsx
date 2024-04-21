@@ -120,7 +120,6 @@ const TripMap: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripSto
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    detectRetina
                 />
                 <TripPolyline trip={trip} tripStops={tripStops}/>
                 <TripMarker tripStops={tripStops}/>
