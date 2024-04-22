@@ -67,12 +67,14 @@ const FeedForm: React.FC<FeedFormProps> = (props) => {
                 }}/>
         </IonItem>
         <IonItem>
-            <input type="file" onInput={e => {
-                const file = e.currentTarget.files?.item(0);
-                if (file) {
-                    setFile(file)
-                }
-            }}/>
+            <input disabled={props.disabled}
+                   type="file"
+                   onInput={e => {
+                       const file = e.currentTarget.files?.item(0);
+                       if (file) {
+                           setFile(file)
+                       }
+                   }}/>
         </IonItem>
     </IonList>
 }
