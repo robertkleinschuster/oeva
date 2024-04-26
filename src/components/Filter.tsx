@@ -52,7 +52,7 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
         </IonItem>
         <IonItem>
             <IonLabel>
-                ab {format(dateLabel, 'HH:mm')} Uhr{dayDiff ? <IonNote> <IonIcon icon={calendar}/> +{dayDiff}</IonNote> : null}
+                ab {format(dateLabel, 'HH:mm')} Uhr{dayDiff ? <IonNote> <IonIcon icon={calendar}/>&nbsp;+{dayDiff}</IonNote> : null}
             </IonLabel>
             <IonButton onClick={() => {
                 setDateLabel(subHours(dateLabel, 1))
