@@ -11,7 +11,7 @@ import {
 } from "@ionic/react";
 import {calcRingRadius} from "../transit/Geo";
 import {addHours, differenceInCalendarDays, format, subHours} from "date-fns";
-import {add, calendar, remove} from "ionicons/icons";
+import {add, calendar, remove, time} from "ionicons/icons";
 import React, {useEffect, useState} from "react";
 import {Stop} from "../db/Schedule";
 import {FilterState} from "../transit/TripStopRepository";
@@ -58,6 +58,11 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
                 setDateLabel(subHours(dateLabel, 1))
             }}>
                 <IonIcon slot="icon-only" icon={remove}></IonIcon>
+            </IonButton>
+            <IonButton onClick={() => {
+                setDateLabel(new Date())
+            }}>
+                <IonIcon slot="icon-only" icon={time}></IonIcon>
             </IonButton>
             <IonButton onClick={() => {
                 setDateLabel(addHours(dateLabel, 1))

@@ -17,11 +17,12 @@ import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
-import {setMinutes, setSeconds} from "date-fns";
+import {addHours, setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";
 import StopMap from "../components/StopMap";
+import {parseStopTimeInt} from "../transit/DateTime";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
@@ -46,9 +47,18 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const tripStops = useLiveQuery(async () => {
             await dismissLoading()
             await presentLoading('Lädt...')
-            const tripStops = await (new TripStopRepository().findByStop(match.params.id, filterState))
+            const repo = new TripStopRepository()
+            const tripStops = await (repo.findByStop(match.params.id, filterState))
+            tripStops.push(...await repo.findByStop(match.params.id,{...filterState, date: addHours(filterState.date, 1)}))
             await dismissLoading()
-            return tripStops;
+            return tripStops.filter(tripStop => {
+                const time = tripStop.arrival_time ?? tripStop.departure_time;
+                if (time !== undefined) {
+                    const stopDate = parseStopTimeInt(time, filterState.date);
+                    return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
+                }
+                return false;
+            })
         },
         [filterState]
     )
