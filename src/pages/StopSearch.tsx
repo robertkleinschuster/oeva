@@ -15,7 +15,7 @@ import {
     IonTitle,
     IonToolbar, isPlatform
 } from '@ionic/react';
-import React, {useEffect, useRef, useState} from "react";
+import React, {useState} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {searchStop} from "../transit/StopSearch";
 import {scheduleDB} from "../db/ScheduleDB";
@@ -82,7 +82,8 @@ const StopSearch: React.FC = () => {
                                                 <IonNote> ({stop.feed_name})</IonNote>
                                             </IonLabel>
                                         </IonItem>
-                                    ) : <IonItem><IonLabel color="medium">{keyword ? `Es wurde keine Station für deinen Suchbegriff „${keyword}“ gefunden.`: 'Gib den Namen einer Station in das Suchfeld ein.'}</IonLabel></IonItem>}
+                                    ) : <IonItem><IonLabel
+                                        color="medium">{keyword ? `Es wurde keine Station für deinen Suchbegriff „${keyword}“ gefunden.` : 'Gib den Namen einer Station in das Suchfeld ein.'}</IonLabel></IonItem>}
                                 </IonList>
                             </div>
                         </IonAccordion>
