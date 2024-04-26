@@ -32,7 +32,7 @@ interface ConnectionsPageProps extends RouteComponentProps<{
 
 const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
     const [presentLoading, dismissLoading] = useIonLoading();
-    const [filterState, setFilter] = useState<FilterState|undefined>()
+    const [filterState, setFilter] = useState<FilterState | undefined>()
 
     const tripStop = useLiveQuery(() => scheduleDB.trip_stop.get(match.params.id), [match.params.id])
     const trip = useLiveQuery(() => tripStop ? scheduleDB.trip.get(tripStop?.trip_id) : undefined, [tripStop])
@@ -63,7 +63,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
     useEffect(() => {
         const filterDefaults: FilterState = {
             ringSize: 12,
-            date: setSeconds(setMinutes(new Date(), 0), 0),
+            date: new Date(),
             arrivals: false,
             rail: true,
             subway: true,
@@ -103,12 +103,15 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                     : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
-                        Anschlüsse an {trip ? <TripName trip={trip}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
+                        Anschlüsse an {trip ?
+                        <TripName trip={trip}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
                     </IonNote>
                     : null}
-                {stop && tripStops && filterState ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
+                {stop && tripStops && filterState ?
+                    <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
             </IonContent>
-            {stop && filterState ? <Filter stop={stop} state={filterState} onChange={state => setFilter(state)}/> : null}
+            {stop && filterState ?
+                <Filter stop={stop} state={filterState} onChange={state => setFilter(state)}/> : null}
         </IonPage>
     );
 };

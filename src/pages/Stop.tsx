@@ -33,7 +33,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const [presentLoading, dismissLoading] = useIonLoading();
     const [filterState, setFilter] = useState<FilterState>({
         ringSize: 12,
-        date: setSeconds(setMinutes(new Date(), 0), 0),
+        date: new Date(),
         arrivals: false,
         rail: true,
         subway: true,
