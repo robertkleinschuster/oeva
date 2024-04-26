@@ -74,7 +74,7 @@ const StopSearch: React.FC = () => {
                                     {stops?.length ? stops.map(stop => <IonItem
                                             routerLink={`/stops/${stop.id}`}
                                             onClick={() => {
-                                                scheduleDB.stop.update(stop, {last_used: (new Date).getTime()})
+                                                scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
                                             }}
                                             key={stop.id}>
                                             <IonLabel>
