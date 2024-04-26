@@ -1,7 +1,17 @@
-import {IonButton, IonIcon, IonItem, IonItemDivider, IonLabel, IonPopover, IonRange, IonToggle} from "@ionic/react";
+import {
+    IonButton,
+    IonIcon,
+    IonItem,
+    IonItemDivider,
+    IonLabel,
+    IonNote,
+    IonPopover,
+    IonRange,
+    IonToggle
+} from "@ionic/react";
 import {calcRingRadius} from "../transit/Geo";
-import {addHours, subHours} from "date-fns";
-import {add, remove} from "ionicons/icons";
+import {addHours, differenceInCalendarDays, format, subHours} from "date-fns";
+import {add, calendar, remove} from "ionicons/icons";
 import React, {useEffect, useState} from "react";
 import {Stop} from "../db/Schedule";
 import {FilterState} from "../transit/TripStopRepository";
@@ -23,6 +33,8 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
         return () => clearTimeout(delayInputTimeoutId);
     }, [dateLabel]);
 
+    const dayDiff = differenceInCalendarDays(dateLabel, new Date())
+
     return <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
         <IonItem>
             <IonRange value={ringSizeLabel}
@@ -40,7 +52,7 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
         </IonItem>
         <IonItem>
             <IonLabel>
-                ab {dateLabel.toLocaleTimeString(undefined, {timeStyle: 'short'})} Uhr
+                ab {format(dateLabel, 'HH:mm')} Uhr{dayDiff ? <IonNote> <IonIcon icon={calendar}/> +{dayDiff}</IonNote> : null}
             </IonLabel>
             <IonButton onClick={() => {
                 setDateLabel(subHours(dateLabel, 1))

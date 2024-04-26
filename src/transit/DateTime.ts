@@ -14,7 +14,11 @@ export function parseStopTimeInt(time: number, referenceDate: Date): Date {
 }
 
 export function formatDisplayTime(time: number, referenceDate: Date): string {
-    return format(parseStopTimeInt(time, referenceDate), 'HH:mm')
+    const date = parseStopTimeInt(time, referenceDate);
+    if (format(date, 'd.M.yyyy') !== format(new Date(), 'd.M.yyyy')) {
+        return format(date, 'd.M.yyyy HH:mm')
+    }
+    return format(date, 'HH:mm')
 }
 
 export function convertStopTimeToInt(time: string): number {
