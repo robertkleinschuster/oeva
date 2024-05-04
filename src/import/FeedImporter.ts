@@ -116,6 +116,8 @@ class FeedImporter {
                 }
             });
 
+            clearInterval(interval)
+
             await this.saveData(feedId, response.data);
         } finally {
             clearInterval(interval)
