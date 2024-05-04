@@ -17,10 +17,30 @@ export class FeedRunner {
             .below(date.getTime())
             .modify(feed => {
                 if (feed.url) {
-                    feed.status = TransitFeedStatus.DOWNLOADING
-                    feed.background_import = true
+                    this.isReachable(feed.url).then(() => {
+                        feed.status = TransitFeedStatus.DOWNLOADING
+                        feed.background_import = true
+                    })
                 }
             })
+    }
+
+    private async isReachable(url: string) {
+        /**
+         * Note: fetch() still "succeeds" for 404s on subdirectories,
+         * which is ok when only testing for domain reachability.
+         *
+         * Example:
+         *   https://google.com/noexist does not throw
+         *   https://noexist.com/noexist does throw
+         */
+        return fetch(url, {method: 'HEAD', mode: 'no-cors'})
+            .then(function (resp) {
+                return resp && (resp.ok || resp.type === 'opaque');
+            })
+            .catch(function (err) {
+                console.warn('[conn test failure]:', err);
+            });
     }
 
     async run() {
