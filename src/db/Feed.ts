@@ -33,6 +33,7 @@ export interface TransitFeed {
     downloaded_megabytes?: number;
     download_progress?: number;
     status: TransitFeedStatus;
+    background_import?: boolean;
     previous_status?: TransitFeedStatus;
     timestamp?: number;
     last_start?: number;

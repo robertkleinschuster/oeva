@@ -15,4 +15,7 @@ root.render(
         </RunnerContextProvider>
     </React.StrictMode>
 );
-setTimeout(() => void runner.run(), 5000)
+setTimeout(async () => {
+    await runner.check()
+    await runner.run()
+}, 5000)

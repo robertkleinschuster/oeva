@@ -8,9 +8,9 @@ export class FeedDB extends Dexie {
 
     public constructor() {
         super('Feed');
-        this.version(9).stores({
+        this.version(10).stores({
             file: '[feed_id+name],[feed_id+status]',
-            transit: '++id,status',
+            transit: '++id,status,last_start',
             log: '++id,feed_id',
         });
         this.file = this.table('file')

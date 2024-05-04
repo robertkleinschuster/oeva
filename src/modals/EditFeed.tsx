@@ -1,6 +1,6 @@
 import {
     IonButton,
-    IonButtons,
+    IonButtons, IonCheckbox,
     IonContent,
     IonHeader,
     IonItem,
@@ -32,6 +32,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const [url, setURL] = useState('')
     const [file, setFile] = useState<File>()
     const [keywords, setKeywords] = useState<string | undefined>('')
+    const [background, setBackground] = useState(false)
     const logs = useLiveQuery(() => feedDb.log.where({feed_id: feedId}).limit(100).toArray())
 
     const modal = useRef<HTMLIonModalElement>(null)
@@ -41,6 +42,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             setName(feed.name)
             setURL(feed.url)
             setKeywords(feed.keywords)
+            setBackground(Boolean(feed.background_import))
         }
     }, [feed]);
 
@@ -48,7 +50,8 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             name,
             url,
-            keywords
+            keywords,
+            background_import: background
         })
 
         if (file) {
@@ -202,6 +205,16 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             <IonContent>
                 <FeedForm disabled={feed && !stoppedStatuses.includes(feed.status)} onChange={onChange} name={name}
                           url={url} keywords={keywords}/>
+                <IonList>
+                    <IonItem>
+                        <IonCheckbox
+                            checked={background}
+                            onIonChange={() => setBackground(!background)}
+                        >
+                            Wird im Hintergrund ausgeführt
+                        </IonCheckbox>
+                    </IonItem>
+                </IonList>
                 <IonList>
                     {feed && stoppedStatuses.includes(feed.status) ?
                         <>

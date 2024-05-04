@@ -7,7 +7,7 @@ import {createStop, createTrip, createTripStop} from "./TripStopFactory";
 export class FeedProcessor {
     private offset: number = 0
 
-    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private background = false) {
     }
 
     prefixId(feedId: number, id: string) {
@@ -30,13 +30,17 @@ export class FeedProcessor {
             progress: "trip stops",
         });
 
-        const interval = setInterval(async () => {
+        const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
                 progress: `trip stops ${percent} %, trip ${this.offset} / ${count}: ${trip?.trip_short_name ?? ''} ${trip?.trip_headsign ?? ''}`,
                 offset: this.offset
             });
+        }
+
+        const interval = setInterval(async () => {
+            await updateProgress()
         }, 1500)
 
 
@@ -87,6 +91,11 @@ export class FeedProcessor {
                         })
                 } finally {
                     errors.forEach(error => this.log(feedId, error))
+                }
+                if (this.background) {
+                    await updateProgress()
+                    clearInterval(interval)
+                    return;
                 }
             }
         } finally {

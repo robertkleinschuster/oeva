@@ -64,7 +64,7 @@ class FeedImporter {
             await this.updateStatus(feedId, TransitFeedStatus.SAVING)
         }
         if (feed?.status === TransitFeedStatus.SAVING) {
-            await this.importData(feedId)
+            await this.importData(feedId, feed.background_import)
             await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
         }
         if (feed?.status === TransitFeedStatus.PROCESSING) {
@@ -82,6 +82,11 @@ class FeedImporter {
             offset: undefined,
             progress: undefined
         });
+        if (status === TransitFeedStatus.DONE) {
+            this.feedDb.transit.update(feedId, {
+                background_import: false
+            });
+        }
     }
 
     async downloadData(feedId: number) {
@@ -134,11 +139,12 @@ class FeedImporter {
                     content: pako.deflate(fileContent),
                     status: FeedFileStatus.IMPORT_PENDING,
                 })
+                await new Promise(resolve => setTimeout(resolve, 500))
             }
         }
     }
 
-    async importData(feedId: number) {
+    async importData(feedId: number, background = false) {
         const files = await this.feedDb.file
             .where({feed_id: feedId, status: FeedFileStatus.IMPORT_PENDING})
             .toArray();
@@ -161,7 +167,11 @@ class FeedImporter {
             const tableName = getTableName(file.name);
 
             if (tableName) {
-                await this.importCSV(pako.inflate(file.content, {to: "string"}), tableName);
+                await this.importCSV(
+                    pako.inflate(file.content, {to: "string"}),
+                    tableName,
+                    background
+                );
             }
 
             await this.feedDb.file.update(file, {
@@ -176,7 +186,7 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb)
+        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb, feed.background_import)
 
         if (feed.step === undefined) {
             await this.feedDb.transit.update(feedId, {
@@ -203,7 +213,7 @@ class FeedImporter {
         }
     }
 
-    private importCSV(csv: string, tableName: string) {
+    private importCSV(csv: string, tableName: string, background: boolean) {
         const table = this.transitDb.table(tableName);
         return this.transitDb.transaction('rw', table, (trans) => {
             return new Promise<void>((resolve, reject) => {
@@ -213,20 +223,22 @@ class FeedImporter {
                         return dynamicallyTypedColumns.has(column.toString());
                     },
                     skipEmptyLines: true,
-                    chunkSize: 5000,
+                    chunkSize: 1310720,
                     worker: false,
                     encoding: "UTF-8",
                     chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
                         parser.pause();
-                        const table = this.transitDb.table(tableName);
-                        table.bulkPut(results.data)
-                            .then(() => {
-                                parser.resume()
-                            })
-                            .catch(() => {
-                                trans.abort();
-                                reject()
-                            });
+                        setTimeout(() => {
+                            const table = this.transitDb.table(tableName);
+                            table.bulkPut(results.data)
+                                .then(() => {
+                                    parser.resume()
+                                })
+                                .catch(() => {
+                                    trans.abort();
+                                    reject()
+                                });
+                        }, background ? 500 : 10)
                     },
                     complete: () => {
                         resolve();

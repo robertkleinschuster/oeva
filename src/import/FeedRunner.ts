@@ -4,10 +4,24 @@ import {FeedImporter} from "./FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
 import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB";
+import {subDays} from "date-fns";
 
 export class FeedRunner {
     running: number | undefined
     private audio: HTMLAudioElement | undefined
+
+    async check() {
+        const date = subDays(new Date(), 7)
+        await feedDb.transit
+            .where('last_start')
+            .below(date.getTime())
+            .modify(feed => {
+                if (feed.url) {
+                    feed.status = TransitFeedStatus.DOWNLOADING
+                    feed.background_import = true
+                }
+            })
+    }
 
     async run() {
         if (this.running === undefined) {
@@ -31,6 +45,7 @@ export class FeedRunner {
                         console.error(error)
                         await feedDb.transit.update(feed.id!, {
                             status: TransitFeedStatus.ERROR,
+                            background_import: false,
                             previous_status: feed.status,
                             progress: String(error)
                         });
