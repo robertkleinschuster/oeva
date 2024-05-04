@@ -228,17 +228,15 @@ class FeedImporter {
                     encoding: "UTF-8",
                     chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
                         parser.pause();
-                        setTimeout(() => {
-                            const table = this.transitDb.table(tableName);
-                            table.bulkPut(results.data)
-                                .then(() => {
-                                    parser.resume()
-                                })
-                                .catch(() => {
-                                    trans.abort();
-                                    reject()
-                                });
-                        }, background ? 500 : 10)
+                        const table = this.transitDb.table(tableName);
+                        table.bulkPut(results.data)
+                            .then(() => {
+                                parser.resume()
+                            })
+                            .catch(() => {
+                                trans.abort();
+                                reject()
+                            });
                     },
                     complete: () => {
                         resolve();
