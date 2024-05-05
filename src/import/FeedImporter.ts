@@ -240,7 +240,7 @@ class FeedImporter {
                 encoding: "UTF-8",
                 chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
                     parser.pause();
-                    (new Promise(resolve => setTimeout(resolve, 1000))).then(() => {
+                    (new Promise(resolve => setTimeout(resolve, background ? 1000 : 0))).then(() => {
                         const table = this.transitDb.table(tableName);
                         table.bulkPut(results.data)
                             .then(() => {
