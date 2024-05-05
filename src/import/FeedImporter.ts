@@ -139,7 +139,7 @@ class FeedImporter {
                     feed_id: feedId,
                     name: fileName,
                     type: 'text/csv',
-                    content: pako.deflate(fileContent, {level: 3}),
+                    content: pako.deflate(fileContent, {level: 1}),
                     status: FeedFileStatus.IMPORT_PENDING,
                 })
                 await new Promise(resolve => setTimeout(resolve, 1000))
