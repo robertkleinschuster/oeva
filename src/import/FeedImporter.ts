@@ -180,6 +180,13 @@ class FeedImporter {
                 status: FeedFileStatus.IMPORTED
             })
             done++
+            if (background) {
+                await this.feedDb.transit.update(feedId, {
+                    progress: `${file.name}, ${done} / ${originalDone + files.length}`,
+                    status: TransitFeedStatus.SAVING
+                });
+                return;
+            }
         }
     }
 
