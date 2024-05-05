@@ -8,6 +8,7 @@ import {subDays} from "date-fns";
 
 export class FeedRunner {
     running: number | undefined
+    onRun: undefined | ((id: number) => void) = undefined
     private audio: HTMLAudioElement | undefined
 
     async check() {
@@ -27,14 +28,14 @@ export class FeedRunner {
                     .toArray()
                 if (feeds.length) {
                     const interval = setInterval(() => {
-                        if (this.running && this.audio && this.audio.paused) {
-                            this.audio.play()
-                        }
+                        this.backgroundExec();
                     }, 500)
-                    this.backgroundExec();
 
                     for (const feed of feeds) {
                         this.running = feed.id
+                        if (this.onRun && feed.id) {
+                            this.onRun(feed.id)
+                        }
                         try {
                             const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
                             await dataImporter.run(feed.id!)
@@ -49,7 +50,6 @@ export class FeedRunner {
                     }
 
                     clearInterval(interval)
-                    this.audio?.pause()
                 }
             } catch (e) {
                 console.log(e)
@@ -64,6 +64,7 @@ export class FeedRunner {
                 }, 10)
             })
         } else {
+            this.audio?.pause()
             return new Promise<void>(resolve => {
                 setTimeout(async () => {
                     await this.run()

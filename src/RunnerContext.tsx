@@ -9,21 +9,12 @@ export const RunnerContext = createContext<number | undefined>(undefined)
 
 export const RunnerContextProvider = ({children, runner}: { children: ReactNode, runner: FeedRunner }) => {
     const [running, setRunning] = useState<number | undefined>()
-    const [runningFeed, setRunningFeed] = useState<TransitFeed | undefined>()
     useEffect(() => {
-        const interval = setInterval(() => {
-            setRunning(runner.running)
-            if (runner.running) {
-                feedDb.transit.get(runner.running).then(setRunningFeed)
-            } else {
-                setRunningFeed(undefined)
-            }
-        }, 1000);
-        return () => clearInterval(interval);
+        runner.onRun = setRunning
     }, [runner]);
 
     return <RunnerContext.Provider value={running}>
-        {runningFeed ? <IonItem color="light" style={{
+        {running ? <IonItem color="light" style={{
             position: 'absolute',
             bottom: '0',
             right: '0',
