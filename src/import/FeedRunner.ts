@@ -54,15 +54,23 @@ export class FeedRunner {
             } catch (e) {
                 console.log(e)
             }
-            this.running = undefined
         }
-
-        return new Promise<void>(resolve => {
-            setTimeout(async () => {
-                await this.run()
-                resolve()
-            }, 1000)
-        })
+        if (this.running) {
+            this.running = undefined
+            return new Promise<void>(resolve => {
+                setTimeout(async () => {
+                    await this.run()
+                    resolve()
+                }, 10)
+            })
+        } else {
+            return new Promise<void>(resolve => {
+                setTimeout(async () => {
+                    await this.run()
+                    resolve()
+                }, 5000)
+            })
+        }
     }
 
 

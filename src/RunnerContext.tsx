@@ -34,8 +34,7 @@ export const RunnerContextProvider = ({children, runner}: { children: ReactNode,
         }}>
             <IonSpinner slot="end"/>
             <IonLabel>
-                <span>{runningFeed.name}: </span>
-                <FeedStatus feed={runningFeed}/>
+                Feeds werden aktualisiert
             </IonLabel>
         </IonItem> : null}
 

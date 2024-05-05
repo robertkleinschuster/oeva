@@ -227,7 +227,7 @@ class FeedImporter {
         }
     }
 
-    private importCSV(csv: string, tableName: string, background: boolean) {
+    private importCSV(csv: string | File, tableName: string, background: boolean) {
         return new Promise<void>((resolve, reject) => {
             Papa.parse(csv, {
                 header: true,
