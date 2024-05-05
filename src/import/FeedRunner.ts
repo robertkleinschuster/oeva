@@ -9,6 +9,7 @@ import {subDays} from "date-fns";
 export class FeedRunner {
     running: number | undefined
     onRun: undefined | ((id: number) => void) = undefined
+    onFinished: undefined | (() => void) = undefined
     private audio: HTMLAudioElement | undefined
 
     async check() {
@@ -65,6 +66,9 @@ export class FeedRunner {
             })
         } else {
             this.audio?.pause()
+            if (this.onFinished) {
+                this.onFinished()
+            }
             return new Promise<void>(resolve => {
                 setTimeout(async () => {
                     await this.run()

@@ -11,6 +11,7 @@ export const RunnerContextProvider = ({children, runner}: { children: ReactNode,
     const [running, setRunning] = useState<number | undefined>()
     useEffect(() => {
         runner.onRun = setRunning
+        runner.onFinished = () => setRunning(undefined)
     }, [runner]);
 
     return <RunnerContext.Provider value={running}>
