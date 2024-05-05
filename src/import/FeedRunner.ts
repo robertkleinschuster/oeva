@@ -25,29 +25,31 @@ export class FeedRunner {
                     .where('status')
                     .noneOf(stoppedStatuses)
                     .toArray()
-                for (const feed of feeds) {
-                    this.running = feed.id
+                if (feeds.length) {
                     const interval = setInterval(() => {
                         if (this.running && this.audio && this.audio.paused) {
                             this.audio.play()
                         }
                     }, 500)
                     this.backgroundExec();
-                    try {
-                        const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
-                        await dataImporter.run(feed.id!)
-                    } catch (error) {
-                        console.error(error)
-                        await feedDb.transit.update(feed.id!, {
-                            status: TransitFeedStatus.ERROR,
-                            background_import: false,
-                            previous_status: feed.status,
-                            progress: String(error)
-                        });
-                    } finally {
-                        clearInterval(interval)
-                        this.audio?.pause()
+
+                    for (const feed of feeds) {
+                        this.running = feed.id
+                        try {
+                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
+                            await dataImporter.run(feed.id!)
+                        } catch (error) {
+                            console.error(error)
+                            await feedDb.transit.update(feed.id!, {
+                                status: TransitFeedStatus.ERROR,
+                                previous_status: feed.status,
+                                progress: String(error)
+                            });
+                        }
                     }
+
+                    clearInterval(interval)
+                    this.audio?.pause()
                 }
             } catch (e) {
                 console.log(e)
