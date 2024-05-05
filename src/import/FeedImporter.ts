@@ -228,38 +228,35 @@ class FeedImporter {
     }
 
     private importCSV(csv: string, tableName: string, background: boolean) {
-        const table = this.transitDb.table(tableName);
-        return this.transitDb.transaction('rw', table, (trans) => {
-            return new Promise<void>((resolve, reject) => {
-                Papa.parse(csv, {
-                    header: true,
-                    dynamicTyping: (column) => {
-                        return dynamicallyTypedColumns.has(column.toString());
-                    },
-                    skipEmptyLines: true,
-                    chunkSize: 1310720,
-                    worker: false,
-                    encoding: "UTF-8",
-                    chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
-                        parser.pause();
+        return new Promise<void>((resolve, reject) => {
+            Papa.parse(csv, {
+                header: true,
+                dynamicTyping: (column) => {
+                    return dynamicallyTypedColumns.has(column.toString());
+                },
+                skipEmptyLines: true,
+                chunkSize: 655360,
+                worker: false,
+                encoding: "UTF-8",
+                chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
+                    parser.pause();
+                    (new Promise(resolve => setTimeout(resolve, 1000))).then(() => {
                         const table = this.transitDb.table(tableName);
                         table.bulkPut(results.data)
                             .then(() => {
                                 parser.resume()
                             })
                             .catch(() => {
-                                trans.abort();
                                 reject()
                             });
-                    },
-                    complete: () => {
-                        resolve();
-                    },
-                    error: (error: Error) => {
-                        trans.abort();
-                        reject(error);
-                    },
-                });
+                    });
+                },
+                complete: () => {
+                    resolve();
+                },
+                error: (error: Error) => {
+                    reject(error);
+                },
             });
         })
     }
