@@ -17,7 +17,8 @@ import {
     IonText,
     IonTitle,
     IonToolbar,
-    isPlatform
+    isPlatform,
+    useIonLoading
 } from '@ionic/react';
 import React, {useContext} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
@@ -31,7 +32,7 @@ import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
     const runningFeed = useContext(RunnerContext)
-
+    const [presentLoading, dismissLoading] = useIonLoading()
     return (
         <IonPage>
             <IonHeader>
@@ -55,6 +56,7 @@ const Feeds: React.FC = () => {
                                 {
                                     text: 'Aktualisieren',
                                     handler: async () => {
+                                        await presentLoading('Aktualisieren...')
                                         await feedDb.transit
                                             .where('status')
                                             .anyOf(stoppedStatuses)
@@ -64,6 +66,7 @@ const Feeds: React.FC = () => {
                                                     feed.background_import = true
                                                 }
                                             })
+                                        await dismissLoading()
                                     },
                                 },
                             ]}
