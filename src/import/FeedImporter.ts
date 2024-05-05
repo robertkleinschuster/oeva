@@ -157,7 +157,7 @@ class FeedImporter {
             .count();
         const originalDone = done;
 
-        if (!files.length) {
+        if (!files.length && !done) {
             throw new Error('No files in import');
         }
 
