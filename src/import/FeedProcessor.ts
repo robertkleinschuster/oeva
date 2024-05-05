@@ -26,9 +26,11 @@ export class FeedProcessor {
 
         const trips = await this.transitDb.trips.offset(this.offset).toArray()
 
-        await this.feedDb.transit.update(feedId, {
-            progress: "trip stops",
-        });
+        if (this.offset === 0) {
+            await this.feedDb.transit.update(feedId, {
+                progress: "trip stops",
+            });
+        }
 
         const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
@@ -92,7 +94,7 @@ export class FeedProcessor {
                 } finally {
                     errors.forEach(error => this.log(feedId, error))
                 }
-                if (this.background) {
+                if (this.background && this.offset % 500 === 0) {
                     await updateProgress()
                     clearInterval(interval)
                     return false;
@@ -123,9 +125,12 @@ export class FeedProcessor {
             .offset(this.offset)
             .toArray()
 
-        await this.feedDb.transit.update(feedId, {
-            progress: "stops",
-        });
+        if (this.offset === 0) {
+            await this.feedDb.transit.update(feedId, {
+                progress: "stops",
+            });
+        }
+
         const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const stop = stops.at(this.offset - (feed.offset ?? 0))
@@ -142,7 +147,7 @@ export class FeedProcessor {
             for (const stop of stops) {
                 await this.scheduleDb.stop.put(createStop(feed, stop))
                 this.offset++;
-                if (this.background) {
+                if (this.background && this.offset % 1000 === 0) {
                     await updateProgress()
                     clearInterval(interval)
                     return false;
@@ -169,9 +174,12 @@ export class FeedProcessor {
             .offset(this.offset)
             .toArray()
 
-        await this.feedDb.transit.update(feedId, {
-            progress: "trips",
-        });
+        if (this.offset === 0) {
+            await this.feedDb.transit.update(feedId, {
+                progress: "trips",
+            });
+        }
+
         const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
@@ -205,7 +213,7 @@ export class FeedProcessor {
                 }
 
                 this.offset++;
-                if (this.background) {
+                if (this.background && this.offset % 1000 === 0) {
                     await updateProgress()
                     clearInterval(interval)
                     return false;
