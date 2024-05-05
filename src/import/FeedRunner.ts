@@ -21,11 +21,11 @@ export class FeedRunner {
     async run() {
         if (this.running === undefined) {
             try {
-                const feed = await feedDb.transit
+                const feeds = await feedDb.transit
                     .where('status')
                     .noneOf(stoppedStatuses)
-                    .first()
-                if (feed) {
+                    .toArray()
+                for (const feed of feeds) {
                     this.running = feed.id
                     const interval = setInterval(() => {
                         if (this.running && this.audio && this.audio.paused) {

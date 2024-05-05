@@ -95,12 +95,13 @@ export class FeedProcessor {
                 if (this.background) {
                     await updateProgress()
                     clearInterval(interval)
-                    return;
+                    return false;
                 }
             }
         } finally {
             clearInterval(interval)
         }
+        return true;
     }
 
     async log(feedId: number, message: string) {
@@ -144,12 +145,13 @@ export class FeedProcessor {
                 if (this.background) {
                     await updateProgress()
                     clearInterval(interval)
-                    return;
+                    return false;
                 }
             }
         } finally {
             clearInterval(interval)
         }
+        return true;
     }
 
     async processTrips(feedId: number) {
@@ -206,11 +208,12 @@ export class FeedProcessor {
                 if (this.background) {
                     await updateProgress()
                     clearInterval(interval)
-                    return;
+                    return false;
                 }
             }
         } finally {
             clearInterval(interval)
         }
+        return true;
     }
 }

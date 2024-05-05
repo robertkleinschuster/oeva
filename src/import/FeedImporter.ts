@@ -64,8 +64,9 @@ class FeedImporter {
             await this.updateStatus(feedId, TransitFeedStatus.SAVING)
         }
         if (feed?.status === TransitFeedStatus.SAVING) {
-            await this.importData(feedId, feed.background_import)
-            await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
+            if (await this.importData(feedId, feed.background_import)) {
+                await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
+            }
         }
         if (feed?.status === TransitFeedStatus.PROCESSING) {
             await this.processData(feedId)
@@ -138,10 +139,10 @@ class FeedImporter {
                     feed_id: feedId,
                     name: fileName,
                     type: 'text/csv',
-                    content: pako.deflate(fileContent),
+                    content: pako.deflate(fileContent, {level: 1}),
                     status: FeedFileStatus.IMPORT_PENDING,
                 })
-                await new Promise(resolve => setTimeout(resolve, 500))
+                await new Promise(resolve => setTimeout(resolve, 1000))
             }
         }
     }
@@ -185,9 +186,10 @@ class FeedImporter {
                     progress: `${file.name}, ${done} / ${originalDone + files.length}`,
                     status: TransitFeedStatus.SAVING
                 });
-                return;
+                return false;
             }
         }
+        return true;
     }
 
     async processData(feedId: number, skipTripStops = false): Promise<void> {
@@ -203,20 +205,23 @@ class FeedImporter {
                 offset: undefined
             });
         } else if (feed.step === TransitFeedStep.STOPS) {
-            await processor.processStops(feedId)
-            await this.feedDb.transit.update(feedId, {
-                step: TransitFeedStep.TRIPS,
-                offset: undefined
-            });
+            if (await processor.processStops(feedId)) {
+                await this.feedDb.transit.update(feedId, {
+                    step: TransitFeedStep.TRIPS,
+                    offset: undefined
+                });
+            }
         } else if (feed.step === TransitFeedStep.TRIPS) {
-            await processor.processTrips(feedId)
-            await this.feedDb.transit.update(feedId, {
-                step: TransitFeedStep.TRIPSTOPS,
-                offset: undefined
-            });
+            if (await processor.processTrips(feedId)) {
+                await this.feedDb.transit.update(feedId, {
+                    step: TransitFeedStep.TRIPSTOPS,
+                    offset: undefined
+                });
+            }
         } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
-            await processor.processTripStops(feedId)
-            await this.updateStatus(feedId, TransitFeedStatus.DONE)
+            if (await processor.processTripStops(feedId)) {
+                await this.updateStatus(feedId, TransitFeedStatus.DONE)
+            }
         } else if (skipTripStops) {
             await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
