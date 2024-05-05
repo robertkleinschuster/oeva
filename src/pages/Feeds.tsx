@@ -1,6 +1,7 @@
 import {
     IonAlert,
-    IonBackButton, IonButton,
+    IonBackButton,
+    IonButton,
     IonButtons,
     IonContent,
     IonHeader,
@@ -15,7 +16,8 @@ import {
     IonSpinner,
     IonText,
     IonTitle,
-    IonToolbar, isPlatform, useIonLoading
+    IonToolbar,
+    isPlatform
 } from '@ionic/react';
 import React, {useContext} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
@@ -24,13 +26,11 @@ import FeedStatus from "../components/FeedStatus";
 import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
-import {scheduleDB} from "../db/ScheduleDB";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
     const runningFeed = useContext(RunnerContext)
-    const [present, dismiss] = useIonLoading();
 
     return (
         <IonPage>
@@ -41,24 +41,29 @@ const Feeds: React.FC = () => {
                     </IonButtons>
                     <IonTitle>Feeds</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton id="delete-schedule">
-                            Daten löschen
+                        <IonButton id="update">
+                            Aktualisieren
                         </IonButton>
                         <IonAlert
-                            header="Fahrplandaten löschen?"
-                            trigger="delete-schedule"
+                            header="Daten aktualisieren?"
+                            trigger="update"
                             buttons={[
                                 {
                                     text: 'Abbrechen',
                                     role: 'cancel',
                                 },
                                 {
-                                    text: 'Löschen',
-                                    role: 'destructive',
+                                    text: 'Aktualisieren',
                                     handler: async () => {
-                                        await present('Löschen...')
-                                        await scheduleDB.delete()
-                                        await dismiss()
+                                        await feedDb.transit
+                                            .where('status')
+                                            .anyOf(stoppedStatuses)
+                                            .modify(feed => {
+                                                if (feed.url) {
+                                                    feed.status = TransitFeedStatus.DOWNLOADING
+                                                    feed.background_import = true
+                                                }
+                                            })
                                     },
                                 },
                             ]}

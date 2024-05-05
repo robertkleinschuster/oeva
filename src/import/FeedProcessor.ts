@@ -125,20 +125,27 @@ export class FeedProcessor {
         await this.feedDb.transit.update(feedId, {
             progress: "stops",
         });
-
-        const interval = setInterval(async () => {
+        const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const stop = stops.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
                 progress: `stops ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`,
                 offset: this.offset
             });
+        }
+        const interval = setInterval(async () => {
+            await updateProgress()
         }, 1500);
 
         try {
             for (const stop of stops) {
                 await this.scheduleDb.stop.put(createStop(feed, stop))
                 this.offset++;
+                if (this.background) {
+                    await updateProgress()
+                    clearInterval(interval)
+                    return;
+                }
             }
         } finally {
             clearInterval(interval)
@@ -163,14 +170,16 @@ export class FeedProcessor {
         await this.feedDb.transit.update(feedId, {
             progress: "trips",
         });
-
-        const interval = setInterval(async () => {
+        const updateProgress = async () => {
             const percent = Math.ceil((this.offset / count) * 100)
             const trip = trips.at(this.offset - (feed.offset ?? 0))
             await this.feedDb.transit.update(feedId, {
                 progress: `trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name ?? ''} ${trip?.trip_headsign ?? ''}`,
                 offset: this.offset
             });
+        }
+        const interval = setInterval(async () => {
+            await updateProgress()
         }, 1500);
 
         try {
@@ -194,6 +203,11 @@ export class FeedProcessor {
                 }
 
                 this.offset++;
+                if (this.background) {
+                    await updateProgress()
+                    clearInterval(interval)
+                    return;
+                }
             }
         } finally {
             clearInterval(interval)
