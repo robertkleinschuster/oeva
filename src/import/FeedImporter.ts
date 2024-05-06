@@ -64,7 +64,7 @@ class FeedImporter {
             await this.updateStatus(feedId, TransitFeedStatus.SAVING)
         }
         if (feed?.status === TransitFeedStatus.SAVING) {
-            if (await this.importData(feedId, feed.background_import)) {
+            if (await this.importData(feedId)) {
                 await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
             }
         }
@@ -83,11 +83,6 @@ class FeedImporter {
             offset: undefined,
             progress: undefined
         });
-        if (status === TransitFeedStatus.DONE) {
-            this.feedDb.transit.update(feedId, {
-                background_import: false
-            });
-        }
     }
 
     async downloadData(feedId: number) {
@@ -147,7 +142,7 @@ class FeedImporter {
         }
     }
 
-    async importData(feedId: number, background = false) {
+    async importData(feedId: number) {
         const files = await this.feedDb.file
             .where({feed_id: feedId, status: FeedFileStatus.IMPORT_PENDING})
             .toArray();
@@ -172,8 +167,7 @@ class FeedImporter {
             if (tableName) {
                 await this.importCSV(
                     pako.inflate(file.content, {to: "string"}),
-                    tableName,
-                    background
+                    tableName
                 );
             }
 
@@ -181,13 +175,6 @@ class FeedImporter {
                 status: FeedFileStatus.IMPORTED
             })
             done++
-            if (background) {
-                await this.feedDb.transit.update(feedId, {
-                    progress: `${file.name}, ${done} / ${originalDone + files.length}`,
-                    status: TransitFeedStatus.SAVING
-                });
-                return false;
-            }
         }
         return true;
     }
@@ -197,7 +184,7 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb, feed.background_import)
+        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb)
 
         if (feed.step === undefined) {
             await this.feedDb.transit.update(feedId, {
@@ -227,7 +214,7 @@ class FeedImporter {
         }
     }
 
-    private importCSV(csv: string | File, tableName: string, background: boolean) {
+    private importCSV(csv: string | File, tableName: string) {
         return new Promise<void>((resolve, reject) => {
             Papa.parse(csv, {
                 header: true,
@@ -240,7 +227,7 @@ class FeedImporter {
                 encoding: "UTF-8",
                 chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
                     parser.pause();
-                    (new Promise(resolve => setTimeout(resolve, background ? 100 : 0))).then(() => {
+                    (new Promise(resolve => setTimeout(resolve, 10))).then(() => {
                         const table = this.transitDb.table(tableName);
                         table.bulkPut(results.data)
                             .then(() => {

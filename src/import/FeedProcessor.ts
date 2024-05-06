@@ -7,7 +7,7 @@ import {createStop, createTrip, createTripStop} from "./TripStopFactory";
 export class FeedProcessor {
     private offset: number = 0
 
-    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private background = false) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB) {
     }
 
     prefixId(feedId: number, id: string) {
@@ -94,11 +94,6 @@ export class FeedProcessor {
                 } finally {
                     errors.forEach(error => this.log(feedId, error))
                 }
-                if (this.background && this.offset % 500 === 0) {
-                    await updateProgress()
-                    clearInterval(interval)
-                    return false;
-                }
             }
         } finally {
             clearInterval(interval)
@@ -147,11 +142,6 @@ export class FeedProcessor {
             for (const stop of stops) {
                 await this.scheduleDb.stop.put(createStop(feed, stop))
                 this.offset++;
-                if (this.background && this.offset % 1000 === 0) {
-                    await updateProgress()
-                    clearInterval(interval)
-                    return false;
-                }
             }
         } finally {
             clearInterval(interval)
@@ -213,11 +203,6 @@ export class FeedProcessor {
                 }
 
                 this.offset++;
-                if (this.background && this.offset % 1000 === 0) {
-                    await updateProgress()
-                    clearInterval(interval)
-                    return false;
-                }
             }
         } finally {
             clearInterval(interval)

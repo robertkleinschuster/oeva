@@ -63,7 +63,6 @@ const Feeds: React.FC = () => {
                                             .modify(feed => {
                                                 if (feed.url) {
                                                     feed.status = TransitFeedStatus.DOWNLOADING
-                                                    feed.background_import = false
                                                 }
                                             })
                                         await dismissLoading()
