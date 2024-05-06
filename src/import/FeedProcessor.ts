@@ -52,7 +52,7 @@ export class FeedProcessor {
                 try {
                     const stopTimes = await this.transitDb.stopTimes
                         .where({trip_id: gtfsTrip.trip_id})
-                        .toArray();
+                        .sortBy('stop_sequence');
                     await this.scheduleDb.transaction(
                         'rw',
                         [this.scheduleDb.trip, this.scheduleDb.stop, this.scheduleDb.trip_stop],
