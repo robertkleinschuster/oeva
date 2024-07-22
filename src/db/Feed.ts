@@ -52,6 +52,7 @@ export interface FeedFile {
 }
 
 export interface FeedLog {
+    id?: number;
     feed_id: number;
     message: string;
 }

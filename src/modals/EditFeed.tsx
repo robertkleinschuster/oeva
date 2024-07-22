@@ -1,6 +1,6 @@
 import {
     IonButton,
-    IonButtons, IonCheckbox,
+    IonButtons,
     IonContent,
     IonHeader,
     IonItem,
@@ -259,7 +259,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                     <IonItemDivider>
                         <IonLabel>Log</IonLabel>
                     </IonItemDivider>
-                    {logs?.map(log => <IonItem>
+                    {logs?.map(log => <IonItem key={log.id}>
                         <IonLabel>{log.message}</IonLabel>
                     </IonItem>)}
                 </IonList>
