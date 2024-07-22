@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
-import {showEstimatedQuota} from "../db/StorageManager";
-import {IonCard, IonCardContent, IonProgressBar} from "@ionic/react";
+import {showEstimatedQuota} from "../fs/StorageManager.ts";
+import {IonProgressBar} from "@ionic/react";
 import React from "react";
 
 export const StorageQuota: React.FC = () => {
@@ -19,13 +19,11 @@ export const StorageQuota: React.FC = () => {
         const usageInPercent = Math.ceil((usageInMB / quotaInMB) * 100);
         const formatter = new Intl.NumberFormat(['de'], {style: 'unit', unit: 'megabyte', maximumFractionDigits: 2})
 
-        return <IonCard>
-            <IonCardContent>
+        return <div className="ion-margin">
                 <p>{usageInPercent} %</p>
                 <IonProgressBar color="secondary" value={usageInPercent / 100} style={{height: '1rem'}}/>
                 <p>{formatter.format(usageInMB)} von {formatter.format(quotaInMB)} Verwendet</p>
-            </IonCardContent>
-        </IonCard>
+        </div>
     }
 
     return <></>

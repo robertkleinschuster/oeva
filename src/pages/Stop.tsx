@@ -17,7 +17,7 @@ import {RouteComponentProps} from "react-router";
 import {useLiveQuery} from "dexie-react-hooks";
 import {scheduleDB} from "../db/ScheduleDB";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
-import {addHours, setMinutes, setSeconds} from "date-fns";
+import {addHours} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";

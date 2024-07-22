@@ -20,6 +20,7 @@
     "@capacitor/status-bar": "5.0.7",
     "@ionic/react": "^7.0.0",
     "@ionic/react-router": "^7.0.0",
+    "@sqlite.org/sqlite-wasm": "^3.46.0-build2",
     "axios": "^1.6.8",
     "date-fns": "^3.6.0",
     "dexie-react-hooks": "^1.1.7",
@@ -37,6 +38,7 @@
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "transliteration": "^2.3.5",
+    "uuid": "^10.0.0",
     "wink-tokenizer": "^5.3.0"
   },
   "devDependencies": {
@@ -52,6 +54,7 @@
     "@types/react-dom": "^18.0.10",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
+    "@types/uuid": "^10.0.0",
     "@types/wink-tokenizer": "^4.0.6",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
@@ -70,5 +73,6 @@
     "vite-plugin-pwa": "^0.19.7",
     "vitest": "^0.34.6"
   },
-  "description": "An Ionic project"
+  "description": "An Ionic project",
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }

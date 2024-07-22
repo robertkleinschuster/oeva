@@ -5,10 +5,13 @@ import {
     IonHeader,
     IonPage,
     IonTitle,
-    IonToolbar, isPlatform
+    IonToolbar,
+    isPlatform
 } from '@ionic/react';
 import React from "react";
 import {StorageQuota} from "../components/StorageQuota";
+import StorageDirectory from "../components/StorageDirectory.tsx";
+import StoragePersistence from "../components/StoragePersistence.tsx";
 
 const Storage: React.FC = () => {
     return (
@@ -23,6 +26,8 @@ const Storage: React.FC = () => {
             </IonHeader>
             <IonContent>
                 <StorageQuota/>
+                <StoragePersistence/>
+                <StorageDirectory/>
             </IonContent>
         </IonPage>
     );
