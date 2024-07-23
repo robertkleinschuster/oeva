@@ -1,27 +1,27 @@
 import * as uuid from "uuid"
 
-export interface Message {
+export interface Messages {
     readonly type: string,
     readonly id: string,
     readonly isResponse?: boolean
 }
 
 
-export interface InvokeMessage extends Message {
+export interface InvokeMessage extends Messages {
     readonly type: 'invoke'
     readonly func: string
 }
 
-export interface ReturnMessage extends Message {
+export interface ReturnMessage extends Messages {
     readonly type: 'return'
     readonly func: string
 }
 
-export function isInvokeMessage(message: Message): message is InvokeMessage {
+export function isInvokeMessage(message: Messages): message is InvokeMessage {
     return message.type === 'invoke'
 }
 
-export function isReturnMessage(message: Message): message is InvokeMessage {
+export function isReturnMessage(message: Messages): message is InvokeMessage {
     return message.type === 'return'
 }
 
@@ -46,11 +46,11 @@ export class WriteFileReturnMessage implements ReturnMessage {
     }
 }
 
-export function isWriteFileMessage(message: Message): message is WriteFileMessage {
+export function isWriteFileMessage(message: Messages): message is WriteFileMessage {
     return isInvokeMessage(message) && message.func === 'writeFile'
 }
 
 
-export function isWriteFileReturnMessage(message: Message): message is WriteFileReturnMessage {
+export function isWriteFileReturnMessage(message: Messages): message is WriteFileReturnMessage {
     return isReturnMessage(message) && message.func === 'writeFile'
 }

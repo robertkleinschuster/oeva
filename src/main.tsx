@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App';
 import {RunnerContextProvider} from "./RunnerContext";
 import {FeedRunner} from "./import/FeedRunner";
-import SqliteWorker from "./worker/sqlite?worker";
+import SqliteWorker from "../worker/sqlite?worker";
 import {tryPersistWithoutPromptingUser} from "./fs/StorageManager.ts";
 
 const runner = new FeedRunner();

@@ -1,5 +1,5 @@
-import FileSystemWorker from "../worker/filesystem?worker"
-import {WriteFileMessage, isWriteFileReturnMessage} from "../worker/message"
+import FileSystemWorker from "../../worker/storage.ts?worker"
+import {WriteFileMessage, isWriteFileReturnMessage} from "./messages.ts"
 
 const fsWorker = new FileSystemWorker()
 
@@ -64,6 +64,7 @@ export async function tryPersistWithoutPromptingUser(): Promise<void> {
             return;
         }
     } catch (e) {
+        console.log(e)
     }
     console.info('Could not automatically activate persistent storage.');
 }
