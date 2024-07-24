@@ -9,7 +9,6 @@
     ]
   },
   "include": [
-    "./worker",
-    "./src/fs/messages.ts"
+    "worker"
   ]
 }
