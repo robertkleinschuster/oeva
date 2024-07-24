@@ -4,7 +4,7 @@ import {IonItem, IonLabel, IonSpinner} from "@ionic/react";
 
 export const RunnerContext = createContext<number | undefined>(undefined)
 
-export const RunnerContextProvider = ({children, runner}: { children: ReactNode, runner: FeedRunner }) => {
+export const RunnerContextProvider: React.FC<{ children: ReactNode, runner: FeedRunner }> = ({children, runner}) => {
     const [running, setRunning] = useState<number | undefined>()
     useEffect(() => {
         runner.onRun = setRunning
