@@ -5,11 +5,13 @@
     "noEmit": false,
     "lib": [
       "ES2020",
-      "webworker"
+      "DOM",
+      "DOM.Iterable",
+      "dom.asynciterable"
     ]
   },
   "include": [
-    "src/worker",
+    "src/client",
     "src/shared"
   ]
 }

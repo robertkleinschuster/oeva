@@ -1,4 +1,4 @@
-import {isWriteFileMessage, WriteFileReturnMessage} from "../src/fs/messages.ts";
+import {isWriteFileMessage, WriteFileReturnMessage} from "../shared/messages.ts";
 
 self.onmessage = (evt: MessageEvent) => {
     if (isWriteFileMessage(evt.data)) {

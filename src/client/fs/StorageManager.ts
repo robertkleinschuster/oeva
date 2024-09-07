@@ -1,5 +1,5 @@
 import FileSystemWorker from "../../worker/storage.ts?worker"
-import {WriteFileMessage, isWriteFileReturnMessage} from "./messages.ts"
+import {WriteFileMessage, isWriteFileReturnMessage} from "../../shared/messages.ts"
 
 const fsWorker = new FileSystemWorker()
 

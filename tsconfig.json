@@ -2,12 +2,6 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable",
-      "dom.asynciterable"
-    ],
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */
@@ -27,15 +21,16 @@
       "vite-plugin-pwa/react.d.ts"
     ]
   },
-  "include": [
-    "src"
-  ],
+  "include": [],
   "references": [
     {
       "path": "./tsconfig.node.json"
     },
     {
       "path": "./tsconfig.worker.json"
+    },
+    {
+      "path": "./tsconfig.client.json"
     }
   ]
 }

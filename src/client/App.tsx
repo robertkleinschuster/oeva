@@ -33,9 +33,9 @@ import StopSearch from "./pages/StopSearch";
 import Stop from "./pages/Stop";
 import Trip from "./pages/Trip";
 import {useRegisterSW} from "virtual:pwa-register/react";
-import {RunnerContext} from "./RunnerContext";
+import {RunnerContext} from "./RunnerContext.tsx";
 import Storage from "./pages/Storage";
-import Router from "./Router";
+import Router from "./Router.tsx";
 import Connections from "./pages/Connections";
 import TripSearch from "./pages/TripSearch";
 

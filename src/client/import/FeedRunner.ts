@@ -85,10 +85,10 @@ export class FeedRunner {
             return;
         }
         // unlock audio context
-        let ctx = new AudioContext();
+        const ctx = new AudioContext();
 
         // create silent sound
-        let bufferSize = 2 * ctx.sampleRate,
+        const bufferSize = 2 * ctx.sampleRate,
             emptyBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate),
             output = emptyBuffer.getChannelData(0);
 
@@ -96,16 +96,16 @@ export class FeedRunner {
         for (let i = 0; i < bufferSize; i++)
             output[i] = 0;
         // create source node
-        let source = ctx.createBufferSource();
+        const source = ctx.createBufferSource();
         source.buffer = emptyBuffer;
         source.loop = true;
 
         // create destination node
-        let node = ctx.createMediaStreamDestination();
+        const node = ctx.createMediaStreamDestination();
         source.connect(node);
 
         // dummy audio element
-        let audio = document.createElement("audio");
+        const audio = document.createElement("audio");
         audio.style.display = "none";
         document.body.appendChild(audio);
 

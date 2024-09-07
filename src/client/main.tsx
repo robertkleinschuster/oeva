@@ -1,9 +1,9 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import App from './App';
-import {RunnerContextProvider} from "./RunnerContext";
+import App from './App.tsx';
+import {RunnerContextProvider} from "./RunnerContext.tsx";
 import {FeedRunner} from "./import/FeedRunner";
-import SqliteWorker from "../worker/sqlite?worker";
+import SqliteWorker from "../worker/sqlite.ts?worker";
 import {tryPersistWithoutPromptingUser} from "./fs/StorageManager.ts";
 
 const runner = new FeedRunner();
