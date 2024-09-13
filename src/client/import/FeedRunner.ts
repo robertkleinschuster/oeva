@@ -39,7 +39,7 @@ export class FeedRunner {
 
                     for (const feed of feeds) {
                         this.running = feed.id
-                        this.progress('Import läuft...')
+                        this.progress('wird gestartet...')
                         try {
                             const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, this)
                             await dataImporter.run(feed.id!)
