@@ -16,8 +16,6 @@ export class FeedProcessor {
     }
 
     async processTripStops(feedId: number) {
-        this.runner.progress("Importieren")
-
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
@@ -31,7 +29,7 @@ export class FeedProcessor {
 
         for (const gtfsTrip of trips) {
             const percent = Math.ceil((this.offset / count) * 100)
-            this.runner.progress(`Importieren: trip stops ${percent} %, trip ${this.offset} / ${count}: ${gtfsTrip?.trip_short_name ?? ''} ${gtfsTrip?.trip_headsign ?? ''}`)
+            this.runner.progress(`trip stops ${percent} %, trip ${this.offset} / ${count}: ${gtfsTrip?.trip_short_name ?? ''} ${gtfsTrip?.trip_headsign ?? ''}`)
             const errors: string[] = [];
             try {
                 const stopTimes = await this.transitDb.stopTimes
@@ -88,8 +86,6 @@ export class FeedProcessor {
     }
 
     async processStops(feedId: number) {
-        this.runner.progress("Importieren")
-
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
@@ -106,7 +102,7 @@ export class FeedProcessor {
 
         for (const stop of stops) {
             const percent = Math.ceil((this.offset / count) * 100)
-            this.runner.progress(`Importieren: stops ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`)
+            this.runner.progress(`stops ${percent} %, ${this.offset} / ${count}: ${stop?.stop_name}`)
             await this.scheduleDb.stop.put(createStop(feed, stop))
             this.offset++;
         }
@@ -115,8 +111,6 @@ export class FeedProcessor {
     }
 
     async processTrips(feedId: number) {
-        this.runner.progress("Importieren")
-
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found')
@@ -133,7 +127,7 @@ export class FeedProcessor {
 
         for (const trip of trips) {
             const percent = Math.ceil((this.offset / count) * 100)
-            this.runner.progress(`Importieren: trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name ?? ''} ${trip?.trip_headsign ?? ''}`)
+            this.runner.progress(`trips ${percent} %, ${this.offset} / ${count}: ${trip?.trip_short_name ?? ''} ${trip?.trip_headsign ?? ''}`)
 
             const [route, service, exceptions] = await this.transitDb.transaction(
                 'r',

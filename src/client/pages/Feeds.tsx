@@ -27,6 +27,7 @@ import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
+import FeedStatus from "../components/FeedStatus";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
@@ -84,7 +85,7 @@ const Feeds: React.FC = () => {
                                 <IonText style={{display: 'block'}}>
                                     {feed.name}
                                 </IonText>
-                                {runningFeed === feed.id ? <IonNote color="medium">{progress}</IonNote> : null}
+                                <IonNote color="medium"><FeedStatus feed={feed}/>{runningFeed === feed.id ? <>: {progress}</> : null}</IonNote>
                             </IonLabel>
                             {runningFeed === feed.id ? <IonSpinner/> : null}
                         </IonItem>

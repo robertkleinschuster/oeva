@@ -93,17 +93,16 @@ class FeedImporter {
 
         await this.updateStatus(feedId, TransitFeedStatus.DOWNLOADING)
 
-        await downloadFile(feed.url, 'feeds', feed.id + '.zip', (prog, bytes, total) => {
+        await downloadFile(feed.url, 'feeds', feed.id + '.zip', (progress, bytes, total) => {
             const downloaded_megabytes = Math.ceil(bytes / 1000000);
             const total_megabytes = Math.ceil(total / 1000000);
-            this.runner.progress(`Lädt: ${prog} % (${downloaded_megabytes} / ${total_megabytes} MB)`)
+            this.runner.progress(`${progress} % (${downloaded_megabytes} / ${total_megabytes} MB)`)
         })
 
         await this.extractData(feedId, await readFile('feeds', feed.id + '.zip'));
     }
 
     async extractData(feedId: number, file: File | Blob) {
-        this.runner.progress("Extrahieren")
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
 
@@ -112,7 +111,7 @@ class FeedImporter {
         for (const fileName of requiredGTFSFiles) {
             const file = content.file(fileName)
             if (file) {
-                this.runner.progress(`Extrahieren: ${fileName}`)
+                this.runner.progress(fileName)
                 const fileContent = await file.async('blob');
                 await writeFile('feeds/' + feedId, new File(
                     [fileContent],
@@ -125,7 +124,6 @@ class FeedImporter {
 
     async importData(feedId: number) {
         await this.updateStatus(feedId, TransitFeedStatus.SAVING)
-        this.runner.progress("Importieren");
         const files = await listFilesAndDirectories(await getDirectoryHandle('feeds/' + feedId))
 
         if (!files.size) {
@@ -133,7 +131,7 @@ class FeedImporter {
         }
         let done = 0
         for (const [path, file] of files) {
-            this.runner.progress(`Importieren: ${path}, ${done} / ${files.size}`);
+            this.runner.progress(`${path} (${done} / ${files.size})`);
             const tableName = getTableName(file.name);
             if (tableName) {
                 await this.importCSV(
