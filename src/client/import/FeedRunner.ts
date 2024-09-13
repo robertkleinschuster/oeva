@@ -2,7 +2,6 @@ import {feedDb} from "../db/FeedDb";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {FeedImporter} from "./FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
-import axios from "axios";
 import {scheduleDB} from "../db/ScheduleDB";
 import {subDays} from "date-fns";
 
@@ -38,7 +37,7 @@ export class FeedRunner {
                             this.onRun(feed.id)
                         }
                         try {
-                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, axios)
+                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB)
                             await dataImporter.run(feed.id!)
                         } catch (error) {
                             console.error(error)
@@ -53,7 +52,7 @@ export class FeedRunner {
                     clearInterval(interval)
                 }
             } catch (e) {
-                console.log(e)
+                console.error(e)
             }
         }
         if (this.running) {

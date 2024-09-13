@@ -3,7 +3,6 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import {RunnerContextProvider} from "./RunnerContext.tsx";
 import {FeedRunner} from "./import/FeedRunner";
-import SqliteWorker from "../worker/sqlite.ts?worker";
 import {tryPersistWithoutPromptingUser} from "./fs/StorageManager.ts";
 
 const runner = new FeedRunner();
@@ -23,5 +22,3 @@ setTimeout(async () => {
 
 void tryPersistWithoutPromptingUser()
 
-const worker = new SqliteWorker()
-console.log(worker)

@@ -18,7 +18,6 @@ import {TransitFeedStatus} from "../db/Feed";
 import {FeedImporter} from "../import/FeedImporter";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
-import axios from "axios";
 
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
     const [presentLoading, dismissLoading] = useIonLoading();
@@ -38,7 +37,7 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             status: startImport ? TransitFeedStatus.DOWNLOADING : TransitFeedStatus.DRAFT
         })
         if (file) {
-            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, axios);
+            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB);
             await importer.saveData(feedId, file)
             await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
         }

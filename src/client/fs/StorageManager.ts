@@ -1,5 +1,10 @@
 import FileSystemWorker from "../../worker/storage.ts?worker"
-import {WriteFileMessage, isWriteFileReturnMessage} from "../../shared/messages.ts"
+import {
+    WriteFileMessage,
+    isWriteFileReturnMessage,
+    DownloadFileMessage,
+    isDownloadFileReturnMessage, isDownloadFileProgressMessage, getDirectoryHandle
+} from "../../shared/messages.ts"
 
 const fsWorker = new FileSystemWorker()
 
@@ -64,29 +69,36 @@ export async function tryPersistWithoutPromptingUser(): Promise<void> {
             return;
         }
     } catch (e) {
-        console.log(e)
+        console.info(e)
     }
     console.info('Could not automatically activate persistent storage.');
 }
 
-export async function listRootDirectory(): Promise<Map<string, File>> {
-    async function listFilesAndDirectories(directoryHandle: FileSystemDirectoryHandle, path = ""): Promise<Map<string, File>> {
-        const entries = new Map<string, File>();
-        for await (const [name, handle] of directoryHandle) {
-            const fullPath = `${path}/${name}`
-            if (handle.kind === 'directory') {
-                const files = await listFilesAndDirectories(handle as FileSystemDirectoryHandle, fullPath)
-                files.forEach((file, name) => entries.set(name, file))
-            } else {
-                const file = await (handle as FileSystemFileHandle).getFile()
-                entries.set(fullPath, file)
-            }
+export async function listFilesAndDirectories(directoryHandle: FileSystemDirectoryHandle, path = ""): Promise<Map<string, File>> {
+    const entries = new Map<string, File>();
+    for await (const [name, handle] of directoryHandle) {
+        const fullPath = `${path}/${name}`
+        if (handle.kind === 'directory') {
+            const files = await listFilesAndDirectories(handle as FileSystemDirectoryHandle, fullPath)
+            files.forEach((file, name) => entries.set(name, file))
+        } else {
+            const file = await (handle as FileSystemFileHandle).getFile()
+            entries.set(fullPath, file)
         }
-        return entries
     }
+    return entries
+}
 
+export async function listRootDirectory(): Promise<Map<string, File>> {
     const root = await navigator.storage.getDirectory()
     return listFilesAndDirectories(root)
+}
+
+
+export async function readFile(directory: string, filename: string): Promise<File> {
+    const directoryHandle = await getDirectoryHandle(directory)
+    const fileHandle = await directoryHandle.getFileHandle(filename)
+    return await fileHandle.getFile()
 }
 
 export async function writeFile(directory: string, file: File): Promise<void> {
@@ -102,6 +114,23 @@ export async function writeFile(directory: string, file: File): Promise<void> {
             if (isWriteFileReturnMessage(evt.data) && evt.data.id === message.id) {
                 resolve()
                 fsWorker.removeEventListener('message', onMessage)
+            }
+        }
+        fsWorker.addEventListener('message', onMessage)
+    })
+}
+
+export async function downloadFile(url: string, directory: string, filename: string, progress: (progress: number, bytes: number, contentLength: number) => void) {
+    const message = new DownloadFileMessage(url, directory, filename)
+    fsWorker.postMessage(message)
+    return new Promise<void>(resolve => {
+        const onMessage = (evt: MessageEvent) => {
+            if (isDownloadFileReturnMessage(evt.data) && evt.data.id === message.id) {
+                resolve()
+                fsWorker.removeEventListener('message', onMessage)
+            }
+            if (isDownloadFileProgressMessage(evt.data) && evt.data.id === message.id) {
+                progress(evt.data.progress, evt.data.bytes, evt.data.contentLength)
             }
         }
         fsWorker.addEventListener('message', onMessage)

@@ -1,13 +1,13 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
-import {Axios} from "axios";
 import {GTFSDB} from '../db/GTFSDB';
 import {getFiles, getTableName} from "../db/GTFSMapping";
 import {FeedDB} from "../db/FeedDb";
-import {FeedFileStatus, TransitFeedStatus, TransitFeedStep} from "../db/Feed";
+import {TransitFeedStatus, TransitFeedStep} from "../db/Feed";
 import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedProcessor} from "./FeedProcessor";
-import pako from "pako"
+import {downloadFile, listFilesAndDirectories, readFile, writeFile} from "../fs/StorageManager";
+import {getDirectoryHandle} from "../../shared/messages";
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -49,7 +49,7 @@ const dynamicallyTypedColumns = new Set([
 
 class FeedImporter {
 
-    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private axios: Axios) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB) {
     }
 
     async run(feedId: number) {
@@ -96,25 +96,22 @@ class FeedImporter {
         const interval = setInterval(async () => {
             await this.feedDb.transit.update(feedId, {
                 downloaded_megabytes: downloaded_megabytes,
-                download_progress: progress ? Math.round(progress * 100) : undefined,
+                download_progress: progress,
                 status: TransitFeedStatus.DOWNLOADING
             });
         }, 1500)
 
         try {
-            const response = await this.axios.get(feed.url, {
-                responseType: 'blob',
-                onDownloadProgress: (event) => {
-                    downloaded_megabytes = Math.ceil(event.loaded / 1000000);
-                    if (event.progress) {
-                        progress = event.progress
-                    }
-                }
-            });
+            await downloadFile(feed.url, 'feeds', feed.id + '.zip', (prog, bytes) => {
+                downloaded_megabytes = Math.ceil(bytes / 1000000);
+                progress = prog
+            })
 
             clearInterval(interval)
 
-            await this.saveData(feedId, response.data);
+            await this.saveData(feedId, await readFile('feeds', feed.id + '.zip'));
+        } catch (e) {
+            console.error(e)
         } finally {
             clearInterval(interval)
         }
@@ -129,36 +126,26 @@ class FeedImporter {
         for (const fileName of requiredGTFSFiles) {
             const file = content.file(fileName)
             if (file) {
-                const fileContent = await file.async('uint8array');
-                await this.feedDb.file.put({
-                    feed_id: feedId,
-                    name: fileName,
-                    type: 'text/csv',
-                    content: pako.deflate(fileContent, {level: 1}),
-                    status: FeedFileStatus.IMPORT_PENDING,
-                })
-                await new Promise(resolve => setTimeout(resolve, 1000))
+                const fileContent = await file.async('blob');
+                await writeFile('feeds/' + feedId, new File(
+                    [fileContent],
+                    fileName + '.csv',
+                    {type: 'text/csv',}
+                ))
             }
         }
     }
 
     async importData(feedId: number) {
-        const files = await this.feedDb.file
-            .where({feed_id: feedId, status: FeedFileStatus.IMPORT_PENDING})
-            .toArray();
+        const files = await listFilesAndDirectories(await getDirectoryHandle('feeds/' + feedId))
 
-        let done = await this.feedDb.file
-            .where({feed_id: feedId, status: FeedFileStatus.IMPORTED})
-            .count();
-        const originalDone = done;
-
-        if (!files.length && !done) {
+        if (!files.size) {
             throw new Error('No files in import');
         }
-
-        for (const file of files) {
+        let done = 0
+        for (const [path, file] of files) {
             await this.feedDb.transit.update(feedId, {
-                progress: `${file.name}, ${done} / ${originalDone + files.length}`,
+                progress: `${path}, ${done} / ${files.size}`,
                 status: TransitFeedStatus.SAVING
             });
 
@@ -166,14 +153,11 @@ class FeedImporter {
 
             if (tableName) {
                 await this.importCSV(
-                    pako.inflate(file.content, {to: "string"}),
+                    file,
                     tableName
                 );
             }
 
-            await this.feedDb.file.update(file, {
-                status: FeedFileStatus.IMPORTED
-            })
             done++
         }
         return true;

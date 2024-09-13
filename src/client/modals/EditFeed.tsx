@@ -20,7 +20,6 @@ import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
 import {FeedImporter} from "../import/FeedImporter";
-import axios from "axios";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -52,7 +51,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         })
 
         if (file) {
-            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, axios);
+            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB);
             await importer.saveData(feedId, file)
             await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
         } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
