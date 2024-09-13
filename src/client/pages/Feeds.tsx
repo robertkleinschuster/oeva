@@ -23,7 +23,6 @@ import {
 import React, {useContext} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {feedDb} from "../db/FeedDb";
-import FeedStatus from "../components/FeedStatus";
 import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
@@ -31,7 +30,7 @@ import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 
 const Feeds: React.FC = () => {
     const feeds = useLiveQuery(() => feedDb.transit.toArray())
-    const runningFeed = useContext(RunnerContext)
+    const [runningFeed, progress] = useContext(RunnerContext)
     const [presentLoading, dismissLoading] = useIonLoading()
     return (
         <IonPage>
@@ -85,7 +84,7 @@ const Feeds: React.FC = () => {
                                 <IonText style={{display: 'block'}}>
                                     {feed.name}
                                 </IonText>
-                                <IonNote color="medium"><FeedStatus feed={feed}/></IonNote>
+                                {runningFeed === feed.id ? <IonNote color="medium">{progress}</IonNote> : null}
                             </IonLabel>
                             {runningFeed === feed.id ? <IonSpinner/> : null}
                         </IonItem>

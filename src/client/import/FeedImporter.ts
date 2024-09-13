@@ -8,6 +8,7 @@ import {ScheduleDB} from "../db/ScheduleDB";
 import {FeedProcessor} from "./FeedProcessor";
 import {downloadFile, listFilesAndDirectories, readFile, writeFile} from "../fs/StorageManager";
 import {getDirectoryHandle} from "../../shared/messages";
+import {FeedRunner} from "./FeedRunner";
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -49,7 +50,7 @@ const dynamicallyTypedColumns = new Set([
 
 class FeedImporter {
 
-    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB) {
+    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private runner: FeedRunner) {
     }
 
     async run(feedId: number) {
@@ -81,7 +82,6 @@ class FeedImporter {
             status: status,
             step: undefined,
             offset: undefined,
-            progress: undefined
         });
     }
 
@@ -90,34 +90,20 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-        let downloaded_megabytes = 0
-        let progress = 0;
 
-        const interval = setInterval(async () => {
-            await this.feedDb.transit.update(feedId, {
-                downloaded_megabytes: downloaded_megabytes,
-                download_progress: progress,
-                status: TransitFeedStatus.DOWNLOADING
-            });
-        }, 1500)
+        await this.updateStatus(feedId, TransitFeedStatus.DOWNLOADING)
 
-        try {
-            await downloadFile(feed.url, 'feeds', feed.id + '.zip', (prog, bytes) => {
-                downloaded_megabytes = Math.ceil(bytes / 1000000);
-                progress = prog
-            })
+        await downloadFile(feed.url, 'feeds', feed.id + '.zip', (prog, bytes, total) => {
+            const downloaded_megabytes = Math.ceil(bytes / 1000000);
+            const total_megabytes = Math.ceil(total / 1000000);
+            this.runner.progress(`Lädt: ${prog} % (${downloaded_megabytes} / ${total_megabytes} MB)`)
+        })
 
-            clearInterval(interval)
-
-            await this.saveData(feedId, await readFile('feeds', feed.id + '.zip'));
-        } catch (e) {
-            console.error(e)
-        } finally {
-            clearInterval(interval)
-        }
+        await this.extractData(feedId, await readFile('feeds', feed.id + '.zip'));
     }
 
-    async saveData(feedId: number, file: File | Blob) {
+    async extractData(feedId: number, file: File | Blob) {
+        this.runner.progress("Extrahieren")
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
 
@@ -126,10 +112,11 @@ class FeedImporter {
         for (const fileName of requiredGTFSFiles) {
             const file = content.file(fileName)
             if (file) {
+                this.runner.progress(`Extrahieren: ${fileName}`)
                 const fileContent = await file.async('blob');
                 await writeFile('feeds/' + feedId, new File(
                     [fileContent],
-                    fileName + '.csv',
+                    fileName,
                     {type: 'text/csv',}
                 ))
             }
@@ -137,6 +124,8 @@ class FeedImporter {
     }
 
     async importData(feedId: number) {
+        await this.updateStatus(feedId, TransitFeedStatus.SAVING)
+        this.runner.progress("Importieren");
         const files = await listFilesAndDirectories(await getDirectoryHandle('feeds/' + feedId))
 
         if (!files.size) {
@@ -144,13 +133,8 @@ class FeedImporter {
         }
         let done = 0
         for (const [path, file] of files) {
-            await this.feedDb.transit.update(feedId, {
-                progress: `${path}, ${done} / ${files.size}`,
-                status: TransitFeedStatus.SAVING
-            });
-
+            this.runner.progress(`Importieren: ${path}, ${done} / ${files.size}`);
             const tableName = getTableName(file.name);
-
             if (tableName) {
                 await this.importCSV(
                     file,
@@ -168,33 +152,46 @@ class FeedImporter {
         if (!feed) {
             throw new Error('Feed not found');
         }
-        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb)
+        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb, this.runner)
 
-        if (feed.step === undefined) {
+        const updateProgress = async () => {
             await this.feedDb.transit.update(feedId, {
-                step: TransitFeedStep.STOPS,
-                offset: undefined
+                offset: processor.offset
             });
-        } else if (feed.step === TransitFeedStep.STOPS) {
-            if (await processor.processStops(feedId)) {
+        }
+        const interval = setInterval(async () => {
+            await updateProgress()
+        }, 1500);
+
+        try {
+            if (feed.step === undefined) {
                 await this.feedDb.transit.update(feedId, {
-                    step: TransitFeedStep.TRIPS,
+                    step: TransitFeedStep.STOPS,
                     offset: undefined
                 });
-            }
-        } else if (feed.step === TransitFeedStep.TRIPS) {
-            if (await processor.processTrips(feedId)) {
-                await this.feedDb.transit.update(feedId, {
-                    step: TransitFeedStep.TRIPSTOPS,
-                    offset: undefined
-                });
-            }
-        } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
-            if (await processor.processTripStops(feedId)) {
+            } else if (feed.step === TransitFeedStep.STOPS) {
+                if (await processor.processStops(feedId)) {
+                    await this.feedDb.transit.update(feedId, {
+                        step: TransitFeedStep.TRIPS,
+                        offset: undefined
+                    });
+                }
+            } else if (feed.step === TransitFeedStep.TRIPS) {
+                if (await processor.processTrips(feedId)) {
+                    await this.feedDb.transit.update(feedId, {
+                        step: TransitFeedStep.TRIPSTOPS,
+                        offset: undefined
+                    });
+                }
+            } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
+                if (await processor.processTripStops(feedId)) {
+                    await this.updateStatus(feedId, TransitFeedStatus.DONE)
+                }
+            } else if (skipTripStops) {
                 await this.updateStatus(feedId, TransitFeedStatus.DONE)
             }
-        } else if (skipTripStops) {
-            await this.updateStatus(feedId, TransitFeedStatus.DONE)
+        } finally {
+            clearInterval(interval)
         }
     }
 

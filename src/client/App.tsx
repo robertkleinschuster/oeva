@@ -49,7 +49,7 @@ const App: React.FC = () => {
         updateServiceWorker,
     } = useRegisterSW();
 
-    const running = useContext(RunnerContext)
+    const [running] = useContext(RunnerContext)
 
     return <IonApp>
         {needRefresh ?

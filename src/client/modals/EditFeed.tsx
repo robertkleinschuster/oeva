@@ -20,6 +20,7 @@ import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {GTFSDB} from "../db/GTFSDB";
 import {scheduleDB} from "../db/ScheduleDB";
 import {FeedImporter} from "../import/FeedImporter";
+import {FeedRunner} from "../import/FeedRunner";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -51,8 +52,8 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         })
 
         if (file) {
-            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB);
-            await importer.saveData(feedId, file)
+            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, new FeedRunner());
+            await importer.extractData(feedId, file)
             await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
         } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
             if (stoppedStatuses.includes(feed.status)) {
@@ -79,7 +80,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             previous_status: TransitFeedStatus.PROCESSING,
             status: TransitFeedStatus.ABORTED,
-            progress: undefined,
             step: undefined,
             offset: undefined
         })
@@ -93,7 +93,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             previous_status: TransitFeedStatus.SAVING,
             status: TransitFeedStatus.ABORTED,
-            progress: undefined,
             step: undefined,
             offset: undefined
         })
@@ -105,7 +104,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.DOWNLOADING,
-            progress: undefined,
             step: undefined,
             offset: undefined
         })
@@ -116,7 +114,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.PROCESSING,
-            progress: undefined,
             step: undefined,
             offset: undefined
         })
@@ -127,7 +124,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.PROCESSING_QUICK,
-            progress: undefined,
             step: undefined,
             offset: undefined
         })
@@ -147,7 +143,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
     const resetFeed = async () => {
         await saveFeed()
         await feedDb.transit.update(feed!, {
-            progress: undefined,
             step: undefined,
             offset: undefined
         })

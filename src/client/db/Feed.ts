@@ -29,9 +29,6 @@ export interface TransitFeed {
     keywords?: string,
     step?: TransitFeedStep
     offset?: number;
-    progress?: string;
-    downloaded_megabytes?: number;
-    download_progress?: number;
     status: TransitFeedStatus;
     previous_status?: TransitFeedStatus;
     timestamp?: number;

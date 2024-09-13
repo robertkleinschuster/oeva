@@ -60,7 +60,7 @@ async function downloadFile(url: string, directory: string, filename: string, pr
             bytes += value.byteLength
         }
         if (contentLength) {
-            progress(Math.round(bytes / contentLength) * 100, bytes, contentLength)
+            progress(Math.round(bytes / contentLength * 100), bytes, contentLength)
         } else {
             progress(0, bytes, 0)
         }

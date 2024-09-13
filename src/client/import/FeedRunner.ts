@@ -7,7 +7,7 @@ import {subDays} from "date-fns";
 
 export class FeedRunner {
     running: number | undefined
-    onRun: undefined | ((id: number) => void) = undefined
+    onRun: undefined | ((id: number, progress: string) => void) = undefined
     onFinished: undefined | (() => void) = undefined
     private audio: HTMLAudioElement | undefined
 
@@ -17,6 +17,12 @@ export class FeedRunner {
             .where('last_start')
             .below(date.getTime())
             .count()
+    }
+
+    progress(progres: string) {
+        if (this.onRun && this.running) {
+            this.onRun(this.running, progres)
+        }
     }
 
     async run() {
@@ -33,18 +39,16 @@ export class FeedRunner {
 
                     for (const feed of feeds) {
                         this.running = feed.id
-                        if (this.onRun && feed.id) {
-                            this.onRun(feed.id)
-                        }
+                        this.progress('Import läuft...')
                         try {
-                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB)
+                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, this)
                             await dataImporter.run(feed.id!)
                         } catch (error) {
                             console.error(error)
+                            this.progress(String(error))
                             await feedDb.transit.update(feed.id!, {
                                 status: TransitFeedStatus.ERROR,
-                                previous_status: feed.status,
-                                progress: String(error)
+                                previous_status: feed.status
                             });
                         }
                     }
