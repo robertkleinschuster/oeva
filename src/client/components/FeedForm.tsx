@@ -9,7 +9,6 @@ interface FeedFormProps {
     onChange: (name: string, url: string, keywords: string, file?: File) => void
 }
 
-
 const FeedForm: React.FC<FeedFormProps> = (props) => {
     const [name, setName] = useState('')
     const [url, setURL] = useState('')
