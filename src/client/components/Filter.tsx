@@ -13,7 +13,7 @@ import {calcRingRadius} from "../transit/Geo";
 import {addHours, differenceInCalendarDays, format, subHours} from "date-fns";
 import {add, calendar, remove, time} from "ionicons/icons";
 import React, {useEffect, useState} from "react";
-import {Stop} from "../db/Schedule";
+import {Stop} from "../db/schema";
 import {FilterState} from "../transit/TripStopRepository";
 
 interface FilterProps {
@@ -35,7 +35,7 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
 
     const dayDiff = differenceInCalendarDays(dateLabel, new Date())
 
-    return <IonPopover trigger={"filter-" + stop?.id} triggerAction="click">
+    return <IonPopover trigger={"filter-" + stop?.stop_id} triggerAction="click">
         <IonItem>
             <IonRange value={ringSizeLabel}
                       min={1}

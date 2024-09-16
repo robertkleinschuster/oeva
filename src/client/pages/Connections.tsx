@@ -9,13 +9,10 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
-    isPlatform,
-    useIonLoading
+    isPlatform
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {useLiveQuery} from "dexie-react-hooks";
-import {scheduleDB} from "../db/ScheduleDB";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
 import {addHours, setHours, setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
@@ -24,6 +21,8 @@ import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import Filter from "../components/Filter";
 import TripName from "../components/TripName";
 import StopMap from "../components/StopMap";
+import {FullTripStop} from "../db/schema";
+import {db} from "../db/client";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
     id: string
@@ -31,30 +30,41 @@ interface ConnectionsPageProps extends RouteComponentProps<{
 }
 
 const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
-    const [presentLoading, dismissLoading] = useIonLoading();
     const [filterState, setFilter] = useState<FilterState | undefined>()
+    const [tripStop, setTripStop] = useState<FullTripStop | undefined>()
+    const [tripStops, setTripStops] = useState<FullTripStop[]>()
 
-    const tripStop = useLiveQuery(() => scheduleDB.trip_stop.get(match.params.id), [match.params.id])
-    const trip = useLiveQuery(() => tripStop ? scheduleDB.trip.get(tripStop?.trip_id) : undefined, [tripStop])
-    const stop = useLiveQuery(() => tripStop ? scheduleDB.stop.get(tripStop.stop_id) : undefined, [tripStop])
-    const tripStops = useLiveQuery(async () => {
-            if (!tripStop || !filterState) {
-                return undefined;
-            }
-            await dismissLoading()
-            await presentLoading('Lädt...')
-            const repo = new TripStopRepository();
-            const tripStops = await repo.findConnections(tripStop, filterState)
-            tripStops.push(...await repo.findConnections(tripStop, {...filterState, date: addHours(filterState.date, 1)}))
-            await dismissLoading()
-            return tripStops.filter(tripStop => {
-                const time = tripStop.arrival_time ?? tripStop.departure_time;
-                if (time !== undefined) {
-                    const stopDate = parseStopTimeInt(time, filterState.date);
-                    return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
+    useEffect(() => {
+        db.selectFrom('trip_stop')
+            .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
+            .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
+            .selectAll()
+            .where('trip_stop_id', '=', match.params.id)
+            .executeTakeFirstOrThrow()
+            .then(setTripStop)
+    }, [match.params.id]);
+
+    useEffect(() => {
+            void (async () => {
+                if (!tripStop || !filterState) {
+                    return undefined;
                 }
-                return false;
-            })
+                const repo = new TripStopRepository();
+                const tripStops = await repo.findConnections(tripStop, filterState)
+                tripStops.push(...await repo.findConnections(tripStop, {
+                    ...filterState,
+                    date: addHours(filterState.date, 1)
+                }))
+
+                setTripStops(tripStops.filter(tripStop => {
+                    const time = tripStop.arrival_time ?? tripStop.departure_time;
+                    if (time !== undefined) {
+                        const stopDate = parseStopTimeInt(time, filterState.date);
+                        return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
+                    }
+                    return false;
+                }))
+            })()
         },
         [tripStop, filterState]
     )
@@ -88,30 +98,31 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}{stop?.platform ? <>: Steig {stop?.platform}</> : null}{" "}
-                        <IonNote>({stop?.feed_name})</IonNote></IonTitle>
+                    <IonTitle>{tripStop?.stop_name}{tripStop?.platform ? <>: Steig {tripStop?.platform}</> : null}{" "}
+                        <IonNote>({tripStop?.feed_name})</IonNote></IonTitle>
                     <IonButtons slot="end">
-                        <IonButton id={"filter-" + stop?.id} aria-label="Filter">
+                        <IonButton id={"filter-" + tripStop?.stop_id} aria-label="Filter">
                             <IonIcon slot="icon-only" icon={filter}/>
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                {stop ?
-                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.name}/>
+                {tripStop ?
+                    <StopMap cell={[tripStop.h3_cell_le1, tripStop.h3_cell_le2]} tooltip={stop.name}/>
                     : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
-                        Anschlüsse an {trip ?
-                        <TripName trip={trip}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
+                        Anschlüsse an {tripStop ?
+                        <TripName
+                            trip={tripStop}/> : null} um {formatDisplayTime(tripStop.arrival_time, filterState.date)}
                     </IonNote>
                     : null}
-                {stop && tripStops && filterState ?
-                    <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
+                {tripStop && tripStops && filterState ?
+                    <Trips stop={tripStop} tripStops={tripStops} date={filterState.date}/> : null}
             </IonContent>
-            {stop && filterState ?
-                <Filter stop={stop} state={filterState} onChange={state => setFilter(state)}/> : null}
+            {tripStop && filterState ?
+                <Filter stop={tripStop} state={filterState} onChange={state => setFilter(state)}/> : null}
         </IonPage>
     );
 };

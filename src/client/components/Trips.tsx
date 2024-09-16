@@ -1,4 +1,5 @@
-import {Boarding, Stop, TripStop} from "../db/Schedule";
+import {Boarding} from "../db/Schedule";
+import {FullTripStop, Stop, TripStop} from "../db/schema";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import {IonIcon, IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";
@@ -22,11 +23,11 @@ const State: React.FC<{ tripStop: TripStop, date: Date }> = ({tripStop, date}) =
     return <></>
 }
 
-export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> = ({stop, tripStops, date}) => (
+export const Trips: React.FC<{ stop: Stop, tripStops: FullTripStop[], date: Date }> = ({stop, tripStops, date}) => (
     <IonList>
         {tripStops?.map(tripStop => <IonItem
             routerLink={`/trips/${tripStop.trip_id}`}
-            key={tripStop.id}>
+            key={tripStop.trip_stop_id}>
             <State tripStop={tripStop} date={date}/>
             <IonText slot="start">
                 {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
@@ -41,13 +42,13 @@ export const Trips: React.FC<{ stop: Stop, tripStops: TripStop[], date: Date }> 
                     </IonNote> : null}
                 <IonText color={tripStop.is_destination ? 'medium' : undefined}
                          style={{display: 'block'}}>
-                    {tripStop.trip ? <TripName trip={tripStop.trip} isDestination={tripStop.is_destination}/> : null}
+                    {tripStop ? <TripName trip={tripStop} isDestination={tripStop.is_destination}/> : null}
                 </IonText>
                 <IonNote color="medium" style={{display: 'block'}}>
-                    {tripStop.stop?.name !== stop?.name ? <>{tripStop.stop?.name}</> : null}
-                    {tripStop.stop?.name !== stop?.name && tripStop.stop?.platform ? ': ' : ''}
-                    {tripStop.stop?.platform ? <>Steig {tripStop.stop.platform}</> : null}
-                    {stop && (stop.feed_parent_station || tripStop.stop?.name !== stop.name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
+                    {tripStop?.stop_name !== stop?.stop_name ? <>{tripStop?.stop_name}</> : null}
+                    {tripStop?.stop_name !== stop?.stop_name && tripStop?.platform ? ': ' : ''}
+                    {tripStop?.platform ? <>Steig {tripStop.platform}</> : null}
+                    {stop && (stop.feed_parent_station || tripStop?.stop_name !== stop.stop_name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
                 </IonNote>
                 {tripStop.boarding !== Boarding.STANDARD ?
                     <IonNote color="warning" style={{display: 'block', fontWeight: 'bold'}}>

@@ -1,8 +1,8 @@
-import {Stop} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import {transliterate} from "transliteration";
-import {scheduleDB} from "../db/ScheduleDB";
 import Fuse from "fuse.js";
+import {db} from "../db/client";
+import {Stop} from "../db/schema";
 
 export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
     const transliteratedKeyword = transliterate(keyword);
@@ -10,21 +10,21 @@ export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
     const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value.toLowerCase())
 
     const stops = new Map<string, Stop>()
-    await findStations(transliteratedKeyword, stop => stops.set(stop.id, stop), limit)
+    await findStations(transliteratedKeyword, stop => stops.set(stop.stop_id, stop), limit)
 
     if (stops.size === 0) {
         for (const token of tokens) {
-            await findStations(token, stop => stops.set(stop.id, stop), limit)
+            await findStations(token, stop => stops.set(stop.stop_id, stop), limit)
         }
     }
 
     if (stops.size === 0) {
-        await findStops(transliteratedKeyword, stop => stops.set(stop.id, stop), limit)
+        await findStops(transliteratedKeyword, stop => stops.set(stop.stop_id, stop), limit)
     }
 
     if (stops.size === 0) {
         for (const token of tokens) {
-            await findStops(token, stop => stops.set(stop.id, stop), limit)
+            await findStops(token, stop => stops.set(stop.stop_id, stop), limit)
         }
     }
 
@@ -46,18 +46,20 @@ export async function searchStop(keyword: string, limit = 10): Promise<Stop[]> {
 }
 
 async function findStops(keyword: string, each: (stop: Stop) => void, limit: number) {
-    await scheduleDB.stop
-        .where('keywords')
-        .startsWith(keyword)
+    (await db
+        .selectFrom('stop')
+        .selectAll()
+        .where('keywords', 'like', `%${keyword}%`)
         .limit(limit)
-        .each(each);
+        .execute()).forEach(each)
 }
 
 async function findStations(keyword: string, each: (stop: Stop) => void, limit: number) {
-    await scheduleDB.stop
-        .where('keywords')
-        .startsWith(keyword)
-        .filter(stop => !stop.feed_parent_station)
+    (await db
+        .selectFrom('stop')
+        .selectAll()
+        .where('keywords', 'like', `%${keyword}%`)
+        .where('feed_parent_station', 'is', null)
         .limit(limit)
-        .each(each);
+        .execute()).forEach(each)
 }

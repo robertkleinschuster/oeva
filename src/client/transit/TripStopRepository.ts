@@ -1,8 +1,10 @@
-import {isTripStopActiveOn} from "./Schedule";
-import {scheduleDB} from "../db/ScheduleDB";
-import {RouteType, TripStop} from "../db/Schedule";
+import {FullTripStop} from "../db/schema";
+import {RouteType} from "../db/Schedule";
 import {gridDisk, H3IndexInput} from "h3-js";
 import {H3Cell} from "./H3Cell";
+import {db} from "../db/client";
+import {formatServiceDate} from "./DateTime";
+import {ExceptionType} from "../db/GTFS";
 
 export interface FilterState {
     ringSize: number,
@@ -18,30 +20,25 @@ export interface FilterState {
 
 
 export class TripStopRepository {
-    async findByTrip(tripId: string): Promise<TripStop[]> {
-        return scheduleDB.transaction('r', [scheduleDB.trip_stop, scheduleDB.trip, scheduleDB.stop], async () => {
-            const tripStops = await scheduleDB.trip_stop
-                .where('trip_id')
-                .equals(tripId)
-                .sortBy('sequence_in_trip')
-
-            for (const tripStop of tripStops) {
-                tripStop.trip = await scheduleDB.trip.get(tripStop.trip_id)
-                tripStop.stop = await scheduleDB.stop.get(tripStop.stop_id)
-            }
-            return tripStops
-        })
+    async findByTrip(tripId: string): Promise<FullTripStop[]> {
+        return await db.selectFrom('trip_stop')
+            .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
+            .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
+            .selectAll()
+            .where('trip.trip_id', '=', tripId)
+            .orderBy('sequence_in_trip')
+            .execute()
     }
 
-    async findByStop(stopId: string, filterState: FilterState): Promise<TripStop[]> {
-        const stop = await scheduleDB.stop.get(stopId)
-        if (!stop) {
-            throw new Error('Stop not found')
-        }
+    async findByStop(stopId: string, filterState: FilterState): Promise<FullTripStop[]> {
+        const stop = await db.selectFrom('stop')
+            .select(['h3_cell_le1', 'h3_cell_le2'])
+            .where('stop.stop_id', '=', stopId)
+            .executeTakeFirstOrThrow()
         return this.findByCell([stop.h3_cell_le1, stop.h3_cell_le2], filterState);
     }
 
-    async findByCell(cell: H3IndexInput, filterState: FilterState): Promise<TripStop[]> {
+    async findByCell(cell: H3IndexInput, filterState: FilterState): Promise<FullTripStop[]> {
         const routeTypes: RouteType[] = [];
         if (filterState.rail) {
             routeTypes.push(RouteType.RAIL)
@@ -69,30 +66,45 @@ export class TripStopRepository {
         const hours = filterState.date.getHours();
         const cells = gridDisk(cell, filterState.ringSize);
         const cellObj = new H3Cell()
-        const filters = cells.map(cell => {
-            cellObj.fromIndex(cell)
-            return [...cellObj.toIndexInput(), hours]
-        });
+        const cells_1: number[] = [];
+        const cells_2: number[] = []
 
-        const tripStops = new Map<string, TripStop>
-        for (const filter of filters) {
-            await scheduleDB.transaction('r', [scheduleDB.trip_stop, scheduleDB.trip, scheduleDB.stop], () => scheduleDB.trip_stop
-                .where('[h3_cell_le1+h3_cell_le2+hour]')
-                .equals(filter)
-                .each(async tripStop => {
-                    if ((filterState.arrivals || !tripStop.is_destination) && routeTypes.includes(tripStop.route_type) && isTripStopActiveOn(tripStop, filterState.date)) {
-                        tripStop.trip = await scheduleDB.trip.get(tripStop.trip_id)
-                        tripStop.stop = await scheduleDB.stop.get(tripStop.stop_id)
-                        tripStops.set(tripStop.id, tripStop)
-                    }
-                }))
+        for (const cell of cells) {
+            cellObj.fromIndex(cell)
+            const index = cellObj.toIndexInput()
+            cells_1.push(index[0])
+            cells_2.push(index[1])
         }
 
-        return Array.from(tripStops.values())
-            .sort((a, b) => a.sequence_at_stop - b.sequence_at_stop);
+        const dateAsInt = formatServiceDate(filterState.date);
+        const query = db.selectFrom('trip_stop')
+            .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
+            .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
+            .innerJoin('service', 'trip.service_id', 'service.service_id')
+            .leftJoin('exception', 'service.service_id', 'exception.service_id')
+            .selectAll('trip_stop')
+            .selectAll('stop')
+            .selectAll('trip')
+            .where('h3_cell_le1', 'in', cells_1)
+            .where('h3_cell_le2', 'in', cells_2)
+            .where('hour', '=', hours)
+            .where('start_date', '<=', dateAsInt)
+            .where('end_date', '>=', dateAsInt)
+            .where('is_destination', '=', false)
+            .where('route_type', 'in', routeTypes)
+            .where(eb => eb.or([
+                eb('exception.type', '=', ExceptionType.RUNNING),
+                eb('exception.type', 'is', null),
+            ]))
+            .where(eb => eb.or([
+                eb('exception.date', '=', dateAsInt),
+                eb('exception.date', 'is', null),
+            ]))
+            .orderBy('sequence_in_trip')
+        return await query.execute()
     }
 
-    async findConnections(tripStop: TripStop, filterState: FilterState) {
+    async findConnections(tripStop: FullTripStop, filterState: FilterState) {
         return await this.findByCell([tripStop.h3_cell_le1, tripStop.h3_cell_le2], filterState)
             .then(connections => connections.filter(connection => connection.trip_id !== tripStop.trip_id));
     }

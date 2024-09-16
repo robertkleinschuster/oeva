@@ -15,32 +15,30 @@ import {
     IonToolbar, isPlatform
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
-import {useLiveQuery} from "dexie-react-hooks";
-import {isTripActiveOn} from "../transit/Schedule";
-import {scheduleDB} from "../db/ScheduleDB";
 import TripName from "../components/TripName";
+import {Trip} from "../db/schema";
+import {db} from "../db/client";
 
 const TripSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
-
-        const trips = useLiveQuery(async () => {
-                if (keyword.length > 1) {
-                    return scheduleDB.trip
-                        .where('number')
-                        .equals(keyword)
-                        .toArray();
-                }
-                return Promise.resolve(undefined)
-            }, [keyword]
-        )
+        const [trips, setTrips] = useState<Trip[]>([])
+        useEffect(() => {
+            if (keyword.length) {
+                db.selectFrom('trip')
+                    .selectAll()
+                    .where('number', '=', keyword)
+                    .execute()
+                    .then(setTrips)
+            } else {
+                setTrips([])
+            }
+        }, [keyword]);
 
         useEffect(() => {
             setLoading(false)
         }, [trips]);
 
-        const tripsToday = trips?.filter(trip => isTripActiveOn(trip, new Date()));
-        const tripsOnOtherDays = trips?.filter(trip => !isTripActiveOn(trip, new Date()));
 
         return (
             <IonPage>
@@ -66,28 +64,14 @@ const TripSearch: React.FC = () => {
                         />
                     </form>
                     <IonList>
-                        {tripsToday?.length ?
+                        {trips?.length ?
                             <IonItemGroup>
                                 <IonItemDivider color="primary">
                                     Verkehrt heute
                                 </IonItemDivider>
-                                {tripsToday.map(trip => <IonItem
-                                        routerLink={`/trips/${trip.id}`}
-                                        key={trip.id}>
-                                        <IonLabel>
-                                            <TripName trip={trip}/>
-                                        </IonLabel>
-                                    </IonItem>
-                                )}
-                            </IonItemGroup> : null}
-                        {tripsOnOtherDays?.length ?
-                            <IonItemGroup>
-                                <IonItemDivider color="warning">
-                                    Verkehrt an anderen Tagen
-                                </IonItemDivider>
-                                {tripsOnOtherDays.map(trip => <IonItem
-                                        routerLink={`/trips/${trip.id}`}
-                                        key={trip.id}>
+                                {trips.map(trip => <IonItem
+                                        routerLink={`/trips/${trip.trip_id}`}
+                                        key={trip.trip_id}>
                                         <IonLabel>
                                             <TripName trip={trip}/>
                                         </IonLabel>

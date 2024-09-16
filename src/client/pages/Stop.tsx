@@ -10,12 +10,9 @@ import {
     IonTitle,
     IonToolbar,
     isPlatform,
-    useIonLoading
 } from '@ionic/react';
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {useLiveQuery} from "dexie-react-hooks";
-import {scheduleDB} from "../db/ScheduleDB";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
 import {addHours} from "date-fns";
 import {filter} from "ionicons/icons";
@@ -23,6 +20,8 @@ import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";
 import StopMap from "../components/StopMap";
 import {parseStopTimeInt} from "../transit/DateTime";
+import {FullTripStop, Stop as StopType} from "../db/schema";
+import {db} from "../db/client";
 
 interface StopPageProps extends RouteComponentProps<{
     id: string
@@ -30,7 +29,6 @@ interface StopPageProps extends RouteComponentProps<{
 }
 
 const Stop: React.FC<StopPageProps> = ({match}) => {
-    const [presentLoading, dismissLoading] = useIonLoading();
     const [filterState, setFilter] = useState<FilterState>({
         ringSize: 12,
         date: new Date(),
@@ -43,25 +41,37 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
         other: true
     })
 
-    const stop = useLiveQuery(() => scheduleDB.stop.get(match.params.id))
-    const tripStops = useLiveQuery(async () => {
-            await dismissLoading()
-            await presentLoading('Lädt...')
-            const repo = new TripStopRepository()
+    const [stop, setStop] = useState<StopType | undefined>(undefined)
+
+    useEffect(() => {
+        db.selectFrom('stop')
+            .selectAll()
+            .where('stop_id', '=', match.params.id)
+            .executeTakeFirstOrThrow()
+            .then(setStop)
+
+    }, [match.params.id]);
+
+    const [tripStops, setTripStops] = useState<FullTripStop[]>([]);
+
+    useEffect(() => {
+        const repo = new TripStopRepository()
+        void (async () => {
             const tripStops = await (repo.findByStop(match.params.id, filterState))
-            tripStops.push(...await repo.findByStop(match.params.id,{...filterState, date: addHours(filterState.date, 1)}))
-            await dismissLoading()
-            return tripStops.filter(tripStop => {
+            tripStops.push(...await repo.findByStop(match.params.id, {
+                ...filterState,
+                date: addHours(filterState.date, 1)
+            }))
+            setTripStops(tripStops.filter(tripStop => {
                 const time = tripStop.arrival_time ?? tripStop.departure_time;
                 if (time !== undefined) {
                     const stopDate = parseStopTimeInt(time, filterState.date);
                     return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
                 }
                 return false;
-            })
-        },
-        [filterState]
-    )
+            }))
+        })()
+    }, [filterState]);
 
     return (
         <IonPage>
@@ -70,10 +80,10 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                     <IonButtons slot="start">
                         <IonBackButton text={isPlatform('ios') ? "OeVA" : undefined}/>
                     </IonButtons>
-                    <IonTitle>{stop?.name}{stop?.platform ? <>:
+                    <IonTitle>{stop?.stop_name}{stop?.platform ? <>:
                         Steig {stop?.platform}</> : null}{" "}<IonNote>({stop?.feed_name})</IonNote></IonTitle>
                     <IonButtons slot="end">
-                        <IonButton id={"filter-" + stop?.id} aria-label="Filter">
+                        <IonButton id={"filter-" + stop?.stop_id} aria-label="Filter">
                             <IonIcon slot="icon-only" icon={filter}/>
                         </IonButton>
                     </IonButtons>
@@ -81,7 +91,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 {stop ?
-                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.name}/>
+                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.stop_name}/>
                     : null}
                 {stop && tripStops ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
             </IonContent>

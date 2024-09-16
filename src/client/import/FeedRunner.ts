@@ -1,8 +1,6 @@
 import {feedDb} from "../db/FeedDb";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
 import {FeedImporter} from "./FeedImporter";
-import {GTFSDB} from "../db/GTFSDB";
-import {scheduleDB} from "../db/ScheduleDB";
 import {subDays} from "date-fns";
 
 export class FeedRunner {
@@ -41,7 +39,7 @@ export class FeedRunner {
                         this.running = feed.id
                         this.progress('wird gestartet...')
                         try {
-                            const dataImporter = new FeedImporter(feedDb, new GTFSDB(feed.id!), scheduleDB, this)
+                            const dataImporter = new FeedImporter(feedDb, this)
                             await dataImporter.run(feed.id!)
                         } catch (error) {
                             console.error(error)

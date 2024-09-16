@@ -1,4 +1,4 @@
-import {H3Index, H3IndexInput} from "h3-js";
+import {H3Index} from "h3-js";
 
 export class H3Cell {
     constructor(public buffer: ArrayBuffer = new ArrayBuffer(8)) {
@@ -14,7 +14,7 @@ export class H3Cell {
         return dataView.getBigUint64(0, true).toString(16)
     }
 
-    toIndexInput(): H3IndexInput {
+    toIndexInput(): number[] {
         const dataView = new DataView(this.buffer)
 
         return [

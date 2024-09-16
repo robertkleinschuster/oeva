@@ -4,14 +4,15 @@ import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
 import locate from "ionicons/dist/svg/locate.svg"
-import {RouteType, Trip, TripStop} from "../db/Schedule";
+import {FullTripStop, Trip} from "../db/schema";
 import {cellToLatLng} from "h3-js";
 import haltestelle from "./haltestelle.svg";
 import {IonButton, IonIcon, IonItem, IonRouterLink} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
 import {formatDisplayTime} from "../transit/DateTime";
+import {RouteType} from "../db/Schedule";
 
-const TripPolyline: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
+const TripPolyline: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip, tripStops}) => {
     const colors = new Map([
         [RouteType.BUS, 'darkblue'],
         [RouteType.TROLLEYBUS, 'darkred'],
@@ -31,12 +32,12 @@ const TripPolyline: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tr
     />
 }
 
-const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
+const TripMarker: React.FC<{ tripStops: FullTripStop[] }> = ({tripStops}) => {
     const map = useMap()
-    const [visibleStops, setVisibleStops] = useState<TripStop[]>([])
+    const [visibleStops, setVisibleStops] = useState<FullTripStop[]>([])
     const handleBoundsChange = () => {
         if (map.getZoom() > 10) {
-            const visibleStops: TripStop[] = [];
+            const visibleStops: FullTripStop[] = [];
             tripStops.forEach(tripStop => {
                 const position = cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]);
                 if (map.getBounds().contains(position)) {
@@ -58,7 +59,7 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
 
     return visibleStops.map(tripStop =>
         <Marker
-            key={tripStop.id}
+            key={tripStop.trip_stop_id}
             position={cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2])}
             icon={new Icon({
                 iconUrl: haltestelle,
@@ -67,8 +68,8 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
         >
             <Popup>
                 <p>
-                    {tripStop.stop?.name}
-                    {tripStop.stop?.platform ? <>: Steig {tripStop.stop.platform}</> : null}
+                    {tripStop?.stop_name}
+                    {tripStop?.platform ? <>: Steig {tripStop.platform}</> : null}
                 </p>
                 <p>
                     {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, new Date) : null}
@@ -76,7 +77,7 @@ const TripMarker: React.FC<{ tripStops: TripStop[] }> = ({tripStops}) => {
                     {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, new Date) : null}
                 </p>
                 <p>
-                    <IonRouterLink routerLink={`/connections/${tripStop.id}`}>Anschlüsse</IonRouterLink>
+                    <IonRouterLink routerLink={`/connections/${tripStop.trip_stop_id}`}>Anschlüsse</IonRouterLink>
                 </p>
             </Popup>
         </Marker>)
@@ -90,7 +91,7 @@ const SizeInvalidator: React.FC<{ expanded: boolean }> = ({expanded}) => {
     return <></>
 }
 
-const TripMap: React.FC<{ trip: Trip, tripStops: TripStop[] }> = ({trip, tripStops}) => {
+const TripMap: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip, tripStops}) => {
     const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | undefined>()
     const [expanded, setExpanded] = useState(false)
     useEffect(() => {

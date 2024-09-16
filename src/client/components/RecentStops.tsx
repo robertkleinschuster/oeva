@@ -1,22 +1,33 @@
-import {useLiveQuery} from "dexie-react-hooks";
-import {scheduleDB} from "../db/ScheduleDB";
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {Stop} from "../db/schema";
+import {db} from "../db/client";
 
 const RecentStops: React.FC = () => {
-    const lastUsedStops = useLiveQuery(
-        () => scheduleDB.stop.orderBy('last_used').limit(10).toArray()
-    )
+    const [stops, setStops] = useState<Stop[]>([]);
+
+    useEffect(() => {
+        db.selectFrom('stop')
+            .selectAll()
+            .where('last_used', 'is not', null)
+            .orderBy('last_used')
+            .limit(10)
+            .execute()
+            .then(setStops)
+    }, []);
 
     return <IonList>
-        {lastUsedStops?.length ? lastUsedStops.map(stop => <IonItem
-                routerLink={`/stops/${stop.id}`}
+        {stops?.length ? stops.map(stop => <IonItem
+                routerLink={`/stops/${stop.stop_id}`}
                 onClick={() => {
-                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                    db.updateTable('stop')
+                        .set({last_used: -(new Date).getTime()})
+                        .where('stop_id', '=', stop.stop_id)
+                        .execute()
                 }}
-                key={stop.id}>
+                key={stop.stop_id}>
                 <IonLabel>
-                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                    {stop.stop_name}{stop.platform ? <>: Steig {stop.platform}</> : null}
                     <IonNote> ({stop.feed_name})</IonNote>
                 </IonLabel>
             </IonItem>

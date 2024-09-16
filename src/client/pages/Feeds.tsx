@@ -93,7 +93,7 @@ const Feeds: React.FC = () => {
                             {stoppedStatuses.includes(feed.status) ?
                                 <IonItemOption onClick={() => {
                                     feedDb.transit.update(feed!, {
-                                        status: TransitFeedStatus.PROCESSING
+                                        status: TransitFeedStatus.IMPORTING
                                     })
                                 }}>Importieren</IonItemOption>
                                 : <IonItemOption color="warning" onClick={() => {

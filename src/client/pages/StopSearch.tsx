@@ -13,31 +13,33 @@ import {
     IonProgressBar,
     IonSearchbar,
     IonTitle,
-    IonToolbar, isPlatform
+    IonToolbar,
+    isPlatform
 } from '@ionic/react';
-import React, {useState} from "react";
-import {useLiveQuery} from "dexie-react-hooks";
+import React, {useEffect, useState} from "react";
 import {searchStop} from "../transit/StopSearch";
-import {scheduleDB} from "../db/ScheduleDB";
 import NearbyStops from "../components/NearbyStops";
 import RecentStops from "../components/RecentStops";
+import {db} from "../db/client";
+import {Stop} from "../db/schema";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
         const [loading, setLoading] = useState(false)
         const [accordion, setAccordion] = useState<string[]>(['recent'])
         const [prevAccordion, setPrevAccordion] = useState<string[]>(accordion)
-        const stops = useLiveQuery(async () => {
+        const [stops, setStops] = useState<Stop[] | undefined>(undefined)
+
+        useEffect(() => {
                 if (keyword.length > 1) {
                     setLoading(true)
-                    const stops = await searchStop(keyword)
+                    searchStop(keyword).then(setStops)
                     setAccordion([...accordion, 'search'])
                     setLoading(false)
-                    return stops;
+                } else {
+                    setLoading(false)
+                    setAccordion(prevAccordion)
                 }
-                setLoading(false)
-                setAccordion(prevAccordion)
-                return Promise.resolve(undefined)
             }, [keyword]
         )
 
@@ -72,13 +74,16 @@ const StopSearch: React.FC = () => {
                             <div slot="content">
                                 <IonList>
                                     {stops?.length ? stops.map(stop => <IonItem
-                                            routerLink={`/stops/${stop.id}`}
+                                            routerLink={`/stops/${stop.stop_id}`}
                                             onClick={() => {
-                                                scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                                                db.updateTable('stop')
+                                                    .set({last_used: -(new Date).getTime()})
+                                                    .where('stop_id', '=', stop.stop_id)
+                                                    .execute()
                                             }}
-                                            key={stop.id}>
+                                            key={stop.stop_id}>
                                             <IonLabel>
-                                                {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                                                {stop.stop_name}{stop.platform ? <>: Steig {stop.platform}</> : null}
                                                 <IonNote> ({stop.feed_name})</IonNote>
                                             </IonLabel>
                                         </IonItem>

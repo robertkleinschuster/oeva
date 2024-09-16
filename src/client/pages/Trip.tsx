@@ -13,19 +13,20 @@ import {
     IonToolbar,
     isPlatform
 } from '@ionic/react';
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {useLiveQuery} from "dexie-react-hooks";
-import {scheduleDB} from "../db/ScheduleDB";
 import {formatDisplayTime} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
 import {Boarding} from "../db/Schedule";
 import StopBoarding from "../components/StopBoarding";
 import {setSeconds} from "date-fns";
-import {extractExceptions, extractWeekdays, weekdayNames} from "../transit/Schedule";
+import {extractExceptions} from "../transit/Schedule";
 import {ExceptionType} from "../db/GTFS";
 import TripName from "../components/TripName";
 import TripMap from "../components/TripMap";
+import type {Exception, FullTripStop, Service, Trip as TripType} from "../db/schema"
+import {db} from "../db/client";
+import {Selectable} from "kysely";
 
 interface TripPageProps extends RouteComponentProps<{
     id: string
@@ -33,14 +34,77 @@ interface TripPageProps extends RouteComponentProps<{
 }
 
 const Trip: React.FC<TripPageProps> = ({match}) => {
-    const trip = useLiveQuery(() => scheduleDB.trip.get(match.params.id))
-    const tripStops = useLiveQuery(() => (new TripStopRepository()
-        .findByTrip(match.params.id))
-    )
+    const [trip, setTrip] = useState<TripType | undefined>()
+    const [service, setService] = useState<Service | undefined>()
+    const [exceptions, setExceptions] = useState<Selectable<Exception>[]>([])
+    const [tripStops, setTripStops] = useState<FullTripStop[] | null>([])
+    useEffect(() => {
+        db.selectFrom('trip')
+            .selectAll()
+            .where('trip_id', '=', match.params.id)
+            .executeTakeFirstOrThrow()
+            .then(setTrip)
+    }, [match.params.id]);
+
+    useEffect(() => {
+        if (trip) {
+            db.selectFrom('service')
+                .selectAll()
+                .where('service_id', '=', trip.service_id)
+                .executeTakeFirstOrThrow()
+                .then(setService)
+        }
+    }, [trip]);
+
+    useEffect(() => {
+        if (service) {
+            db.selectFrom('exception')
+                .selectAll()
+                .where('service_id', '=', service.service_id)
+                .execute()
+                .then(setExceptions)
+        }
+    }, [service]);
+
+    useEffect(() => {
+        (new TripStopRepository()
+            .findByTrip(match.params.id)).then(setTripStops)
+    }, [match.params.id]);
+
+
     const date = setSeconds(new Date(), 0);
-    const weekdays = trip ? extractWeekdays(trip.service_weekdays).map(weekday => weekdayNames.get(weekday)) : [];
-    const additional = trip ? extractExceptions(trip.service_exceptions, ExceptionType.RUNNING) : [];
-    const exceptions = trip ? extractExceptions(trip.service_exceptions, ExceptionType.NOT_RUNNING) : [];
+    const weekdays = []
+
+    if (service?.monday) {
+        weekdays.push('Mo.')
+    }
+
+    if (service?.tuesday) {
+        weekdays.push('Di.')
+    }
+
+    if (service?.wednesday) {
+        weekdays.push('Mi.')
+    }
+
+    if (service?.thursday) {
+        weekdays.push('Do.')
+    }
+
+    if (service?.friday) {
+        weekdays.push('Fr.')
+    }
+
+    if (service?.saturday) {
+        weekdays.push('Sa.')
+    }
+
+    if (service?.sunday) {
+        weekdays.push('So.')
+    }
+
+    const additional_dates = trip ? extractExceptions(exceptions, ExceptionType.RUNNING) : [];
+    const exception_dates = trip ? extractExceptions(exceptions, ExceptionType.NOT_RUNNING) : [];
     return (
         <IonPage>
             <IonHeader>
@@ -57,8 +121,8 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     : null}
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
-                        routerLink={`/connections/${tripStop.id}`}
-                        key={tripStop.id}>
+                        routerLink={`/connections/${tripStop.trip_stop_id}`}
+                        key={tripStop.trip_stop_id}>
                         <IonLabel>
                             <IonNote>
                                 {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
@@ -66,8 +130,8 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                                 {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
-                                {tripStop.stop?.name}{tripStop.stop?.platform ? <>:
-                                Steig {tripStop.stop.platform}</> : null}
+                                {tripStop?.stop_name}{tripStop?.platform ? <>:
+                                Steig {tripStop.platform}</> : null}
                             </IonText>
                             {tripStop.boarding !== Boarding.STANDARD ?
                                 <IonNote color="warning" style={{display: 'block', fontWeight: 'bold'}}>
@@ -80,13 +144,13 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                     <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
                         Verkehrt:<br/>{weekdays.join(', ')}
                     </IonNote> : null}
-                {exceptions.length ?
+                {exception_dates.length ?
                     <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
-                        Ausgenommen:<br/>{exceptions.map(date => date.toLocaleDateString()).join(', ')}
+                        Ausgenommen:<br/>{exception_dates.map(date => date.toLocaleDateString()).join(', ')}
                     </IonNote> : null}
-                {additional.length ?
+                {additional_dates.length ?
                     <IonNote className="ion-margin" color="medium" style={{display: 'block'}}>
-                        Zusätzlich:<br/>{additional.map(date => date.toLocaleDateString()).join(', ')}
+                        Zusätzlich:<br/>{additional_dates.map(date => date.toLocaleDateString()).join(', ')}
                     </IonNote> : null}
             </IonContent>
         </IonPage>

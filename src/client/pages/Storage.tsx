@@ -12,6 +12,7 @@ import React from "react";
 import {StorageQuota} from "../components/StorageQuota";
 import StorageDirectory from "../components/StorageDirectory.tsx";
 import StoragePersistence from "../components/StoragePersistence.tsx";
+import StorageDatabase from "../components/StorageDatabase";
 
 const Storage: React.FC = () => {
     return (
@@ -27,6 +28,7 @@ const Storage: React.FC = () => {
             <IonContent>
                 <StorageQuota/>
                 <StoragePersistence/>
+                <StorageDatabase/>
                 <StorageDirectory/>
             </IonContent>
         </IonPage>

@@ -1,33 +1,21 @@
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
-import {Boarding, Stop, TripStop, Trip, Weekday, H3_RESOLUTION, RouteType} from "../db/Schedule";
+import {GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {Boarding, H3_RESOLUTION, RouteType} from "../db/Schedule";
 import Tokenizer from "wink-tokenizer";
 import {convertStopTimeToInt} from "../transit/DateTime";
 import {latLngToCell} from "h3-js";
 import {transliterate} from "transliteration";
 import {H3Cell} from "../transit/H3Cell";
 import {TransitFeed} from "../db/Feed";
+import {Stop, Trip, TripStop} from "../db/schema";
 
 export function createTripStop(
-    trip: Trip,
-    stop: Stop,
+    feedId: number,
+    tripId: string,
     stopTime: GTFSStopTime,
     tripStopTimes: GTFSStopTime[] = []
 ): TripStop {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
-    }
-
-    if (
-        trip.feed_trip_id !== stopTime.trip_id
-        || stop.feed_stop_id !== stopTime.stop_id
-    ) {
-        throw new Error('Data mismatch')
-    }
-
-    for (const tripStopTime of tripStopTimes) {
-        if (tripStopTime.trip_id !== trip.feed_trip_id) {
-            throw new Error('Data mismatch')
-        }
     }
 
     const is_origin = tripStopTimes.length > 0 && stopTime.stop_id === tripStopTimes[0].stop_id
@@ -51,25 +39,17 @@ export function createTripStop(
     }
 
     return {
-        id: `${stop.id}-${trip.id}-${stopTime.stop_sequence}`,
-        feed_id: trip.feed_id,
-        stop_id: stop.id,
-        trip_id: trip.id,
-        route_type: trip.route_type,
+        trip_stop_id: `${feedId}-${stopTime.stop_id}-${tripId}-${stopTime.stop_sequence}`,
+        stop_id: `${feedId}-${stopTime.stop_id}`,
+        trip_id: `${feedId}-${tripId}`,
         sequence_in_trip: stopTime.stop_sequence,
         sequence_at_stop: hour * 60 + minute,
         hour: hour,
-        h3_cell_le1: stop.h3_cell_le1,
-        h3_cell_le2: stop.h3_cell_le2,
         departure_time: is_destination || stopTime.departure_time == undefined ? undefined : convertStopTimeToInt(stopTime.departure_time),
         arrival_time: is_origin || stopTime.arrival_time === undefined ? undefined : convertStopTimeToInt(stopTime.arrival_time),
         is_origin,
         is_destination,
         boarding,
-        service_start_date: trip.service_start_date,
-        service_end_date: trip.service_end_date,
-        service_exceptions: trip.service_exceptions,
-        service_weekdays: trip.service_weekdays,
     };
 }
 
@@ -116,21 +96,19 @@ export function createStop(feed: TransitFeed, stop: GTFSStop): Stop {
     const cellIndex = cell.toIndexInput()
 
     return {
-        id: `${feed.id}-${stop.stop_id}`,
-        feed_id: feed.id,
+        stop_id: `${feed.id}-${stop.stop_id}`,
         feed_name: feed.name,
-        feed_stop_id: stop.stop_id,
         feed_parent_station: stop.parent_station === "" ? undefined : stop.parent_station,
-        name: name,
+        stop_name: name,
         platform: platform?.trim(),
-        keywords: keywords.map(keyword => keyword.toLowerCase()),
+        keywords: keywords.map(keyword => keyword.toLowerCase()).join(','),
         h3_cell_le1: cellIndex[0] as number,
         h3_cell_le2: cellIndex[1] as number
     };
 }
 
 
-export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRoute, service: GTFSCalendar | undefined, exceptions: GTFSCalendarDate[]): Trip {
+export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRoute): Trip {
     if (!feed.id) {
         throw new Error('Invalid feed')
     }
@@ -151,31 +129,17 @@ export function createTrip(feed: TransitFeed, gtfsTrip: GTFSTrip, route: GTFSRou
     keywords.push(transliterate(name))
     keywords.push(transliterate(feed.name))
 
-    let weekdays = 0;
-    if (service) {
-        weekdays += service.monday ? Weekday.Monday : 0;
-        weekdays += service.tuesday ? Weekday.Tuesday : 0;
-        weekdays += service.wednesday ? Weekday.Wednesday : 0;
-        weekdays += service.thursday ? Weekday.Thursday : 0;
-        weekdays += service.friday ? Weekday.Friday : 0;
-        weekdays += service.saturday ? Weekday.Saturday : 0;
-        weekdays += service.sunday ? Weekday.Sunday : 0;
-    }
 
     const trip: Trip = {
-        id: `${feed.id}-${gtfsTrip.trip_id}`,
-        feed_id: feed.id,
+        trip_id: `${feed.id}-${gtfsTrip.trip_id}`,
+        service_id: `${feed.id}-${gtfsTrip.service_id}`,
         feed_name: feed.name,
         feed_trip_id: gtfsTrip.trip_id,
         route_type: route.route_type,
-        name: name,
+        trip_name: name,
         line: route.route_short_name !== name ? route.route_short_name : undefined,
         direction: gtfsTrip.trip_headsign ?? '',
-        keywords: keywords.map(keyword => keyword.toLowerCase()),
-        service_exceptions: new Map(exceptions.map(exception => [exception.date, exception.exception_type])),
-        service_start_date: service?.start_date,
-        service_end_date: service?.end_date,
-        service_weekdays: weekdays,
+        keywords: keywords.map(keyword => keyword.toLowerCase()).join(','),
     }
 
     if (route.route_type === RouteType.RAIL) {

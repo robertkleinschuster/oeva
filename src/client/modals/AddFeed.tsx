@@ -16,8 +16,6 @@ import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {TransitFeedStatus} from "../db/Feed";
 import {FeedImporter} from "../import/FeedImporter";
-import {GTFSDB} from "../db/GTFSDB";
-import {scheduleDB} from "../db/ScheduleDB";
 import {FeedRunner} from "../import/FeedRunner";
 
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
@@ -38,9 +36,9 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             status: startImport ? TransitFeedStatus.DOWNLOADING : TransitFeedStatus.DRAFT
         })
         if (file) {
-            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, new FeedRunner());
+            const importer = new FeedImporter(feedDb, new FeedRunner());
             await importer.extractData(feedId, file)
-            await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
+            await importer.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
         }
     }
 

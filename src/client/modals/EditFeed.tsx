@@ -17,10 +17,9 @@ import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
-import {GTFSDB} from "../db/GTFSDB";
-import {scheduleDB} from "../db/ScheduleDB";
 import {FeedImporter} from "../import/FeedImporter";
 import {FeedRunner} from "../import/FeedRunner";
+import {db} from "../db/client";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -52,13 +51,13 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         })
 
         if (file) {
-            const importer = new FeedImporter(feedDb, new GTFSDB(feedId), scheduleDB, new FeedRunner());
+            const importer = new FeedImporter(feedDb, new FeedRunner());
             await importer.extractData(feedId, file)
-            await importer.updateStatus(feedId, TransitFeedStatus.SAVING)
+            await importer.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
         } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
             if (stoppedStatuses.includes(feed.status)) {
                 await feedDb.transit.update(feed!, {
-                    status: TransitFeedStatus.PROCESSING_QUICK
+                    status: TransitFeedStatus.IMPORTING
                 })
             }
         }
@@ -74,11 +73,9 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const deleteFeedData = async () => {
         await presentLoading('Löschen...')
-        await scheduleDB.trip.where({feed_id: feedId}).delete()
-        await scheduleDB.stop.where({feed_id: feedId}).delete()
-        await scheduleDB.trip_stop.where({feed_id: feedId}).delete()
+        await db.deleteFrom('service').where("feed_id", '=', feedId).execute()
         await feedDb.transit.update(feed!, {
-            previous_status: TransitFeedStatus.PROCESSING,
+            previous_status: TransitFeedStatus.IMPORTING,
             status: TransitFeedStatus.ABORTED,
             step: undefined,
             offset: undefined
@@ -88,10 +85,8 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
 
     const deleteFeedDownload = async () => {
         await presentLoading('Löschen...')
-        const gtfsDB = new GTFSDB(feed!.id!)
-        await gtfsDB.delete()
         await feedDb.transit.update(feed!, {
-            previous_status: TransitFeedStatus.SAVING,
+            previous_status: TransitFeedStatus.EXTRACTING,
             status: TransitFeedStatus.ABORTED,
             step: undefined,
             offset: undefined
@@ -113,7 +108,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await saveFeed()
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
-            status: TransitFeedStatus.PROCESSING,
+            status: TransitFeedStatus.IMPORTING,
             step: undefined,
             offset: undefined
         })
@@ -123,7 +118,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await saveFeed()
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
-            status: TransitFeedStatus.PROCESSING_QUICK,
+            status: TransitFeedStatus.IMPORTING,
             step: undefined,
             offset: undefined
         })

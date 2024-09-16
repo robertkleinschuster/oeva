@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from "react";
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
-import {scheduleDB} from "../db/ScheduleDB";
 import {calcDistance} from "../transit/Geo";
-import {H3_RESOLUTION, Stop} from "../db/Schedule";
+import {H3_RESOLUTION} from "../db/Schedule";
 import {H3Cell} from "../transit/H3Cell";
 import {gridDisk, latLngToCell} from "h3-js";
+import {db} from "../db/client";
+import {Stop} from "../db/schema";
 
 interface NearbyStop extends Stop {
     distance: number
@@ -23,19 +24,20 @@ const NearbyStops: React.FC = () => {
                 });
                 const stops = new Map<string, NearbyStop>()
                 for (const cell of cells) {
-                    await scheduleDB.stop
-                        .where('[h3_cell_le1+h3_cell_le2]')
-                        .equals(cell)
-                        .each(stop => {
-                            if (!stop.feed_parent_station) {
-                                stops.set(
-                                    stop.name + stop.platform,
-                                    {
-                                        ...stop,
-                                        distance: calcDistance(currentCell, [stop.h3_cell_le1, stop.h3_cell_le2])
-                                    }
-                                )
-                            }
+                    (await db.selectFrom('stop')
+                        .selectAll()
+                        .where('h3_cell_le1', '=', Number(cell[0]))
+                        .where('h3_cell_le2', '=', Number(cell[1]))
+                        .where('feed_parent_station', 'is', null)
+                        .execute())
+                        .forEach(stop => {
+                            stops.set(
+                                stop.stop_name + stop.platform,
+                                {
+                                    ...stop,
+                                    distance: calcDistance(currentCell, [stop.h3_cell_le1, stop.h3_cell_le2])
+                                }
+                            )
                         })
                 }
 
@@ -53,13 +55,16 @@ const NearbyStops: React.FC = () => {
 
     return <IonList>
         {nearbyStops?.length ? nearbyStops.map(stop => <IonItem
-                routerLink={`/stops/${stop.id}`}
+                routerLink={`/stops/${stop.stop_id}`}
                 onClick={() => {
-                    scheduleDB.stop.update(stop, {last_used: -(new Date).getTime()})
+                    db.updateTable('stop')
+                        .set({last_used: -(new Date).getTime()})
+                        .where('stop_id', '=', stop.stop_id)
+                        .execute()
                 }}
-                key={stop.id}>
+                key={stop.stop_id}>
                 <IonLabel>
-                    {stop.name}{stop.platform ? <>: Steig {stop.platform}</> : null}
+                    {stop.stop_name}{stop.platform ? <>: Steig {stop.platform}</> : null}
                     <IonNote> ({stop.feed_name})</IonNote>
                     <IonNote
                         style={{display: 'block'}}>{stop.distance} m</IonNote>

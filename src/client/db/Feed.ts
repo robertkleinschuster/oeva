@@ -1,9 +1,8 @@
 export enum TransitFeedStatus {
     DRAFT,
     DOWNLOADING,
-    SAVING,
-    PROCESSING,
-    PROCESSING_QUICK,
+    EXTRACTING,
+    IMPORTING,
     DONE,
     ERROR,
     ABORTED,

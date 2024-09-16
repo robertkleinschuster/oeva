@@ -1,14 +1,16 @@
 import Papa, {ParseResult} from 'papaparse';
 import JSZip from 'jszip';
-import {GTFSDB} from '../db/GTFSDB';
-import {getFiles, getTableName} from "../db/GTFSMapping";
+import {getFiles} from "../db/GTFSMapping";
 import {FeedDB} from "../db/FeedDb";
-import {TransitFeedStatus, TransitFeedStep} from "../db/Feed";
-import {ScheduleDB} from "../db/ScheduleDB";
-import {FeedProcessor} from "./FeedProcessor";
-import {downloadFile, listFilesAndDirectories, readFile, writeFile} from "../fs/StorageManager";
+import {TransitFeedStatus} from "../db/Feed";
+import {downloadFile, readFile, writeFile} from "../fs/StorageManager";
 import {getDirectoryHandle} from "../../shared/messages";
 import {FeedRunner} from "./FeedRunner";
+import {createStop, createTrip, createTripStop} from "./TripStopFactory";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {db} from "../db/client";
+import {Exception, Service} from "../db/schema";
+import {Insertable} from "kysely";
 
 const dynamicallyTypedColumns = new Set([
     'stop_lat',
@@ -50,7 +52,7 @@ const dynamicallyTypedColumns = new Set([
 
 class FeedImporter {
 
-    constructor(private feedDb: FeedDB, private transitDb: GTFSDB, private scheduleDb: ScheduleDB, private runner: FeedRunner) {
+    constructor(private feedDb: FeedDB, private runner: FeedRunner) {
     }
 
     async run(feedId: number) {
@@ -62,18 +64,11 @@ class FeedImporter {
 
         if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
-            await this.updateStatus(feedId, TransitFeedStatus.SAVING)
+            await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
         }
-        if (feed?.status === TransitFeedStatus.SAVING) {
-            if (await this.importData(feedId)) {
-                await this.updateStatus(feedId, TransitFeedStatus.PROCESSING)
-            }
-        }
-        if (feed?.status === TransitFeedStatus.PROCESSING) {
-            await this.processData(feedId)
-        }
-        if (feed?.status === TransitFeedStatus.PROCESSING_QUICK) {
-            await this.processData(feedId, true)
+        if (feed?.status === TransitFeedStatus.IMPORTING) {
+            await this.importData(feedId)
+            await this.updateStatus(feedId, TransitFeedStatus.DONE)
         }
     }
 
@@ -103,6 +98,8 @@ class FeedImporter {
     }
 
     async extractData(feedId: number, file: File | Blob) {
+        await this.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
+
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
 
@@ -123,77 +120,135 @@ class FeedImporter {
     }
 
     async importData(feedId: number) {
-        await this.updateStatus(feedId, TransitFeedStatus.SAVING)
-        const files = await listFilesAndDirectories(await getDirectoryHandle('feeds/' + feedId))
-
-        if (!files.size) {
-            throw new Error('No files in import');
-        }
-        let done = 0
-        for (const [path, file] of files) {
-            this.runner.progress(`${path} (${done} / ${files.size})`);
-            const tableName = getTableName(file.name);
-            if (tableName) {
-                await this.importCSV(
-                    file,
-                    tableName
-                );
-            }
-
-            done++
-        }
-        return true;
-    }
-
-    async processData(feedId: number, skipTripStops = false): Promise<void> {
+        await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
         const feed = await this.feedDb.transit.get(feedId);
         if (!feed) {
             throw new Error('Feed not found');
         }
-        const processor = new FeedProcessor(this.feedDb, this.transitDb, this.scheduleDb, this.runner)
 
-        const updateProgress = async () => {
-            await this.feedDb.transit.update(feedId, {
-                offset: processor.offset
-            });
-        }
-        const interval = setInterval(async () => {
-            await updateProgress()
-        }, 1500);
-
-        try {
-            if (feed.step === undefined) {
-                await this.feedDb.transit.update(feedId, {
-                    step: TransitFeedStep.STOPS,
-                    offset: undefined
-                });
-            } else if (feed.step === TransitFeedStep.STOPS) {
-                if (await processor.processStops(feedId)) {
-                    await this.feedDb.transit.update(feedId, {
-                        step: TransitFeedStep.TRIPS,
-                        offset: undefined
-                    });
+        const directoryHandle = await getDirectoryHandle('feeds/' + feedId)
+        await this.importCSV<GTFSStop>(
+            await (await directoryHandle.getFileHandle('stops.txt')).getFile(),
+            async results => {
+                const stops = results.data.map(stop => createStop(feed, stop))
+                while (stops.length) {
+                    await db.replaceInto('stop')
+                        .values(stops.splice(0, 1000))
+                        .execute()
                 }
-            } else if (feed.step === TransitFeedStep.TRIPS) {
-                if (await processor.processTrips(feedId)) {
-                    await this.feedDb.transit.update(feedId, {
-                        step: TransitFeedStep.TRIPSTOPS,
-                        offset: undefined
-                    });
-                }
-            } else if (feed.step === TransitFeedStep.TRIPSTOPS && !skipTripStops) {
-                if (await processor.processTripStops(feedId)) {
-                    await this.updateStatus(feedId, TransitFeedStatus.DONE)
-                }
-            } else if (skipTripStops) {
-                await this.updateStatus(feedId, TransitFeedStatus.DONE)
             }
-        } finally {
-            clearInterval(interval)
+        );
+
+        await this.importCSV<GTFSCalendar>(
+            await (await directoryHandle.getFileHandle('calendar.txt')).getFile(),
+            async results => {
+                const services = results.data.map(calendar => ({
+                    service_id: `${feedId}-${calendar.service_id}`,
+                    feed_id: feedId,
+                    monday: Boolean(calendar.monday),
+                    tuesday: Boolean(calendar.tuesday),
+                    wednesday: Boolean(calendar.wednesday),
+                    thursday: Boolean(calendar.thursday),
+                    friday: Boolean(calendar.friday),
+                    saturday: Boolean(calendar.saturday),
+                    sunday: Boolean(calendar.sunday),
+                    start_date: calendar.start_date,
+                    end_date: calendar.end_date,
+                } satisfies Service))
+                while (services.length) {
+                    await db.replaceInto('service')
+                        .values(services.splice(0, 1000))
+                        .execute()
+                }
+
+            }
+        );
+
+        await this.importCSV<GTFSCalendarDate>(
+            await (await directoryHandle.getFileHandle('calendar_dates.txt')).getFile(),
+            async results => {
+                const exceptions = results.data.map(calendarDate => ({
+                    service_id: `${feedId}-${calendarDate.service_id}`,
+                    date: calendarDate.date,
+                    type: calendarDate.exception_type
+                } satisfies Insertable<Exception>))
+                while (exceptions.length) {
+                    await db.replaceInto('exception')
+                        .values(exceptions.splice(0, 1000))
+                        .execute()
+                }
+            }
+        );
+
+        const routes = new Map<string, GTFSRoute>();
+
+        await this.importCSV<GTFSRoute>(
+            await (await directoryHandle.getFileHandle('routes.txt')).getFile(),
+            async results => {
+                for (const route of results.data) {
+                    routes.set(route.route_id, route)
+                }
+            }
+        );
+
+
+        await this.importCSV<GTFSTrip>(
+            await (await directoryHandle.getFileHandle('trips.txt')).getFile(),
+            async results => {
+                const trips = results.data.map(trip => {
+                    const route = routes.get(trip.route_id)
+                    if (!route) {
+                        throw new Error('Route not found')
+                    }
+                    return createTrip(feed, trip, route)
+                })
+
+                while (trips.length) {
+                    await db.replaceInto('trip')
+                        .values(trips.splice(0, 1000))
+                        .execute()
+                }
+            }
+        );
+
+        const tripStopTimes = new Map<string, GTFSStopTime[]>();
+
+        await this.importCSV<GTFSStopTime>(
+            await (await directoryHandle.getFileHandle('stop_times.txt')).getFile(),
+            async results => {
+                for (const stopTime of results.data) {
+                    const stopTimes = tripStopTimes.get(stopTime.trip_id) ?? []
+                    stopTimes.push(stopTime)
+                    tripStopTimes.set(stopTime.trip_id, stopTimes)
+                }
+            }
+        );
+
+        const tripStops = []
+        let count = 0;
+        for (const [tripId, stopTimes] of tripStopTimes) {
+            for (const stopTime of stopTimes) {
+                tripStops.push(createTripStop(feedId, tripId, stopTime, stopTimes))
+                count++;
+                while (tripStops.length >= 1000) {
+                    await db.replaceInto('trip_stop')
+                        .values(tripStops.splice(0, 1000))
+                        .execute()
+                    this.runner.progress('trip_stop: ' + count)
+                }
+            }
+        }
+
+        while (tripStops.length) {
+            await db.replaceInto('trip_stop')
+                .values(tripStops.splice(0, 1000))
+                .execute()
         }
     }
 
-    private importCSV(csv: string | File, tableName: string) {
+    private importCSV<T>(csv: File, pump: (results: ParseResult<T>) => Promise<void>) {
+        this.runner.progress(csv.name)
+        let count = 0;
         return new Promise<void>((resolve, reject) => {
             Papa.parse(csv, {
                 header: true,
@@ -204,18 +259,11 @@ class FeedImporter {
                 chunkSize: 655360,
                 worker: false,
                 encoding: "UTF-8",
-                chunk: (results: ParseResult<object>, parser: Papa.Parser) => {
+                chunk: (results: ParseResult<T>, parser: Papa.Parser) => {
                     parser.pause();
-                    (new Promise(resolve => setTimeout(resolve, 10))).then(() => {
-                        const table = this.transitDb.table(tableName);
-                        table.bulkPut(results.data)
-                            .then(() => {
-                                parser.resume()
-                            })
-                            .catch(() => {
-                                reject()
-                            });
-                    });
+                    pump(results).then(() => parser.resume()).catch(reject)
+                    count += results.data.length
+                    this.runner.progress(csv.name + ': ' + count)
                 },
                 complete: () => {
                     resolve();
