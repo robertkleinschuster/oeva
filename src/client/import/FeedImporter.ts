@@ -217,7 +217,7 @@ class FeedImporter {
             await (await directoryHandle.getFileHandle('stop_times.txt')).getFile(),
             async results => {
                 for (const stopTime of results.data) {
-                    const stopTimes = tripStopTimes.get(stopTime.trip_id) ?? []
+                    const stopTimes = tripStopTimes.has(stopTime.trip_id) ? tripStopTimes.get(stopTime.trip_id) ?? [] : []
                     stopTimes.push(stopTime)
                     tripStopTimes.set(stopTime.trip_id, stopTimes)
                 }
