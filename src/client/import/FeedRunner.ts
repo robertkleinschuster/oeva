@@ -48,6 +48,7 @@ export class FeedRunner {
                                 status: TransitFeedStatus.ERROR,
                                 previous_status: feed.status
                             });
+                            await feedDb.log.add({feed_id: feed.id!, message: String(error)})
                         }
                     }
 
