@@ -112,10 +112,14 @@ async function extractFile(directory: string, filename: string, destination: str
 
             const fileContentBlob = await file.async('blob');
             const reader = fileContentBlob.stream().getReader();
-
+            const chunkSize = 1024 * 64;
             let result;
             while (!(result = await reader.read()).done) {
-                writable.write(result.value);
+                const chunk = result.value;
+                for (let i = 0; i < chunk.length; i += chunkSize) {
+                    const smallChunk = chunk.subarray(i, Math.min(i + chunkSize, chunk.length));
+                    writable.write(smallChunk);
+                }
             }
 
             writable.close();
