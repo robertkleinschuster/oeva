@@ -14,11 +14,9 @@ import {
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
-import {addHours} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";
-import {parseStopTimeInt} from "../transit/DateTime";
 import {FullTripStop, Stop as StopType} from "../db/schema";
 import {db} from "../db/client";
 
@@ -55,22 +53,8 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
 
     useEffect(() => {
         const repo = new TripStopRepository()
-        void (async () => {
-            const tripStops = await (repo.findByStop(match.params.id, filterState))
-            tripStops.push(...await repo.findByStop(match.params.id, {
-                ...filterState,
-                date: addHours(filterState.date, 1)
-            }))
-            setTripStops(tripStops.filter(tripStop => {
-                const time = tripStop.arrival_time ?? tripStop.departure_time;
-                if (time !== null) {
-                    const stopDate = parseStopTimeInt(time, filterState.date);
-                    return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
-                }
-                return false;
-            }))
-        })()
-    }, [filterState]);
+        repo.findByStop(match.params.id, filterState).then(setTripStops)
+    }, [filterState, match.params.id]);
 
     return (
         <IonPage>

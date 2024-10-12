@@ -14,7 +14,7 @@ import {
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
-import {addHours, setHours, setMinutes, setSeconds} from "date-fns";
+import {setHours, setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
@@ -44,26 +44,11 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
     }, [match.params.id]);
 
     useEffect(() => {
-            void (async () => {
-                if (!tripStop || !filterState) {
-                    return undefined;
-                }
-                const repo = new TripStopRepository();
-                const tripStops = await repo.findConnections(tripStop, filterState)
-                tripStops.push(...await repo.findConnections(tripStop, {
-                    ...filterState,
-                    date: addHours(filterState.date, 1)
-                }))
-
-                setTripStops(tripStops.filter(tripStop => {
-                    const time = tripStop.arrival_time ?? tripStop.departure_time;
-                    if (time !== null) {
-                        const stopDate = parseStopTimeInt(time, filterState.date);
-                        return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
-                    }
-                    return false;
-                }))
-            })()
+            if (!tripStop || !filterState) {
+                return;
+            }
+            const repo = new TripStopRepository();
+            repo.findConnections(tripStop, filterState).then(setTripStops)
         },
         [tripStop, filterState]
     )
