@@ -1,22 +1,19 @@
 import {FeedDB} from "../db/FeedDb";
 import {TransitFeedStatus} from "../db/Feed";
-import {downloadFile, readFile} from "../fs/StorageManager";
+import {downloadFile, extractFile} from "../fs/StorageManager";
 import {getDirectoryHandle} from "../../shared/messages";
 import {FeedRunner} from "./FeedRunner";
 import {createException, createService, createStop, createTrip, createTripStop} from "./factories";
 import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
 import {bulkReplaceInto} from "../db/client";
 import {CsvParser} from "./CsvParser";
-import {ZipExtractor} from "./ZipExtractor";
 
 class FeedImporter {
 
     private csv: CsvParser
-    private zip: ZipExtractor
 
     constructor(private feedDb: FeedDB, private runner: FeedRunner) {
         this.csv = new CsvParser(progress => runner.progress(progress))
-        this.zip = new ZipExtractor(progress => runner.progress(progress))
     }
 
     async run(feedId: number) {
@@ -70,8 +67,12 @@ class FeedImporter {
         }
 
         await this.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
-        const file = await readFile('feeds', feedId + '.zip')
-        await this.zip.extract(file, 'feeds/' + feedId, ['shapes.txt'])
+        await extractFile(
+            'feeds',
+            feedId + '.zip',
+            'feeds/' + feedId,
+            file => this.runner.progress(file)
+        )
     }
 
     async importData(feedId: number) {
@@ -156,10 +157,14 @@ class FeedImporter {
         }
 
         if (tripStops.length > 0) {
+            const count = tripStops.length
             await bulkReplaceInto(
                 'trip_stop',
                 tripStops,
-                remaining => this.runner.progress('trip_stop ' + remaining)
+                remaining => {
+                    const percent = Math.round(((count - remaining) / count) * 100)
+                    this.runner.progress('trip_stop ' + percent + ' %')
+                }
             )
         }
     }

@@ -49,7 +49,8 @@ export class CsvParser {
                     pump(results.data, {cursor, lines})
                         .then(() => {
                             cursor += results.data.length
-                            this.progress(file.name + ' ' + cursor)
+                            const percent = Math.round((cursor / lines) * 100);
+                            this.progress(file.name + ' ' + percent + ' %')
                             parser.resume()
                     })
                         .catch(reason => {

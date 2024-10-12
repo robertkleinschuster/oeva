@@ -112,6 +112,49 @@ export function isDownloadFileProgressMessage(message: Messages): message is Dow
     return isProgressMessage(message) && message.func === 'downloadFile'
 }
 
+export class ExtractFileMessage implements InvokeMessage {
+    readonly type = "invoke"
+    readonly func = 'extractFile'
+    readonly id = uuid.v4()
+
+    constructor(
+        public readonly directory: string,
+        public readonly filename: string,
+        public readonly destination: string,
+    ) {
+    }
+}
+
+export class ExtractFileReturnMessage implements ReturnMessage {
+    readonly type = "return"
+    readonly func = 'extractFile'
+
+    constructor(readonly id: string) {
+    }
+}
+
+export class ExtractFileProgressMessage implements ProgressMessage {
+    readonly type = "progress"
+    readonly func = 'extractFile'
+
+    constructor(
+        readonly id: string,
+        readonly file: string,
+    ) {
+    }
+}
+
+export function isExtractFileMessage(message: Messages): message is ExtractFileMessage {
+    return isInvokeMessage(message) && message.func === 'extractFile'
+}
+
+export function isExtractFileReturnMessage(message: Messages): message is ExtractFileReturnMessage {
+    return isReturnMessage(message) && message.func === 'extractFile'
+}
+
+export function isExtractFileProgressMessage(message: Messages): message is ExtractFileProgressMessage {
+    return isProgressMessage(message) && message.func === 'extractFile'
+}
 
 export async function getDirectoryHandle(directory: string, create = false): Promise<FileSystemDirectoryHandle> {
     const parts = directory.split('/').filter(p => p.trim() !== '');

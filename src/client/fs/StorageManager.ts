@@ -3,7 +3,11 @@ import {
     WriteFileMessage,
     isWriteFileReturnMessage,
     DownloadFileMessage,
-    isDownloadFileReturnMessage, isDownloadFileProgressMessage, getDirectoryHandle
+    isDownloadFileReturnMessage,
+    isDownloadFileProgressMessage,
+    getDirectoryHandle,
+    ExtractFileMessage,
+    isExtractFileReturnMessage, isExtractFileProgressMessage
 } from "../../shared/messages.ts"
 
 const fsWorker = new FileSystemWorker()
@@ -131,6 +135,23 @@ export async function downloadFile(url: string, directory: string, filename: str
             }
             if (isDownloadFileProgressMessage(evt.data) && evt.data.id === message.id) {
                 progress(evt.data.progress, evt.data.bytes, evt.data.contentLength)
+            }
+        }
+        fsWorker.addEventListener('message', onMessage)
+    })
+}
+
+export async function extractFile(directory: string, filename: string, destination: string, progress: (file: string) => void) {
+    const message = new ExtractFileMessage(directory, filename, destination)
+    fsWorker.postMessage(message)
+    return new Promise<void>(resolve => {
+        const onMessage = (evt: MessageEvent) => {
+            if (isExtractFileReturnMessage(evt.data) && evt.data.id === message.id) {
+                resolve()
+                fsWorker.removeEventListener('message', onMessage)
+            }
+            if (isExtractFileProgressMessage(evt.data) && evt.data.id === message.id) {
+                progress(evt.data.file)
             }
         }
         fsWorker.addEventListener('message', onMessage)
