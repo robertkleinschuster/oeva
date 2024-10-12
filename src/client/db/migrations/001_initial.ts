@@ -115,7 +115,13 @@ export const initial1: Migration = {
         await db.schema
             .createIndex('i_t_number')
             .on('trip')
-            .columns(['number'])
+            .column('number')
+            .execute();
+
+        await db.schema
+            .createIndex('i_t_route')
+            .on('trip')
+            .column('route_type')
             .execute();
 
         await db.schema
@@ -148,9 +154,21 @@ export const initial1: Migration = {
             .execute();
 
         await db.schema
-            .createIndex('i_ts_hour')
+            .createIndex('i_ts_destination')
             .on('trip_stop')
-            .column('hour')
+            .column('is_destination')
+            .execute();
+
+        await db.schema
+            .createIndex('i_ts_seq_stop')
+            .on('trip_stop')
+            .column('sequence_at_stop')
+            .execute();
+
+        await db.schema
+            .createIndex('i_ts_seq_trip')
+            .on('trip_stop')
+            .column('sequence_in_trip')
             .execute();
     },
 
