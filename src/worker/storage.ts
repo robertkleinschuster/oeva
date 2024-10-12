@@ -111,15 +111,19 @@ async function extractFile(directory: string, filename: string, destination: str
             writable.truncate(0)
 
             const fileContentBlob = await file.async('blob');
-            const reader = fileContentBlob.stream().getReader();
+
             const chunkSize = 1024 * 64;
-            let result;
-            while (!(result = await reader.read()).done) {
-                const chunk = result.value;
-                for (let i = 0; i < chunk.length; i += chunkSize) {
-                    const smallChunk = chunk.subarray(i, Math.min(i + chunkSize, chunk.length));
-                    writable.write(smallChunk);
+            let offset = 0;
+            const fileSize = fileContentBlob.size;
+
+            while (offset < fileSize) {
+                const chunk = fileContentBlob.slice(offset, offset + chunkSize);
+                const reader = chunk.stream().getReader();
+                let result;
+                while (!(result = await reader.read()).done) {
+                    writable.write(result.value);
                 }
+                offset += chunkSize;
             }
 
             writable.close();
