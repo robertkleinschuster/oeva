@@ -33,19 +33,19 @@ export const initial1: Migration = {
         await db.schema
             .createIndex('i_s_keywords')
             .on('stop')
-            .columns(['keywords'])
+            .column('keywords')
             .execute();
 
         await db.schema
             .createIndex('i_s_last_used')
             .on('stop')
-            .columns(['last_used'])
+            .column('last_used')
             .execute();
 
         await db.schema
             .createIndex('i_s_favorite_order')
             .on('stop')
-            .columns(['favorite_order'])
+            .column('favorite_order')
             .execute();
 
         await db.schema.createTable('service')

@@ -54,6 +54,7 @@ async function writeFile(directory: string, file: File): Promise<void> {
     // Create the file and write content
     const fileHandle = await getFileHandle(dirHandle, file.name);
     const writable = await fileHandle.createSyncAccessHandle();
+    writable.truncate(0)
     writable.write(await file.arrayBuffer());
     writable.close();
 }
@@ -107,6 +108,7 @@ async function extractFile(directory: string, filename: string, destination: str
 
             const fileHandle = await getFileHandle(destinationHandle, file.name);
             const writable = await fileHandle.createSyncAccessHandle();
+            writable.truncate(0)
 
             const fileContentBlob = await file.async('blob');
             const reader = fileContentBlob.stream().getReader();

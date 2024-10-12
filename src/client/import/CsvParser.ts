@@ -54,8 +54,8 @@ export class CsvParser {
                             parser.resume()
                     })
                         .catch(reason => {
-                            parser.abort()
                             reject(reason)
+                            parser.abort()
                         })
 
                 },
