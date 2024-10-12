@@ -85,25 +85,34 @@ class FeedImporter {
         const directoryHandle = await getDirectoryHandle('feeds/' + feedId)
         await this.csv.parse<GTFSStop>(
             await (await directoryHandle.getFileHandle('stops.txt')).getFile(),
-            async results => {
+            async (results, meta) => {
                 const stops = results.map(stop => createStop(feed, stop))
-                await bulkReplaceInto('stop', stops)
+                await bulkReplaceInto('stop', stops, saved => {
+                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                    this.runner.progress('stops.txt ' + percent + ' %')
+                })
             }
         );
 
         await this.csv.parse<GTFSCalendar>(
             await (await directoryHandle.getFileHandle('calendar.txt')).getFile(),
-            async results => {
+            async (results, meta) => {
                 const services = results.map(result => createService(feed, result))
-                await bulkReplaceInto('service', services)
+                await bulkReplaceInto('service', services, saved => {
+                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                    this.runner.progress('calendar.txt ' + percent + ' %')
+                })
             }
         );
 
         await this.csv.parse<GTFSCalendarDate>(
             await (await directoryHandle.getFileHandle('calendar_dates.txt')).getFile(),
-            async results => {
+            async (results, meta) => {
                 const exceptions = results.map(calendarDate => createException(feed, calendarDate))
-                await bulkReplaceInto('exception', exceptions)
+                await bulkReplaceInto('exception', exceptions, saved => {
+                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                    this.runner.progress('calendar_dates.txt ' + percent + ' %')
+                })
             }
         );
 
@@ -120,7 +129,7 @@ class FeedImporter {
 
         await this.csv.parse<GTFSTrip>(
             await (await directoryHandle.getFileHandle('trips.txt')).getFile(),
-            async results => {
+            async (results, meta) => {
                 const trips = results.map(trip => {
                     const route = routes.get(trip.route_id)
                     if (!route) {
@@ -128,15 +137,21 @@ class FeedImporter {
                     }
                     return createTrip(feed, trip, route)
                 })
-                await bulkReplaceInto('trip', trips)
+                await bulkReplaceInto('trip', trips, saved => {
+                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                    this.runner.progress('trips.txt ' + percent + ' %')
+                })
             }
         );
 
         await this.csv.parse<GTFSStopTime>(
             await (await directoryHandle.getFileHandle('stop_times.txt')).getFile(),
-            async results => {
+            async (results, meta) => {
                 const tripStops = results.map(stopTime => createTripStop(feedId, stopTime))
-                await bulkReplaceInto('trip_stop', tripStops)
+                await bulkReplaceInto('trip_stop', tripStops, saved => {
+                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                    this.runner.progress('stop_times.txt ' + percent + ' %')
+                })
             }
         );
     }
