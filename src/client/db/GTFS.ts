@@ -14,14 +14,14 @@ export interface GTFSStop {
     stop_code?: string;
     stop_name: string;
     stop_desc?: string;
-    stop_lat: number;
-    stop_lon: number;
+    stop_lat: string;
+    stop_lon: string;
     zone_id?: string;
     stop_url?: string;
-    location_type?: number;
+    location_type?: string;
     parent_station?: string;
     stop_timezone?: string;
-    wheelchair_boarding?: number;
+    wheelchair_boarding?: string;
     level_id?: string;
     platform_code?: string;
 }
@@ -32,13 +32,13 @@ export interface GTFSRoute {
     route_short_name: string;
     route_long_name: string;
     route_desc?: string;
-    route_type: number;
+    route_type: string;
     route_url?: string;
     route_color?: string;
     route_text_color?: string;
-    route_sort_order?: number;
-    continuous_pickup?: number;
-    continuous_drop_off?: number;
+    route_sort_order?: string;
+    continuous_pickup?: string;
+    continuous_drop_off?: string;
 }
 
 export interface GTFSTrip {
@@ -47,11 +47,11 @@ export interface GTFSTrip {
     service_id: string;
     trip_headsign?: string;
     trip_short_name?: string;
-    direction_id?: number;
+    direction_id?: string;
     block_id?: string;
     shape_id?: string;
-    wheelchair_accessible?: number;
-    bikes_allowed?: number;
+    wheelchair_accessible?: string;
+    bikes_allowed?: string;
 }
 
 export interface GTFSStopTime {
@@ -59,27 +59,27 @@ export interface GTFSStopTime {
     arrival_time?: string;
     departure_time?: string;
     stop_id: string;
-    stop_sequence: number;
+    stop_sequence: string;
     stop_headsign?: string;
-    pickup_type?: number;
-    drop_off_type?: number;
-    continuous_pickup?: number;
-    continuous_drop_off?: number;
-    shape_dist_traveled?: number;
-    timepoint?: number;
+    pickup_type?: string;
+    drop_off_type?: string;
+    continuous_pickup?: string;
+    continuous_drop_off?: string;
+    shape_dist_traveled?: string;
+    timepoint?: string;
 }
 
 export interface GTFSCalendar {
     service_id: string;
-    monday: number;
-    tuesday: number;
-    wednesday: number;
-    thursday: number;
-    friday: number;
-    saturday: number;
-    sunday: number;
-    start_date: number;
-    end_date: number;
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+    start_date: string;
+    end_date: string;
 }
 
 export enum ExceptionType {
@@ -89,31 +89,31 @@ export enum ExceptionType {
 
 export interface GTFSCalendarDate {
     service_id: string;
-    date: number;
-    exception_type: ExceptionType;
+    date: string;
+    exception_type: string;
 }
 
 export interface GTFSShape {
     shape_id: string;
-    shape_pt_lat: number;
-    shape_pt_lon: number;
-    shape_pt_sequence: number;
-    shape_dist_traveled?: number;
+    shape_pt_lat: string;
+    shape_pt_lon: string;
+    shape_pt_sequence: string;
+    shape_dist_traveled?: string;
 }
 
 export interface GTFSFrequency {
     trip_id: string;
     start_time: string;
     end_time: string;
-    headway_secs: number;
-    exact_times?: number;
+    headway_secs: string;
+    exact_times?: string;
 }
 
 export interface GTFSTransfer {
     from_stop_id: string;
     to_stop_id: string;
-    transfer_type: number;
-    min_transfer_time?: number;
+    transfer_type: string;
+    min_transfer_time?: string;
 }
 
 export interface GTFSLevel {
@@ -126,7 +126,7 @@ export interface GTFSPathway {
     pathway_id: string;
     from_stop_id: string;
     to_stop_id: string;
-    pathway_mode: number;
-    is_bidirectional: boolean;
-    traversal_time: number;
+    pathway_mode: string;
+    is_bidirectional: string;
+    traversal_time: string;
 }

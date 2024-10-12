@@ -58,7 +58,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
 
                 setTripStops(tripStops.filter(tripStop => {
                     const time = tripStop.arrival_time ?? tripStop.departure_time;
-                    if (time !== undefined) {
+                    if (time !== null) {
                         const stopDate = parseStopTimeInt(time, filterState.date);
                         return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
                     }
@@ -83,8 +83,8 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             other: true
         }
         const hour = tripStop?.hour
-        const time = tripStop?.arrival_time ?? tripStop?.departure_time;
-        if (time !== undefined) {
+        const time = tripStop?.arrival_time ?? tripStop?.departure_time ?? null;
+        if (time !== null) {
             setFilter({...filterDefaults, date: parseStopTimeInt(time, new Date())})
         } else if (hour !== undefined) {
             setFilter({...filterDefaults, date: setHours(setSeconds(setMinutes(new Date(), 0), 0), hour)})
@@ -109,7 +109,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             </IonHeader>
             <IonContent>
                 {tripStop ?
-                    <StopMap cell={[tripStop.h3_cell_le1, tripStop.h3_cell_le2]} tooltip={stop.name}/>
+                    <StopMap cell={tripStop.h3_cell} tooltip={stop.name}/>
                     : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>

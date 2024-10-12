@@ -1,7 +1,7 @@
 import {ExceptionType} from "../db/GTFS";
 import {parseServiceDate} from "./DateTime";
 import {Exception} from "../db/schema";
-import {Weekday} from "../db/Schedule";
+import {Weekday, WeekdayCode} from "../db/Schedule";
 import {Selectable} from "kysely";
 
 
@@ -15,12 +15,12 @@ export function extractExceptions(service_exceptions: Selectable<Exception>[], e
     return dates;
 }
 
-export const weekdayNames = new Map([
-    [Weekday.Monday, 'Mo.'],
-    [Weekday.Tuesday, 'Di.'],
-    [Weekday.Wednesday, 'Mi.'],
-    [Weekday.Thursday, 'Do.'],
-    [Weekday.Friday, 'Fr.'],
-    [Weekday.Saturday, 'Sa.'],
-    [Weekday.Sunday, 'So.'],
+export const weekdayCodes = new Map<Weekday, WeekdayCode>([
+    [Weekday.Sunday, 'sunday'],
+    [Weekday.Monday, 'monday'],
+    [Weekday.Tuesday, 'tuesday'],
+    [Weekday.Wednesday, 'wednesday'],
+    [Weekday.Thursday, 'thursday'],
+    [Weekday.Friday, 'friday'],
+    [Weekday.Saturday, 'saturday'],
 ])

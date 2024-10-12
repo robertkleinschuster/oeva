@@ -36,15 +36,18 @@ export enum Boarding {
     ON_REQUEST,
     ON_CALL,
 }
+
 export enum Weekday {
-    Sunday = 1,
-    Saturday = 2,
-    Friday = 4,
-    Thursday = 8,
-    Wednesday = 16,
-    Tuesday = 32,
-    Monday = 64,
+    Sunday = 0,
+    Monday = 1,
+    Tuesday = 2,
+    Wednesday = 3,
+    Thursday = 4,
+    Friday = 5,
+    Saturday = 6,
 }
+
+export type WeekdayCode = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday'
 
 export interface TripStop {
     id: string;

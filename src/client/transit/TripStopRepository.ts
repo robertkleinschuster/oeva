@@ -1,10 +1,10 @@
 import {FullTripStop} from "../db/schema";
-import {RouteType} from "../db/Schedule";
+import {RouteType, WeekdayCode} from "../db/Schedule";
 import {gridDisk, H3IndexInput} from "h3-js";
-import {H3Cell} from "./H3Cell";
 import {db} from "../db/client";
 import {formatServiceDate} from "./DateTime";
 import {ExceptionType} from "../db/GTFS";
+import {weekdayCodes} from "./Schedule";
 
 export interface FilterState {
     ringSize: number,
@@ -32,10 +32,10 @@ export class TripStopRepository {
 
     async findByStop(stopId: string, filterState: FilterState): Promise<FullTripStop[]> {
         const stop = await db.selectFrom('stop')
-            .select(['h3_cell_le1', 'h3_cell_le2'])
+            .select(['h3_cell'])
             .where('stop.stop_id', '=', stopId)
             .executeTakeFirstOrThrow()
-        return this.findByCell([stop.h3_cell_le1, stop.h3_cell_le2], filterState);
+        return this.findByCell(stop.h3_cell, filterState);
     }
 
     async findByCell(cell: H3IndexInput, filterState: FilterState): Promise<FullTripStop[]> {
@@ -63,49 +63,48 @@ export class TripStopRepository {
             routeTypes.push(RouteType.MONORAIL)
         }
 
-        const hours = filterState.date.getHours();
         const cells = gridDisk(cell, filterState.ringSize);
-        const cellObj = new H3Cell()
-        const cells_1: number[] = [];
-        const cells_2: number[] = []
-
-        for (const cell of cells) {
-            cellObj.fromIndex(cell)
-            const index = cellObj.toIndexInput()
-            cells_1.push(index[0])
-            cells_2.push(index[1])
-        }
 
         const dateAsInt = formatServiceDate(filterState.date);
+        const weekday = filterState.date.getUTCDay();
+        const time = filterState.date.getHours() * 100 + filterState.date.getMinutes()
+
         const query = db.selectFrom('trip_stop')
             .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
             .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
             .innerJoin('service', 'trip.service_id', 'service.service_id')
-            .leftJoin('exception', 'service.service_id', 'exception.service_id')
+            .leftJoin('exception', join => join
+                .onRef('service.service_id', '=', 'exception.service_id')
+                .on('exception.date', '=', dateAsInt)
+            )
             .selectAll('trip_stop')
             .selectAll('stop')
             .selectAll('trip')
-            .where('h3_cell_le1', 'in', cells_1)
-            .where('h3_cell_le2', 'in', cells_2)
-            .where('hour', '=', hours)
+            .where('h3_cell', 'in', cells)
+            .where(eb =>
+                    eb.or([
+                        eb('departure_time', '>=', time),
+                        eb('arrival_time', '>=', time),
+                    ])
+            ).where(eb =>
+                eb.or([
+                    eb('departure_time', '<=', time + 100),
+                    eb('arrival_time', '<=', time + 100),
+                ])
+            )
+            .where(weekdayCodes.get(weekday) as WeekdayCode, '=', true)
             .where('start_date', '<=', dateAsInt)
             .where('end_date', '>=', dateAsInt)
-            .where('is_destination', '=', false)
+            .where('is_destination', 'in', filterState.arrivals ? [true, false] : [false])
             .where('route_type', 'in', routeTypes)
-            .where(eb => eb.or([
-                eb('exception.type', '=', ExceptionType.RUNNING),
-                eb('exception.type', 'is', null),
-            ]))
-            .where(eb => eb.or([
-                eb('exception.date', '=', dateAsInt),
-                eb('exception.date', 'is', null),
-            ]))
-            .orderBy('sequence_in_trip')
+            .where('exception.type', 'is not', ExceptionType.NOT_RUNNING)
+            .orderBy('sequence_at_stop')
+
         return await query.execute()
     }
 
     async findConnections(tripStop: FullTripStop, filterState: FilterState) {
-        return await this.findByCell([tripStop.h3_cell_le1, tripStop.h3_cell_le2], filterState)
+        return await this.findByCell(tripStop.h3_cell, filterState)
             .then(connections => connections.filter(connection => connection.trip_id !== tripStop.trip_id));
     }
 }

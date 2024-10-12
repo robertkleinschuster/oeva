@@ -23,7 +23,6 @@ import {setSeconds} from "date-fns";
 import {extractExceptions} from "../transit/Schedule";
 import {ExceptionType} from "../db/GTFS";
 import TripName from "../components/TripName";
-import TripMap from "../components/TripMap";
 import type {Exception, FullTripStop, Service, Trip as TripType} from "../db/schema"
 import {db} from "../db/client";
 import {Selectable} from "kysely";
@@ -116,18 +115,15 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent color="light">
-                {tripStops && trip ?
-                    <TripMap trip={trip} tripStops={tripStops}/>
-                    : null}
                 <IonList>
                     {tripStops?.map(tripStop => <IonItem
                         routerLink={`/connections/${tripStop.trip_stop_id}`}
                         key={tripStop.trip_stop_id}>
                         <IonLabel>
                             <IonNote>
-                                {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, date) : null}
-                                {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
-                                {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
+                                {tripStop.arrival_time !== null ? formatDisplayTime(tripStop.arrival_time, date) : null}
+                                {tripStop.arrival_time !== null && tripStop.departure_time !== null ? " - " : null}
+                                {tripStop.departure_time !== null ? formatDisplayTime(tripStop.departure_time, date) : null}
                             </IonNote>
                             <IonText style={{display: 'block'}}>
                                 {tripStop?.stop_name}{tripStop?.platform ? <>:

@@ -18,7 +18,6 @@ import {addHours} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";
-import StopMap from "../components/StopMap";
 import {parseStopTimeInt} from "../transit/DateTime";
 import {FullTripStop, Stop as StopType} from "../db/schema";
 import {db} from "../db/client";
@@ -64,7 +63,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
             }))
             setTripStops(tripStops.filter(tripStop => {
                 const time = tripStop.arrival_time ?? tripStop.departure_time;
-                if (time !== undefined) {
+                if (time !== null) {
                     const stopDate = parseStopTimeInt(time, filterState.date);
                     return stopDate >= filterState.date && stopDate <= addHours(filterState.date, 1);
                 }
@@ -90,9 +89,6 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                {stop ?
-                    <StopMap cell={[stop.h3_cell_le1, stop.h3_cell_le2]} tooltip={stop.stop_name}/>
-                    : null}
                 {stop && tripStops ? <Trips stop={stop} tripStops={tripStops} date={filterState.date}/> : null}
             </IonContent>
             {stop ? <Filter stop={stop} state={filterState} onChange={state => setFilter(state)}/> : null}

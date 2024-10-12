@@ -1,9 +1,8 @@
 import Dexie from 'dexie';
-import {FeedFile, FeedLog, TransitFeed} from "./Feed";
+import {FeedLog, TransitFeed} from "./Feed";
 
 export class FeedDB extends Dexie {
     public transit: Dexie.Table<TransitFeed, number>
-    public file: Dexie.Table<FeedFile, number>
     public log: Dexie.Table<FeedLog, number>
 
     public constructor() {
@@ -13,7 +12,6 @@ export class FeedDB extends Dexie {
             transit: '++id,status,last_start',
             log: '++id,feed_id',
         });
-        this.file = this.table('file')
         this.transit = this.table('transit')
         this.log = this.table('log')
     }

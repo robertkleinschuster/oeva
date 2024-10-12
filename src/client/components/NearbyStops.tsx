@@ -2,7 +2,6 @@ import React, {useEffect, useState} from "react";
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
 import {calcDistance} from "../transit/Geo";
 import {H3_RESOLUTION} from "../db/Schedule";
-import {H3Cell} from "../transit/H3Cell";
 import {gridDisk, latLngToCell} from "h3-js";
 import {db} from "../db/client";
 import {Stop} from "../db/schema";
@@ -17,17 +16,12 @@ const NearbyStops: React.FC = () => {
     useEffect(() => {
         const watchId = navigator.geolocation.watchPosition(async (position) => {
                 const currentCell = latLngToCell(position.coords.latitude, position.coords.longitude, H3_RESOLUTION);
-                const cells = gridDisk(currentCell, 26).map(c => {
-                    const cell = new H3Cell()
-                    cell.fromIndex(c)
-                    return cell.toIndexInput()
-                });
+                const cells = gridDisk(currentCell, 26);
                 const stops = new Map<string, NearbyStop>()
                 for (const cell of cells) {
                     (await db.selectFrom('stop')
                         .selectAll()
-                        .where('h3_cell_le1', '=', Number(cell[0]))
-                        .where('h3_cell_le2', '=', Number(cell[1]))
+                        .where('h3_cell', '=', cell)
                         .where('feed_parent_station', 'is', null)
                         .execute())
                         .forEach(stop => {
@@ -35,7 +29,7 @@ const NearbyStops: React.FC = () => {
                                 stop.stop_name + stop.platform,
                                 {
                                     ...stop,
-                                    distance: calcDistance(currentCell, [stop.h3_cell_le1, stop.h3_cell_le2])
+                                    distance: calcDistance(currentCell, stop.h3_cell)
                                 }
                             )
                         })

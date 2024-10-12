@@ -17,9 +17,8 @@ import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
 import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
-import {FeedImporter} from "../import/FeedImporter";
-import {FeedRunner} from "../import/FeedRunner";
 import {db} from "../db/client";
+import {writeFile} from "../fs/StorageManager";
 
 
 const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigger}) => {
@@ -51,9 +50,8 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         })
 
         if (file) {
-            const importer = new FeedImporter(feedDb, new FeedRunner());
-            await importer.extractData(feedId, file)
-            await importer.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
+            await writeFile('feeds', new File([file], feedId + '.zip'))
+            await feedDb.transit.update(feedId, {status: TransitFeedStatus.EXTRACTING})
         } else if (feed?.id && (name !== feed?.name || keywords !== feed?.keywords)) {
             if (stoppedStatuses.includes(feed.status)) {
                 await feedDb.transit.update(feed!, {
@@ -77,8 +75,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             previous_status: TransitFeedStatus.IMPORTING,
             status: TransitFeedStatus.ABORTED,
-            step: undefined,
-            offset: undefined
         })
         await dismissLoading()
     }
@@ -88,29 +84,23 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.transit.update(feed!, {
             previous_status: TransitFeedStatus.EXTRACTING,
             status: TransitFeedStatus.ABORTED,
-            step: undefined,
-            offset: undefined
         })
         await dismissLoading()
     }
 
-    const importFeed = async () => {
+    const downloadFeed = async () => {
         await saveFeed()
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.DOWNLOADING,
-            step: undefined,
-            offset: undefined
         })
         modal.current?.dismiss()
     }
-    const processFeed = async () => {
+    const importFeed = async () => {
         await saveFeed()
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.IMPORTING,
-            step: undefined,
-            offset: undefined
         })
         modal.current?.dismiss()
     }
@@ -119,8 +109,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
         await feedDb.log.where({feed_id: feed!.id}).delete()
         await feedDb.transit.update(feed!, {
             status: TransitFeedStatus.IMPORTING,
-            step: undefined,
-            offset: undefined
         })
         modal.current?.dismiss()
     }
@@ -133,16 +121,6 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
             })
             modal.current?.dismiss()
         }
-    }
-
-    const resetFeed = async () => {
-        await saveFeed()
-        await feedDb.transit.update(feed!, {
-            step: undefined,
-            offset: undefined
-        })
-        modal.current?.dismiss()
-        window.location.reload()
     }
 
     const abortFeed = async () => {
@@ -197,11 +175,11 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                             <IonItem>
                                 {feed.url ?
                                     <IonButton color="primary"
-                                               onClick={importFeed}>
+                                               onClick={downloadFeed}>
                                         Herunterladen
                                     </IonButton> : null}
                                 <IonButton color="primary"
-                                           onClick={processFeed}>
+                                           onClick={importFeed}>
                                     Importieren
                                 </IonButton>
                                 {feed?.status !== TransitFeedStatus.DONE
@@ -239,11 +217,7 @@ const EditFeed: React.FC<{ feedId: number, trigger: string }> = ({feedId, trigge
                             <IonButton color="warning"
                                        onClick={abortFeed}>
                                 Abbrechen
-                            </IonButton> :
-                            <IonButton color="warning"
-                                       onClick={resetFeed}>
-                                Fortschritt zurücksetzen
-                            </IonButton>}
+                            </IonButton> : null}
                     </IonItem>
                     <IonItemDivider>
                         <IonLabel>Log</IonLabel>

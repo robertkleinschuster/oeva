@@ -10,8 +10,9 @@ export const initial1: Migration = {
             .addColumn('feed_parent_station', 'text')
             .addColumn('stop_name', 'text', (col) => col.notNull())
             .addColumn('platform', 'text')
-            .addColumn('h3_cell_le1', 'integer', (col) => col.notNull())
-            .addColumn('h3_cell_le2', 'integer', (col) => col.notNull())
+            .addColumn('h3_cell', 'text', (col) => col.notNull())
+            .addColumn('lat', 'integer', (col) => col.notNull())
+            .addColumn('lon', 'integer', (col) => col.notNull())
             .addColumn('keywords', 'text', (col) => col.notNull())
             .addColumn('last_used', 'integer')
             .addColumn('favorite_order', 'integer')
@@ -20,7 +21,13 @@ export const initial1: Migration = {
         await db.schema
             .createIndex('i_s_h3')
             .on('stop')
-            .columns(['h3_cell_le1', 'h3_cell_le2'])
+            .column('h3_cell')
+            .execute();
+
+        await db.schema
+            .createIndex('i_s_coord')
+            .on('stop')
+            .columns(['lat', 'lon'])
             .execute();
 
         await db.schema
@@ -76,7 +83,7 @@ export const initial1: Migration = {
         await db.schema
             .createTable('exception')
             .addColumn('exception_id', 'integer', col => col.primaryKey().autoIncrement())
-            .addColumn('service_id', 'text', (col) => col.references('service.id').onDelete('cascade').notNull())
+            .addColumn('service_id', 'text', (col) => col.references('service.service_id').onDelete('cascade').notNull())
             .addColumn('date', 'integer', (col) => col.notNull())
             .addColumn('type', 'integer', (col) => col.notNull())
             .addForeignKeyConstraint('fk_e_service', ['service_id'], 'service', ['service_id'], c => c.onDelete('cascade'))
@@ -92,7 +99,7 @@ export const initial1: Migration = {
         await db.schema
             .createTable('trip')
             .addColumn('trip_id', 'text', (col) => col.primaryKey())
-            .addColumn('service_id', 'text', col => col.references('service.id').onDelete('cascade').notNull())
+            .addColumn('service_id', 'text', col => col.references('service.service_id').onDelete('cascade').notNull())
             .addColumn('feed_name', 'text', (col) => col.notNull())
             .addColumn('feed_trip_id', 'text', (col) => col.notNull())
             .addColumn('trip_name', 'text', (col) => col.notNull())
@@ -120,8 +127,8 @@ export const initial1: Migration = {
         await db.schema
             .createTable('trip_stop')
             .addColumn('trip_stop_id', 'text', (col) => col.primaryKey())
-            .addColumn('stop_id', 'text', (col) => col.references('stop.id').onDelete('cascade').notNull())
-            .addColumn('trip_id', 'text', (col) => col.references('trip.id').onDelete('cascade').notNull())
+            .addColumn('stop_id', 'text', (col) => col.references('stop.stop_id').onDelete('cascade').notNull())
+            .addColumn('trip_id', 'text', (col) => col.references('trip.trip_id').onDelete('cascade').notNull())
             .addColumn('hour', 'integer', col => col.notNull())
             .addColumn('sequence_in_trip', 'integer', (col) => col.notNull())
             .addColumn('sequence_at_stop', 'integer', (col) => col.notNull())
@@ -135,9 +142,15 @@ export const initial1: Migration = {
             .execute();
 
         await db.schema
-            .createIndex('i_ts_h3_hour')
+            .createIndex('i_ts_time')
             .on('trip_stop')
-            .columns(['hour'])
+            .columns(['departure_time', 'arrival_time'])
+            .execute();
+
+        await db.schema
+            .createIndex('i_ts_hour')
+            .on('trip_stop')
+            .column('hour')
             .execute();
     },
 

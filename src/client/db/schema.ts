@@ -26,14 +26,15 @@ export interface Exception {
 export interface Stop {
     stop_id: string;
     feed_name: string;
-    feed_parent_station?: string;
+    feed_parent_station: string|null;
     stop_name: string;
-    platform?: string;
-    h3_cell_le1: number;
-    h3_cell_le2: number;
+    platform: string|null;
+    h3_cell: string;
+    lat: number;
+    lon: number;
     keywords: string;
-    last_used?: number;
-    favorite_order?: number;
+    last_used: number|null;
+    favorite_order: number|null;
 }
 
 
@@ -43,9 +44,9 @@ export interface Trip {
     feed_name: string;
     feed_trip_id: string;
     trip_name: string;
-    line?: string;
-    number?: string;
-    category?: string;
+    line: string|null;
+    number: string|null;
+    category: string|null;
     direction: string;
     route_type: RouteType;
     keywords: string;
@@ -58,8 +59,8 @@ export interface TripStop {
     hour: number;
     sequence_in_trip: number;
     sequence_at_stop: number;
-    departure_time?: number;
-    arrival_time?: number;
+    departure_time: number|null;
+    arrival_time: number|null;
     boarding: Boarding;
     is_origin: boolean;
     is_destination: boolean;

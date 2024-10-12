@@ -22,7 +22,7 @@ const TripPolyline: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip
     ])
 
     const map = useMap()
-    return <Polyline positions={tripStops.map(tripStop => cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]))}
+    return <Polyline positions={tripStops.map(tripStop => cellToLatLng(tripStop.h3_cell))}
                      pathOptions={{color: colors.get(trip.route_type) ?? 'black'}}
                      eventHandlers={{
                          add: e => {
@@ -39,7 +39,7 @@ const TripMarker: React.FC<{ tripStops: FullTripStop[] }> = ({tripStops}) => {
         if (map.getZoom() > 10) {
             const visibleStops: FullTripStop[] = [];
             tripStops.forEach(tripStop => {
-                const position = cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2]);
+                const position = cellToLatLng(tripStop.h3_cell);
                 if (map.getBounds().contains(position)) {
                     visibleStops.push(tripStop);
                 }
@@ -60,7 +60,7 @@ const TripMarker: React.FC<{ tripStops: FullTripStop[] }> = ({tripStops}) => {
     return visibleStops.map(tripStop =>
         <Marker
             key={tripStop.trip_stop_id}
-            position={cellToLatLng([tripStop.h3_cell_le1, tripStop.h3_cell_le2])}
+            position={cellToLatLng(tripStop.h3_cell)}
             icon={new Icon({
                 iconUrl: haltestelle,
                 iconSize: [20, 20]
@@ -72,9 +72,9 @@ const TripMarker: React.FC<{ tripStops: FullTripStop[] }> = ({tripStops}) => {
                     {tripStop?.platform ? <>: Steig {tripStop.platform}</> : null}
                 </p>
                 <p>
-                    {tripStop.arrival_time !== undefined ? formatDisplayTime(tripStop.arrival_time, new Date) : null}
-                    {tripStop.arrival_time !== undefined && tripStop.departure_time !== undefined ? " - " : null}
-                    {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, new Date) : null}
+                    {tripStop.arrival_time !== null ? formatDisplayTime(tripStop.arrival_time, new Date) : null}
+                    {tripStop.arrival_time !== null && tripStop.departure_time !== null ? " - " : null}
+                    {tripStop.departure_time !== null ? formatDisplayTime(tripStop.departure_time, new Date) : null}
                 </p>
                 <p>
                     <IonRouterLink routerLink={`/connections/${tripStop.trip_stop_id}`}>Anschlüsse</IonRouterLink>
@@ -112,7 +112,7 @@ const TripMap: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip, tri
 
     return <>
         <div className={expanded ? 'expanded' : 'collapsed'}>
-            <MapContainer center={cellToLatLng([tripStops[0].h3_cell_le1, tripStops[0].h3_cell_le2])}
+            <MapContainer center={cellToLatLng(tripStops[0].h3_cell)}
                           zoom={10}
                           trackResize
                           doubleClickZoom={false}

@@ -46,7 +46,7 @@ const Filter: React.FC<FilterProps> = ({stop, state, onChange,}) => {
                       onIonInput={(e) => setRingSizeLabel(e.detail.value as number)}
             >
                 <div
-                    slot="label">{stop ? calcRingRadius([stop.h3_cell_le1, stop.h3_cell_le2], ringSizeLabel as number) : 0} m
+                    slot="label">{stop ? calcRingRadius(stop.h3_cell, ringSizeLabel as number) : 0} m
                 </div>
             </IonRange>
         </IonItem>

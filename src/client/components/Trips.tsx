@@ -30,13 +30,13 @@ export const Trips: React.FC<{ stop: Stop, tripStops: FullTripStop[], date: Date
             key={tripStop.trip_stop_id}>
             <State tripStop={tripStop} date={date}/>
             <IonText slot="start">
-                {tripStop.departure_time !== undefined ? formatDisplayTime(tripStop.departure_time, date) : null}
-                {tripStop.departure_time === undefined && tripStop.arrival_time !== undefined ? <>
+                {tripStop.departure_time !== null ? formatDisplayTime(tripStop.departure_time, date) : null}
+                {tripStop.departure_time === null && tripStop.arrival_time !== null ? <>
                     An. {formatDisplayTime(tripStop.arrival_time, date)}
                 </> : null}
             </IonText>
             <IonLabel>
-                {tripStop.departure_time !== undefined && tripStop.arrival_time !== undefined && tripStop.departure_time !== tripStop.arrival_time ?
+                {tripStop.departure_time !== null && tripStop.arrival_time !== null && tripStop.departure_time !== tripStop.arrival_time ?
                     <IonNote>
                         An. {formatDisplayTime(tripStop.arrival_time, date)}
                     </IonNote> : null}
@@ -48,7 +48,7 @@ export const Trips: React.FC<{ stop: Stop, tripStops: FullTripStop[], date: Date
                     {tripStop?.stop_name !== stop?.stop_name ? <>{tripStop?.stop_name}</> : null}
                     {tripStop?.stop_name !== stop?.stop_name && tripStop?.platform ? ': ' : ''}
                     {tripStop?.platform ? <>Steig {tripStop.platform}</> : null}
-                    {stop && (stop.feed_parent_station || tripStop?.stop_name !== stop.stop_name) ? <> ({calcDistance([stop.h3_cell_le1, stop.h3_cell_le2], [tripStop.h3_cell_le1, tripStop.h3_cell_le2])} m)</> : ''}
+                    {stop && (stop.feed_parent_station || tripStop?.stop_name !== stop.stop_name) ? <> ({calcDistance(stop.h3_cell, tripStop.h3_cell)} m)</> : ''}
                 </IonNote>
                 {tripStop.boarding !== Boarding.STANDARD ?
                     <IonNote color="warning" style={{display: 'block', fontWeight: 'bold'}}>

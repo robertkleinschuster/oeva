@@ -15,8 +15,7 @@ import React, {useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
 import {feedDb} from "../db/FeedDb";
 import {TransitFeedStatus} from "../db/Feed";
-import {FeedImporter} from "../import/FeedImporter";
-import {FeedRunner} from "../import/FeedRunner";
+import {writeFile} from "../fs/StorageManager";
 
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
     const [presentLoading, dismissLoading] = useIonLoading();
@@ -36,9 +35,10 @@ const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {
             status: startImport ? TransitFeedStatus.DOWNLOADING : TransitFeedStatus.DRAFT
         })
         if (file) {
-            const importer = new FeedImporter(feedDb, new FeedRunner());
-            await importer.extractData(feedId, file)
-            await importer.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
+            await writeFile('feeds', new File([file], feedId + '.zip'))
+            await feedDb.transit.update(feedId, {
+                status: TransitFeedStatus.EXTRACTING
+            })
         }
     }
 
