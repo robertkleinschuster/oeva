@@ -20,7 +20,6 @@ import {Trips} from "../components/Trips";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import Filter from "../components/Filter";
 import TripName from "../components/TripName";
-import StopMap from "../components/StopMap";
 import {FullTripStop} from "../db/schema";
 import {db} from "../db/client";
 
@@ -108,9 +107,6 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                {tripStop ?
-                    <StopMap cell={tripStop.h3_cell} tooltip={stop.name}/>
-                    : null}
                 {tripStop && filterState && tripStop.arrival_time ?
                     <IonNote color="medium" class="ion-margin" style={{display: 'block'}}>
                         Anschlüsse an {tripStop ?
