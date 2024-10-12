@@ -71,7 +71,7 @@ class FeedImporter {
 
         await this.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
         const file = await readFile('feeds', feedId + '.zip')
-        await this.zip.extract(file, 'feeds/' + feedId)
+        await this.zip.extract(file, 'feeds/' + feedId, ['shapes.txt'])
     }
 
     async importData(feedId: number) {

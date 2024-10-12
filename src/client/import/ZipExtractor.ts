@@ -7,12 +7,15 @@ export class ZipExtractor {
     ) {
     }
 
-    async extract(file: File, directory: string) {
+    async extract(file: File, directory: string, skip: string[] = []) {
         const zip = new JSZip();
         const content = await zip.loadAsync(file);
 
         for (const file of Object.values(content.files)) {
             if (file) {
+                if (skip.includes(file.name)) {
+                    continue
+                }
                 this.progress(file.name)
                 const fileContent = await file.async('blob');
                 await writeFile(directory, new File(
