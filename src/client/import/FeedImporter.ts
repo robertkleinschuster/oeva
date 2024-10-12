@@ -83,6 +83,12 @@ class FeedImporter {
         await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
 
         const directoryHandle = await getDirectoryHandle('feeds/' + feedId)
+        const files = []
+
+        for await (const file of directoryHandle.keys()) {
+            files.push(file)
+        }
+
         await this.csv.parse<GTFSStop>(
             await (await directoryHandle.getFileHandle('stops.txt')).getFile(),
             async (results, meta) => {
@@ -105,16 +111,18 @@ class FeedImporter {
             }
         );
 
-        await this.csv.parse<GTFSCalendarDate>(
-            await (await directoryHandle.getFileHandle('calendar_dates.txt')).getFile(),
-            async (results, meta) => {
-                const exceptions = results.map(calendarDate => createException(feed, calendarDate))
-                await bulkReplaceInto('exception', exceptions, saved => {
-                    const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                    this.runner.progress('calendar_dates.txt ' + percent + ' %')
-                })
-            }
-        );
+        if (files.includes('calendar_dates.txt')) {
+            await this.csv.parse<GTFSCalendarDate>(
+                await (await directoryHandle.getFileHandle('calendar_dates.txt')).getFile(),
+                async (results, meta) => {
+                    const exceptions = results.map(calendarDate => createException(feed, calendarDate))
+                    await bulkReplaceInto('exception', exceptions, saved => {
+                        const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
+                        this.runner.progress('calendar_dates.txt ' + percent + ' %')
+                    })
+                }
+            );
+        }
 
         const routes = new Map<string, GTFSRoute>();
 
