@@ -118,7 +118,6 @@ class FeedImporter {
             }
         );
 
-
         await this.csv.parse<GTFSTrip>(
             await (await directoryHandle.getFileHandle('trips.txt')).getFile(),
             async results => {
@@ -133,40 +132,13 @@ class FeedImporter {
             }
         );
 
-        const tripStopTimes = new Map<string, GTFSStopTime[]>();
-
         await this.csv.parse<GTFSStopTime>(
             await (await directoryHandle.getFileHandle('stop_times.txt')).getFile(),
             async results => {
-                for (const stopTime of results) {
-                    const stopTimes = tripStopTimes.has(stopTime.trip_id) ? tripStopTimes.get(stopTime.trip_id) ?? [] : []
-                    stopTimes.push(stopTime)
-                    tripStopTimes.set(stopTime.trip_id, stopTimes)
-                }
+                const tripStops = results.map(stopTime => createTripStop(feedId, stopTime))
+                await bulkReplaceInto('trip_stop', tripStops)
             }
         );
-
-        const tripStops = []
-        const tripIds = Array.from(tripStopTimes.keys())
-        for (const tripId of tripIds) {
-            const stopTimes = tripStopTimes.get(tripId) as GTFSStopTime[]
-            for (const stopTime of stopTimes) {
-                tripStops.push(createTripStop(feedId, tripId, stopTime, stopTimes))
-            }
-            tripStopTimes.delete(tripId)
-        }
-
-        if (tripStops.length > 0) {
-            const count = tripStops.length
-            await bulkReplaceInto(
-                'trip_stop',
-                tripStops,
-                remaining => {
-                    const percent = Math.round(((count - remaining) / count) * 100)
-                    this.runner.progress('trip_stop ' + percent + ' %')
-                }
-            )
-        }
     }
 }
 

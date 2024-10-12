@@ -10,16 +10,11 @@ import {Insertable} from "kysely";
 
 export function createTripStop(
     feedId: number,
-    tripId: string,
     stopTime: GTFSStopTime,
-    tripStopTimes: GTFSStopTime[] = []
 ): TripStop {
     if (!stopTime.departure_time && !stopTime.arrival_time) {
         throw new Error('Stop time has no departure or arrival time')
     }
-
-    const is_origin = tripStopTimes.length > 0 && stopTime.stop_id === tripStopTimes[0].stop_id
-    const is_destination = tripStopTimes.length > 0 && stopTime.stop_id === tripStopTimes[tripStopTimes.length - 1].stop_id
 
     const time = stopTime.departure_time ?? stopTime.arrival_time ?? '00:00'
     const [hour, minute] = time.split(':').map(Number);
@@ -39,16 +34,16 @@ export function createTripStop(
     }
 
     return {
-        trip_stop_id: `${feedId}-${stopTime.stop_id}-${tripId}-${stopTime.stop_sequence}`,
+        trip_stop_id: `${feedId}-${stopTime.stop_id}-${stopTime.trip_id}-${stopTime.stop_sequence}`,
         stop_id: `${feedId}-${stopTime.stop_id}`,
-        trip_id: `${feedId}-${tripId}`,
+        trip_id: `${feedId}-${stopTime.trip_id}`,
         sequence_in_trip: Number.parseInt(stopTime.stop_sequence),
         sequence_at_stop: hour * 60 + minute,
         hour: hour,
-        departure_time: is_destination || stopTime.departure_time == undefined ? null : convertStopTimeToInt(stopTime.departure_time),
-        arrival_time: is_origin || stopTime.arrival_time == undefined ? null : convertStopTimeToInt(stopTime.arrival_time),
-        is_origin,
-        is_destination,
+        departure_time: stopTime.departure_time?.length ? convertStopTimeToInt(stopTime.departure_time) : null,
+        arrival_time: stopTime.arrival_time?.length ? convertStopTimeToInt(stopTime.arrival_time) : null,
+        is_origin: !stopTime.arrival_time?.length,
+        is_destination: !stopTime.departure_time?.length,
         boarding,
     };
 }

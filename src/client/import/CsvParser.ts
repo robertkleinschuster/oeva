@@ -30,7 +30,7 @@ export class CsvParser {
         options = {
             header: true,
             encoding: 'UTF-8',
-            chunkSize: 655360
+            chunkSize: 655360 * 20
         }
     ): Promise<void> {
         this.progress(file.name)
