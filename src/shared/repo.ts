@@ -1,10 +1,13 @@
-import {FullTripStop} from "../db/schema";
-import {RouteType, WeekdayCode} from "../db/enums";
+import {Database, FullTripStop, Stop} from "./db/schema";
+import {RouteType, WeekdayCode} from "./db/enums";
 import {gridDisk, H3IndexInput} from "h3-js";
-import {db} from "../db/client";
 import {formatServiceDate} from "./DateTime";
-import {ExceptionType} from "../db/gtfs-types";
+import {ExceptionType} from "./gtfs-types";
 import {weekdayCodes} from "./Schedule";
+import {Kysely} from "kysely";
+import {transliterate} from "transliteration";
+import Tokenizer from "wink-tokenizer";
+import Fuse from "fuse.js";
 
 export interface FilterState {
     ringSize: number,
@@ -19,9 +22,72 @@ export interface FilterState {
 }
 
 
-export class TripStopRepository {
+export class Repo {
+    constructor(private db: Kysely<Database>) {
+    }
+
+    async searchStop(keyword: string, limit = 10): Promise<Stop[]> {
+        const transliteratedKeyword = transliterate(keyword);
+        const tokenizer = new Tokenizer()
+        const tokens = tokenizer.tokenize(transliteratedKeyword).map(token => token.value.toLowerCase())
+
+        const stops = new Map<string, Stop>()
+        await this.findStations(transliteratedKeyword, stop => stops.set(stop.stop_id, stop), limit)
+
+        if (stops.size === 0) {
+            for (const token of tokens) {
+                await this.findStations(token, stop => stops.set(stop.stop_id, stop), limit)
+            }
+        }
+
+        if (stops.size === 0) {
+            await this.findStops(transliteratedKeyword, stop => stops.set(stop.stop_id, stop), limit)
+        }
+
+        if (stops.size === 0) {
+            for (const token of tokens) {
+                await this.findStops(token, stop => stops.set(stop.stop_id, stop), limit)
+            }
+        }
+
+        const fuse = new Fuse(
+            Array.from(stops.values()),
+            {
+                keys: ['name', 'keywords'],
+                threshold: 0.4,
+                useExtendedSearch: true,
+            }
+        )
+
+        const result = fuse.search(transliteratedKeyword).map(result => result.item)
+        if (result.length === 0 && limit !== 1000) {
+            return this.searchStop(keyword, 1000)
+        }
+
+        return result;
+    }
+
+    async findStops(keyword: string, each: (stop: Stop) => void, limit: number) {
+        (await this.db
+            .selectFrom('stop')
+            .selectAll()
+            .where('keywords', 'like', `%${keyword}%`)
+            .limit(limit)
+            .execute()).forEach(each)
+    }
+
+    async findStations(keyword: string, each: (stop: Stop) => void, limit: number) {
+        (await this.db
+            .selectFrom('stop')
+            .selectAll()
+            .where('keywords', 'like', `%${keyword}%`)
+            .where('feed_parent_station', 'is', null)
+            .limit(limit)
+            .execute()).forEach(each)
+    }
+
     async findByTrip(tripId: string): Promise<FullTripStop[]> {
-        return await db.selectFrom('trip_stop')
+        return await this.db.selectFrom('trip_stop')
             .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
             .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
             .selectAll()
@@ -31,7 +97,7 @@ export class TripStopRepository {
     }
 
     async findByStop(stopId: string, filterState: FilterState): Promise<FullTripStop[]> {
-        const stop = await db.selectFrom('stop')
+        const stop = await this.db.selectFrom('stop')
             .select(['h3_cell'])
             .where('stop.stop_id', '=', stopId)
             .executeTakeFirstOrThrow()
@@ -69,7 +135,7 @@ export class TripStopRepository {
         const weekday = filterState.date.getUTCDay();
         const time = filterState.date.getHours() * 100 + filterState.date.getMinutes()
 
-        const query = db.selectFrom('trip_stop')
+        const query = this.db.selectFrom('trip_stop')
             .innerJoin('stop', 'trip_stop.stop_id', 'stop.stop_id')
             .innerJoin('trip', 'trip_stop.trip_id', 'trip.trip_id')
             .innerJoin('service', 'trip.service_id', 'service.service_id')
@@ -82,10 +148,10 @@ export class TripStopRepository {
             .selectAll('trip')
             .where('h3_cell', 'in', cells)
             .where(eb =>
-                    eb.or([
-                        eb('departure_time', '>=', time),
-                        eb('arrival_time', '>=', time),
-                    ])
+                eb.or([
+                    eb('departure_time', '>=', time),
+                    eb('arrival_time', '>=', time),
+                ])
             ).where(eb =>
                 eb.or([
                     eb('departure_time', '<=', time + 100),

@@ -48,7 +48,7 @@ async function getFileHandle(directoryHandle: FileSystemDirectoryHandle, filenam
     return await directoryHandle.getFileHandle(filename, {create: true});
 }
 
-async function writeFile(directory: string, file: File): Promise<void> {
+export async function writeFile(directory: string, file: File): Promise<void> {
     const dirHandle = await getDirectoryHandle(directory, true);
 
     // Create the file and write content
@@ -59,7 +59,7 @@ async function writeFile(directory: string, file: File): Promise<void> {
     writable.close();
 }
 
-async function downloadFile(url: string, directory: string, filename: string, progress: (progress: number, bytes: number, contentLength: number) => void): Promise<void> {
+export async function downloadFile(url: string, directory: string, filename: string, progress: (progress: number, bytes: number, contentLength: number) => void): Promise<void> {
     const response = await fetch(url)
     if (!response.body) throw new Error('Stream not supported by browser');
     const reader = response.body.getReader()
@@ -89,7 +89,7 @@ async function downloadFile(url: string, directory: string, filename: string, pr
     await pump();
 }
 
-async function extractFile(directory: string, filename: string, destination: string, progress: (file: string) => void): Promise<void> {
+export async function extractFile(directory: string, filename: string, destination: string, progress: (file: string) => void): Promise<void> {
     const destinationHandle = await getDirectoryHandle(destination, true);
     const sourceHandle = await (await getDirectoryHandle(directory)).getFileHandle(filename)
     const sourceFile = await sourceHandle.getFile()

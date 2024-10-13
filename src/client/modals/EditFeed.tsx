@@ -14,9 +14,9 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
-import {feedDb} from "../db/FeedDb";
+import {feedDb} from "../../shared/db/FeedDb";
 import {useLiveQuery} from "dexie-react-hooks";
-import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
+import {stoppedStatuses, TransitFeedStatus} from "../../shared/db/Feed";
 import {db} from "../db/client";
 import {writeFile} from "../fs/StorageManager";
 

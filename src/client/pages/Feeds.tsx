@@ -22,11 +22,11 @@ import {
 } from '@ionic/react';
 import React, {useContext} from "react";
 import {useLiveQuery} from "dexie-react-hooks";
-import {feedDb} from "../db/FeedDb";
+import {feedDb} from "../../shared/db/FeedDb";
 import AddFeed from "../modals/AddFeed";
 import EditFeed from "../modals/EditFeed";
 import {RunnerContext} from "../RunnerContext";
-import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
+import {stoppedStatuses, TransitFeedStatus} from "../../shared/db/Feed";
 import FeedStatus from "../components/FeedStatus";
 
 const Feeds: React.FC = () => {

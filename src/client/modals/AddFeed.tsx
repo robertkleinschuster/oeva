@@ -13,8 +13,8 @@ import {
 } from '@ionic/react';
 import React, {useRef, useState} from "react";
 import FeedForm from "../components/FeedForm";
-import {feedDb} from "../db/FeedDb";
-import {TransitFeedStatus} from "../db/Feed";
+import {feedDb} from "../../shared/db/FeedDb";
+import {TransitFeedStatus} from "../../shared/db/Feed";
 import {writeFile} from "../fs/StorageManager";
 
 const AddFeed: React.FC<{ trigger: string }> = ({trigger}) => {

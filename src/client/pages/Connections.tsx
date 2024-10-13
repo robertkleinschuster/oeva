@@ -13,14 +13,14 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
+import {FilterState, Repo} from "../../shared/repo";
 import {setHours, setMinutes, setSeconds} from "date-fns";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
-import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
+import {formatDisplayTime, parseStopTimeInt} from "../../shared/DateTime";
 import Filter from "../components/Filter";
 import TripName from "../components/TripName";
-import {FullTripStop} from "../db/schema";
+import {FullTripStop} from "../../shared/db/schema";
 import {db} from "../db/client";
 
 interface ConnectionsPageProps extends RouteComponentProps<{
@@ -47,7 +47,7 @@ const Connections: React.FC<ConnectionsPageProps> = ({match}) => {
             if (!tripStop || !filterState) {
                 return;
             }
-            const repo = new TripStopRepository();
+            const repo = new Repo(db);
             repo.findConnections(tripStop, filterState).then(setTripStops)
         },
         [tripStop, filterState]

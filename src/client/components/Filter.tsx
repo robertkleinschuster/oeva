@@ -9,12 +9,12 @@ import {
     IonRange,
     IonToggle
 } from "@ionic/react";
-import {calcRingRadius} from "../transit/Geo";
+import {calcRingRadius} from "../../shared/Geo";
 import {addHours, differenceInCalendarDays, format, subHours} from "date-fns";
 import {add, calendar, remove, time} from "ionicons/icons";
 import React, {useEffect, useState} from "react";
-import {Stop} from "../db/schema";
-import {FilterState} from "../transit/TripStopRepository";
+import {Stop} from "../../shared/db/schema";
+import {FilterState} from "../../shared/repo";
 
 interface FilterProps {
     stop: Stop,

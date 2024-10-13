@@ -17,11 +17,11 @@ import {
     isPlatform
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
-import {searchStop} from "../transit/StopSearch";
 import NearbyStops from "../components/NearbyStops";
 import RecentStops from "../components/RecentStops";
 import {db} from "../db/client";
-import {Stop} from "../db/schema";
+import {Stop} from "../../shared/db/schema";
+import {Repo} from "../../shared/repo";
 
 const StopSearch: React.FC = () => {
         const [keyword, setKeyword] = useState('')
@@ -33,7 +33,8 @@ const StopSearch: React.FC = () => {
         useEffect(() => {
                 if (keyword.length > 1) {
                     setLoading(true)
-                    searchStop(keyword).then(setStops)
+                    const repo = new Repo(db)
+                    repo.searchStop(keyword).then(setStops)
                     setAccordion([...accordion, 'search'])
                     setLoading(false)
                 } else {

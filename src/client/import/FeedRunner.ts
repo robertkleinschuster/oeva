@@ -1,14 +1,14 @@
-import {feedDb} from "../db/FeedDb";
-import {stoppedStatuses, TransitFeedStatus} from "../db/Feed";
-import {FeedImporter} from "./FeedImporter";
+import {feedDb} from "../../shared/db/FeedDb";
+import {stoppedStatuses, TransitFeedStatus} from "../../shared/db/Feed";
 import {subDays} from "date-fns";
+import ImportWorker from "../../worker/import.ts?worker"
 
 export class FeedRunner {
     running: number | undefined
     onRun: undefined | ((id: number, progress: string) => void) = undefined
     onFinished: undefined | (() => void) = undefined
     private audio: HTMLAudioElement | undefined
-
+    worker = new ImportWorker()
     async check() {
         const date = subDays(new Date(), 7)
         return feedDb.transit
@@ -39,8 +39,7 @@ export class FeedRunner {
                         this.running = feed.id
                         this.progress('wird gestartet...')
                         try {
-                            const dataImporter = new FeedImporter(feedDb, this)
-                            await dataImporter.run(feed.id!)
+                          await this.runInWorker(feed.id!)
                         } catch (error) {
                             console.error(error)
                             this.progress(String(error))
@@ -80,6 +79,27 @@ export class FeedRunner {
         }
     }
 
+
+    runInWorker(feedId: number)
+    {
+        return new Promise<void>((resolve, reject) => {
+            this.worker.postMessage({runFeedId:feedId})
+            const listener = (e: MessageEvent) => {
+                if (e.data.progress) {
+                    this.progress(e.data.progress)
+                }
+                if (e.data.done) {
+                    this.worker.removeEventListener('message', listener)
+                    resolve()
+                }
+                if (e.data.error) {
+                    this.worker.removeEventListener('message', listener)
+                    reject(e.data.error)
+                }
+            }
+            this.worker.addEventListener('message', listener)
+        })
+    }
 
     backgroundExec() {
         if (this.audio && this.audio.paused) {

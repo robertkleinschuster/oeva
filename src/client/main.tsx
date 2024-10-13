@@ -21,4 +21,3 @@ setTimeout(async () => {
 }, 5000)
 
 void tryPersistWithoutPromptingUser()
-

@@ -1,19 +1,33 @@
-import {FeedDB} from "../db/FeedDb";
-import {TransitFeedStatus} from "../db/Feed";
-import {downloadFile, extractFile} from "../fs/StorageManager";
-import {getDirectoryHandle} from "../../shared/messages";
-import {FeedRunner} from "./FeedRunner";
-import {createException, createService, createStop, createTrip, createTripStop} from "./factories";
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/gtfs-types";
-import {bulkReplaceInto} from "../db/client";
-import {CsvParser} from "./CsvParser";
+import {FeedDB, feedDb} from "../shared/db/FeedDb";
+import {db} from "./db/client";
+import {CsvParser} from "../shared/import/CsvParser";
+import {InsertObject, Kysely} from "kysely";
+import {Database} from "../shared/db/schema";
+import {TransitFeedStatus} from "../shared/db/Feed";
+import {getDirectoryHandle} from "../shared/messages";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../shared/gtfs-types";
+import {createException, createService, createStop, createTrip, createTripStop} from "../shared/import/factories";
+import {downloadFile, extractFile} from "./storage";
+
+self.onmessage = (message) => {
+    if (message.data.runFeedId) {
+        const importer = new FeedImporter(feedDb, db, progress => {
+            self.postMessage({progress})
+        })
+        importer.run(message.data.runFeedId).then(() => {
+            self.postMessage({done: true})
+        }).catch(error => {
+            self.postMessage({error})
+        });
+    }
+}
 
 class FeedImporter {
 
     private csv: CsvParser
 
-    constructor(private feedDb: FeedDB, private runner: FeedRunner) {
-        this.csv = new CsvParser(progress => runner.progress(progress))
+    constructor(private feedDb: FeedDB, private db: Kysely<Database>, private progress: (progress: string) => void) {
+        this.csv = new CsvParser(progress)
     }
 
     async run(feedId: number) {
@@ -56,7 +70,7 @@ class FeedImporter {
         await downloadFile(feed.url, 'feeds', feed.id + '.zip', (progress, bytes, total) => {
             const downloaded_megabytes = Math.ceil(bytes / 1000000);
             const total_megabytes = Math.ceil(total / 1000000);
-            this.runner.progress(`${progress} % (${downloaded_megabytes} / ${total_megabytes} MB)`)
+            this.progress(`${progress} % (${downloaded_megabytes} / ${total_megabytes} MB)`)
         })
     }
 
@@ -71,7 +85,7 @@ class FeedImporter {
             'feeds',
             feedId + '.zip',
             'feeds/' + feedId,
-            file => this.runner.progress(file)
+            file => this.progress(file)
         )
     }
 
@@ -83,19 +97,14 @@ class FeedImporter {
         await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
 
         const directoryHandle = await getDirectoryHandle('feeds/' + feedId)
-        const files = []
-
-        for await (const file of directoryHandle.keys()) {
-            files.push(file)
-        }
 
         await this.csv.parse<GTFSStop>(
             await (await directoryHandle.getFileHandle('stops.txt')).getFile(),
             async (results, meta) => {
                 const stops = results.map(stop => createStop(feed, stop))
-                await bulkReplaceInto('stop', stops, saved => {
+                await this.bulkReplaceInto('stop', stops, saved => {
                     const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                    this.runner.progress('stops.txt ' + percent + ' %')
+                    this.progress('stops.txt ' + percent + ' %')
                 })
             }
         );
@@ -104,25 +113,28 @@ class FeedImporter {
             await (await directoryHandle.getFileHandle('calendar.txt')).getFile(),
             async (results, meta) => {
                 const services = results.map(result => createService(feed, result))
-                await bulkReplaceInto('service', services, saved => {
+                await this.bulkReplaceInto('service', services, saved => {
                     const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                    this.runner.progress('calendar.txt ' + percent + ' %')
+                    this.progress('calendar.txt ' + percent + ' %')
                 })
             }
         );
 
-        if (files.includes('calendar_dates.txt')) {
+        try {
             await this.csv.parse<GTFSCalendarDate>(
                 await (await directoryHandle.getFileHandle('calendar_dates.txt')).getFile(),
                 async (results, meta) => {
                     const exceptions = results.map(calendarDate => createException(feed, calendarDate))
-                    await bulkReplaceInto('exception', exceptions, saved => {
+                    await this.bulkReplaceInto('exception', exceptions, saved => {
                         const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                        this.runner.progress('calendar_dates.txt ' + percent + ' %')
+                        this.progress('calendar_dates.txt ' + percent + ' %')
                     })
                 }
             );
+        } catch (error) {
+            console.warn('calendar_dates.txt: ' + error)
         }
+
 
         const routes = new Map<string, GTFSRoute>();
 
@@ -145,9 +157,9 @@ class FeedImporter {
                     }
                     return createTrip(feed, trip, route)
                 })
-                await bulkReplaceInto('trip', trips, saved => {
+                await this.bulkReplaceInto('trip', trips, saved => {
                     const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                    this.runner.progress('trips.txt ' + percent + ' %')
+                    this.progress('trips.txt ' + percent + ' %')
                 })
             }
         );
@@ -156,14 +168,26 @@ class FeedImporter {
             await (await directoryHandle.getFileHandle('stop_times.txt')).getFile(),
             async (results, meta) => {
                 const tripStops = results.map(stopTime => createTripStop(feedId, stopTime))
-                await bulkReplaceInto('trip_stop', tripStops, saved => {
+                await this.bulkReplaceInto('trip_stop', tripStops, saved => {
                     const percent = Math.round(((meta.cursor + saved) / meta.lines) * 100)
-                    this.runner.progress('stop_times.txt ' + percent + ' %')
+                    this.progress('stop_times.txt ' + percent + ' %')
                 })
             }
         );
     }
+
+    async bulkReplaceInto<T extends keyof Database & string>(table: T, values: InsertObject<Database, T>[], progress?: (saved: number) => void): Promise<void> {
+        await this.db.transaction().execute(async trx => {
+            let saved = 0
+            while (values.length) {
+                await trx.replaceInto(table)
+                    .values(values.splice(0, 1000))
+                    .execute()
+                saved += 1000
+                if (progress) {
+                    progress(saved)
+                }
+            }
+        })
+    }
 }
-
-
-export {FeedImporter};

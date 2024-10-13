@@ -2,7 +2,7 @@ import {describe, expect, it} from "vitest";
 import {CsvParser} from "./CsvParser";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {GTFSTrip} from "../db/gtfs-types";
+import {GTFSTrip} from "../gtfs-types";
 
 describe('CsvParser', () => {
     it('should parse trips from csv', async () => {

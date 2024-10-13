@@ -15,15 +15,15 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {formatDisplayTime} from "../transit/DateTime";
-import {TripStopRepository} from "../transit/TripStopRepository";
-import {Boarding} from "../db/enums";
+import {formatDisplayTime} from "../../shared/DateTime";
+import {Repo} from "../../shared/repo";
+import {Boarding} from "../../shared/db/enums";
 import StopBoarding from "../components/StopBoarding";
 import {setSeconds} from "date-fns";
-import {extractExceptions} from "../transit/Schedule";
-import {ExceptionType} from "../db/gtfs-types";
+import {extractExceptions} from "../../shared/Schedule";
+import {ExceptionType} from "../../shared/gtfs-types";
 import TripName from "../components/TripName";
-import type {Exception, FullTripStop, Service, Trip as TripType} from "../db/schema"
+import type {Exception, FullTripStop, Service, Trip as TripType} from "../../shared/db/schema"
 import {db} from "../db/client";
 import {Selectable} from "kysely";
 
@@ -66,7 +66,7 @@ const Trip: React.FC<TripPageProps> = ({match}) => {
     }, [service]);
 
     useEffect(() => {
-        (new TripStopRepository()
+        (new Repo(db)
             .findByTrip(match.params.id)).then(setTripStops)
     }, [match.params.id]);
 

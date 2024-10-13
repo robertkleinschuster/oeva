@@ -6,7 +6,7 @@ import "vitest/config"
 // https://vitejs.dev/config/
 export default defineConfig({
     optimizeDeps: {
-        exclude: ['sqlocal'],
+        exclude: ['@sqlite.org/sqlite-wasm', 'sqlocal'],
     },
     plugins: [
         {

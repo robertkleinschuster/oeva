@@ -16,7 +16,7 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import TripName from "../components/TripName";
-import {Trip} from "../db/schema";
+import {Trip} from "../../shared/db/schema";
 import {db} from "../db/client";
 
 const TripSearch: React.FC = () => {

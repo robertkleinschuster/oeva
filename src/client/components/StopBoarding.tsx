@@ -1,5 +1,5 @@
 import React from "react";
-import {Boarding} from "../db/enums";
+import {Boarding} from "../../shared/db/enums";
 
 const StopBoarding: React.FC<{boarding: Boarding}> = ({boarding}) => {
     switch (boarding) {

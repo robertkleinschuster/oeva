@@ -1,9 +1,9 @@
-import {Boarding} from "../db/enums";
-import {FullTripStop, Stop, TripStop} from "../db/schema";
-import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
+import {Boarding} from "../../shared/db/enums";
+import {FullTripStop, Stop, TripStop} from "../../shared/db/schema";
+import {formatDisplayTime, parseStopTimeInt} from "../../shared/DateTime";
 import {IonIcon, IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";
 import React from "react";
-import {calcDistance} from "../transit/Geo";
+import {calcDistance} from "../../shared/Geo";
 import TripName from "./TripName";
 import StopBoarding from "./StopBoarding";
 import {closeOutline, ellipse, hourglassOutline} from "ionicons/icons";

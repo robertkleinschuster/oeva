@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
-import {calcDistance} from "../transit/Geo";
-import {H3_RESOLUTION} from "../db/enums";
+import {calcDistance} from "../../shared/Geo";
+import {H3_RESOLUTION} from "../../shared/db/enums";
 import {gridDisk, latLngToCell} from "h3-js";
 import {db} from "../db/client";
-import {Stop} from "../db/schema";
+import {Stop} from "../../shared/db/schema";
 
 interface NearbyStop extends Stop {
     distance: number

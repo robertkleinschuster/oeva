@@ -13,11 +13,11 @@ import {
 } from '@ionic/react';
 import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
-import {FilterState, TripStopRepository} from "../transit/TripStopRepository";
+import {FilterState, Repo} from "../../shared/repo";
 import {filter} from "ionicons/icons";
 import {Trips} from "../components/Trips";
 import Filter from "../components/Filter";
-import {FullTripStop, Stop as StopType} from "../db/schema";
+import {FullTripStop, Stop as StopType} from "../../shared/db/schema";
 import {db} from "../db/client";
 
 interface StopPageProps extends RouteComponentProps<{
@@ -52,7 +52,7 @@ const Stop: React.FC<StopPageProps> = ({match}) => {
     const [tripStops, setTripStops] = useState<FullTripStop[]>([]);
 
     useEffect(() => {
-        const repo = new TripStopRepository()
+        const repo = new Repo(db)
         repo.findByStop(match.params.id, filterState).then(setTripStops)
     }, [filterState, match.params.id]);
 

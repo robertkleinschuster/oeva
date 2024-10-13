@@ -1,6 +1,6 @@
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
 import React, {useEffect, useState} from "react";
-import {Stop} from "../db/schema";
+import {Stop} from "../../shared/db/schema";
 import {db} from "../db/client";
 
 const RecentStops: React.FC = () => {

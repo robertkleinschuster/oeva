@@ -1,4 +1,4 @@
-import {TransitFeed, TransitFeedStatus} from "../db/Feed";
+import {TransitFeed, TransitFeedStatus} from "../../shared/db/Feed";
 import React from "react";
 
 export const FeedStatus: React.FC<{ feed: TransitFeed }> = ({feed}) => (

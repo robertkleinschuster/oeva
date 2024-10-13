@@ -4,13 +4,13 @@ import 'leaflet/dist/leaflet.css';
 import './map.css'
 import {Icon} from "leaflet";
 import locate from "ionicons/dist/svg/locate.svg"
-import {FullTripStop, Trip} from "../db/schema";
+import {FullTripStop, Trip} from "../../shared/db/schema";
 import {cellToLatLng} from "h3-js";
 import haltestelle from "./haltestelle.svg";
 import {IonButton, IonIcon, IonItem, IonRouterLink} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
-import {formatDisplayTime} from "../transit/DateTime";
-import {RouteType} from "../db/enums";
+import {formatDisplayTime} from "../../shared/DateTime";
+import {RouteType} from "../../shared/db/enums";
 
 const TripPolyline: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip, tripStops}) => {
     const colors = new Map([

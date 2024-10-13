@@ -1,5 +1,5 @@
 import {Kysely, Migration} from 'kysely';
-import {Database} from "../schema";
+import {Database} from "../../../shared/db/schema";
 
 export const initial1: Migration = {
     async up(db: Kysely<Database>): Promise<void> {

@@ -1,7 +1,7 @@
 import React from "react";
-import {routeTypeNames} from "../db/enums";
+import {routeTypeNames} from "../../shared/db/enums";
 import {IonNote} from "@ionic/react";
-import {Trip} from "../db/schema";
+import {Trip} from "../../shared/db/schema";
 
 const TripName: React.FC<{ trip: Trip, isDestination?: boolean }> = ({trip, isDestination = false}) => <>
     {routeTypeNames.get(trip.route_type)}

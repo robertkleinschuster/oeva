@@ -1,7 +1,7 @@
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/gtfs-types";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../gtfs-types";
 import {Boarding, H3_RESOLUTION, RouteType} from "../db/enums";
 import Tokenizer from "wink-tokenizer";
-import {convertStopTimeToInt} from "../transit/DateTime";
+import {convertStopTimeToInt} from "../DateTime";
 import {latLngToCell} from "h3-js";
 import {transliterate} from "transliteration";
 import {TransitFeed} from "../db/Feed";
