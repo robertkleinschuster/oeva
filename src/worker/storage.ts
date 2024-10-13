@@ -66,6 +66,8 @@ export async function downloadFile(url: string, directory: string, filename: str
     const dirHandle = await getDirectoryHandle(directory, true)
     const fileHandle = await getFileHandle(dirHandle, filename)
     const writable = await fileHandle.createSyncAccessHandle()
+    writable.truncate(0)
+    writable.flush()
     let bytes = 0
     const contentLength = Number.parseInt(response.headers.get('Content-Length') ?? '0')
     const pump = async () => {
@@ -109,7 +111,7 @@ export async function extractFile(directory: string, filename: string, destinati
             const fileHandle = await getFileHandle(destinationHandle, file.name);
             const writable = await fileHandle.createSyncAccessHandle();
             writable.truncate(0)
-
+            writable.flush()
             const fileContentBlob = await file.async('blob');
 
             const chunkSize = 1024 * 64;
@@ -124,6 +126,7 @@ export async function extractFile(directory: string, filename: string, destinati
                     writable.write(result.value);
                 }
                 offset += chunkSize;
+                writable.flush()
             }
 
             writable.close();

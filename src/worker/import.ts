@@ -40,16 +40,19 @@ class FeedImporter {
         if (feed?.status === TransitFeedStatus.DOWNLOADING) {
             await this.downloadData(feedId)
             await this.updateStatus(feedId, TransitFeedStatus.EXTRACTING)
+            return
         }
 
         if (feed?.status === TransitFeedStatus.EXTRACTING) {
             await this.extractData(feedId)
             await this.updateStatus(feedId, TransitFeedStatus.IMPORTING)
+            return
         }
 
         if (feed?.status === TransitFeedStatus.IMPORTING) {
             await this.importData(feedId)
             await this.updateStatus(feedId, TransitFeedStatus.DONE)
+            return
         }
     }
 

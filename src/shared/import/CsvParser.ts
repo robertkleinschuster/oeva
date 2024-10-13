@@ -9,18 +9,47 @@ export class CsvParser {
 
     private async calculateLineCount(file: File): Promise<number> {
         return new Promise((resolve, reject) => {
+            const chunkSize = 64 * 1024; // 64 KB chunk size
+            let offset = 0;
+            let lineCount = 0;
+            let leftover = '';
+
             const reader = new FileReader();
+
             reader.onload = function (event) {
-                const content = event.target?.result as string | null ?? '';
-                const lines = content.split(/\r?\n/);
-                resolve(lines.filter(line => line.length > 0).length);
+                const content = event.target?.result as string || '';
+                const lines = (leftover + content).split(/\r?\n/);
+
+                // Update line count excluding the last item which might be incomplete
+                lineCount += lines.length - 1;
+
+                // Save incomplete line for the next chunk
+                leftover = lines[lines.length - 1];
+
+                // Continue reading if we haven't reached the end
+                if (offset < file.size) {
+                    readNextChunk();
+                } else {
+                    // Add the last leftover line if it exists
+                    if (leftover.length > 0) {
+                        lineCount++;
+                    }
+                    resolve(lineCount);
+                }
             };
 
             reader.onerror = function () {
                 reject(new Error("Error reading the file"));
             };
 
-            reader.readAsText(file);
+            function readNextChunk() {
+                const slice = file.slice(offset, offset + chunkSize);
+                reader.readAsText(slice);
+                offset += chunkSize;
+            }
+
+            // Start reading the first chunk
+            readNextChunk();
         });
     }
 
