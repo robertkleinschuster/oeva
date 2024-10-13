@@ -1,5 +1,5 @@
 import React from "react";
-import {routeTypeNames} from "../db/Schedule";
+import {routeTypeNames} from "../db/enums";
 import {IonNote} from "@ionic/react";
 import {Trip} from "../db/schema";
 

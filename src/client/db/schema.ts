@@ -1,6 +1,6 @@
-import {Boarding, RouteType} from "./Schedule";
+import {Boarding, RouteType} from "./enums";
 import {Generated, Selectable} from "kysely";
-import {ExceptionType} from "./GTFS";
+import {ExceptionType} from "./gtfs-types";
 
 export interface Service {
     service_id: string;

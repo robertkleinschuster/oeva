@@ -10,7 +10,7 @@ import haltestelle from "./haltestelle.svg";
 import {IonButton, IonIcon, IonItem, IonRouterLink} from "@ionic/react";
 import {chevronCollapse, chevronExpand} from "ionicons/icons";
 import {formatDisplayTime} from "../transit/DateTime";
-import {RouteType} from "../db/Schedule";
+import {RouteType} from "../db/enums";
 
 const TripPolyline: React.FC<{ trip: Trip, tripStops: FullTripStop[] }> = ({trip, tripStops}) => {
     const colors = new Map([

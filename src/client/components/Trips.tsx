@@ -1,4 +1,4 @@
-import {Boarding} from "../db/Schedule";
+import {Boarding} from "../db/enums";
 import {FullTripStop, Stop, TripStop} from "../db/schema";
 import {formatDisplayTime, parseStopTimeInt} from "../transit/DateTime";
 import {IonIcon, IonItem, IonLabel, IonList, IonNote, IonText} from "@ionic/react";

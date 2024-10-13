@@ -1,9 +1,9 @@
 import {FullTripStop} from "../db/schema";
-import {RouteType, WeekdayCode} from "../db/Schedule";
+import {RouteType, WeekdayCode} from "../db/enums";
 import {gridDisk, H3IndexInput} from "h3-js";
 import {db} from "../db/client";
 import {formatServiceDate} from "./DateTime";
-import {ExceptionType} from "../db/GTFS";
+import {ExceptionType} from "../db/gtfs-types";
 import {weekdayCodes} from "./Schedule";
 
 export interface FilterState {

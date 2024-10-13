@@ -17,11 +17,11 @@ import React, {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import {formatDisplayTime} from "../transit/DateTime";
 import {TripStopRepository} from "../transit/TripStopRepository";
-import {Boarding} from "../db/Schedule";
+import {Boarding} from "../db/enums";
 import StopBoarding from "../components/StopBoarding";
 import {setSeconds} from "date-fns";
 import {extractExceptions} from "../transit/Schedule";
-import {ExceptionType} from "../db/GTFS";
+import {ExceptionType} from "../db/gtfs-types";
 import TripName from "../components/TripName";
 import type {Exception, FullTripStop, Service, Trip as TripType} from "../db/schema"
 import {db} from "../db/client";

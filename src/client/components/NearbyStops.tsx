@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {IonItem, IonLabel, IonList, IonNote} from "@ionic/react";
 import {calcDistance} from "../transit/Geo";
-import {H3_RESOLUTION} from "../db/Schedule";
+import {H3_RESOLUTION} from "../db/enums";
 import {gridDisk, latLngToCell} from "h3-js";
 import {db} from "../db/client";
 import {Stop} from "../db/schema";

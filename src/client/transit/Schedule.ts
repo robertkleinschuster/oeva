@@ -1,7 +1,7 @@
-import {ExceptionType} from "../db/GTFS";
+import {ExceptionType} from "../db/gtfs-types";
 import {parseServiceDate} from "./DateTime";
 import {Exception} from "../db/schema";
-import {Weekday, WeekdayCode} from "../db/Schedule";
+import {Weekday, WeekdayCode} from "../db/enums";
 import {Selectable} from "kysely";
 
 

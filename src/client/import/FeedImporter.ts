@@ -4,7 +4,7 @@ import {downloadFile, extractFile} from "../fs/StorageManager";
 import {getDirectoryHandle} from "../../shared/messages";
 import {FeedRunner} from "./FeedRunner";
 import {createException, createService, createStop, createTrip, createTripStop} from "./factories";
-import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/GTFS";
+import {GTFSCalendar, GTFSCalendarDate, GTFSRoute, GTFSStop, GTFSStopTime, GTFSTrip} from "../db/gtfs-types";
 import {bulkReplaceInto} from "../db/client";
 import {CsvParser} from "./CsvParser";
 
